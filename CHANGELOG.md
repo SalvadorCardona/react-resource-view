@@ -1,5 +1,19 @@
 # react-resource-view
 
+## 0.3.1
+
+### Patch Changes
+
+- Build page metadata without reading `window`.
+
+  `MetaResourceComponent` took the canonical URL from `window.location`. There is
+  no `window` on a server, so it threw while rendering the one element a crawler
+  always reads — and React answered by abandoning the server render entirely,
+  returning an empty document.
+
+  It now reads the path from the navigation port, which a router answers on both
+  sides.
+
 ## 0.3.0
 
 ### Minor Changes

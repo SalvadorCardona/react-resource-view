@@ -5,8 +5,14 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 export default function MetaResourceComponent() {
   const currentResource = useCurrentViewResourceContext()
   const { appName, description, appUrl } = getPorts()
+  // Read through the navigation port rather than `window.location`: there is
+  // no `window` while rendering on a server, and a page whose metadata throws
+  // renders nothing at all — which is precisely the markup a crawler reads.
+  const { pathname } = getPorts().navigation.useLocation()
   const viewName = currentResource?.view?.name ?? appName
   const pageTitle = viewName === appName ? viewName : `${viewName} · ${appName}`
+  const canonical = `${appUrl}${pathname}`
+
   useEffect(() => {
     if (currentResource.parentResource) return
     document.title = pageTitle
@@ -21,14 +27,11 @@ export default function MetaResourceComponent() {
       <title>{pageTitle}</title>
       <meta name="description" content={description} />
       <meta property="og:title" content={pageTitle} />
-      <meta
-        property="og:url"
-        content={`${appUrl}${window.location.pathname}`}
-      />
+      <meta property="og:url" content={canonical} />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={pageTitle} />
       <meta name="twitter:description" content={description} />
-      <link rel="canonical" href={`${appUrl}${window.location.pathname}`} />
+      <link rel="canonical" href={canonical} />
     </>
   )
 }
