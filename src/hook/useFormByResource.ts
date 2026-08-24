@@ -1,0 +1,167 @@
+import { useForm, FormContextOutput } from "react-data-form"
+import { ApiJsonLdError } from "jsonld-api-client"
+import { addErrorFromViolations } from "react-data-form"
+import getFormByCurrentResourceContext from "@/views/update/getFormByCurrentResourceContext"
+import { FormBuiltInterface, FormInterface } from "react-data-form"
+import { ApiError } from "jsonld-api-client"
+import { ActionList } from "react-data-form"
+import { toast } from "sonner"
+import { ViewResourceContextParams } from "@/ViewResourceContext"
+import { deepCopy } from "@/internal/object/deepCopy"
+import getIdFromObject from "@/internal/id/getIdFromObject"
+import { generateLink } from "@/routes/routes"
+import { useNavigate } from "@/ports"
+import { resolveViewResourceContext } from "@/utils/resolveViewResourceContext"
+import { findResource } from "@/utils/findResource"
+import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { translate } from "react-mini-i18n"
+
+export interface formByResourceInputsInterface<DataProps extends object = object> {
+  currentResource: ViewResourceContextParams
+  onSubmit?: (data: DataProps) => DataProps
+  onUpdated?: (data: DataProps) => void
+  onChange?: (data: DataProps, form: FormInterface<DataProps>) => void
+  data?: Partial<DataProps>
+  form?: FormInterface
+}
+
+export default function useFormByResource<DataMain extends object = object>({
+  currentResource,
+  data,
+  form,
+  onSubmit,
+  onChange,
+  onUpdated,
+}: formByResourceInputsInterface<DataMain>): FormContextOutput<DataMain> {
+  const router = useNavigate()
+  const id = currentResource?.id
+  const action =
+    currentResource.resourceAction ?? (id ? ActionList.update : ActionList.create)
+  const view =
+    currentResource.view ?? resolveViewResourceContext(currentResource).view
+  const closeAfterUpdate = view?.behavior?.closeAfterUpdate ?? false
+  const redirectToAfterUpdate = view?.behavior?.redirectToAfterUpdate ?? false
+
+  const refreshDataAfterUpdate = view?.behavior?.refreshDataAfterUpdate ?? false
+  const resource = findResource({
+    resourceId: currentResource.resourceId as string,
+    resource: currentResource.resource,
+  }) as ViewResourceInterface
+
+  const currentForm = deepCopy(
+    form ??
+      (getFormByCurrentResourceContext({
+        ...currentResource,
+        resourceAction: currentResource.resourceAction ?? action,
+      }) as FormBuiltInterface)
+  )
+
+  if (!currentForm) {
+    throw Error("Form not found")
+  }
+
+  if (action === ActionList.read) {
+    currentForm.action = ActionList.read
+  }
+
+  const formContext = useForm<DataMain>({
+    form: currentForm,
+    onChange,
+    asyncData: async () => {
+      const currentData = data ?? currentResource.data ?? undefined
+
+      if (action === ActionList.create || data) return currentData as DataMain
+
+      const fetcher = currentResource.resource?.getItem
+
+      if (fetcher) {
+        const response = await fetcher({
+          id: id as string,
+        })
+
+        return response.data as DataMain
+      }
+
+      throw new Error("Data is unreachable")
+    },
+    onSubmit: async (data) => {
+      const newData = onSubmit ? onSubmit(data) : data
+      const newDataWithId = {
+        ...{ id: id as string },
+        ...newData,
+      }
+
+      const idInObjet = getIdFromObject(formContext.form.originalData)
+      if (idInObjet) {
+        newDataWithId.id = idInObjet
+      }
+
+      try {
+        const response =
+          action === ActionList.create && !idInObjet
+            ? await resource?.createItem(newDataWithId)
+            : await resource?.updateItem(newDataWithId)
+        toast.success(formContext.form?.label?.success, {
+          description: translate("Your changes have been saved"),
+        })
+
+        if (typeof response === "undefined") {
+          throw new Error("Data Unfetchable")
+        }
+
+        onUpdated?.(response.data as DataMain)
+
+        if (refreshDataAfterUpdate) {
+          formContext.updateData(response.data)
+        }
+
+        if (redirectToAfterUpdate) {
+          router({
+            to: redirectToAfterUpdate,
+          })
+
+          return response.data
+        }
+
+        if (action === ActionList.create && !closeAfterUpdate) {
+          router({
+            to: generateLink({
+              id: getIdFromObject(response.data) as string,
+              resourceId: resource?.["@id"] as string,
+              resourceAction: ActionList.update,
+            }),
+          })
+
+          return response.data
+        }
+
+        return response.data
+      } catch (error) {
+        if (error instanceof ApiError) {
+          const apiError = error.response.data as ApiJsonLdError
+
+          // With no field violations — a 400 such as "slot no longer
+          // available" — the API's detail is the only explanation to show.
+          toast.error(formContext.form.label.error, {
+            description: apiError?.violations?.length
+              ? undefined
+              : (apiError?.detail ?? undefined),
+          })
+
+          const formWithError = addErrorFromViolations(
+            formContext.form as FormBuiltInterface,
+            apiError
+          )
+
+          formContext.updateForm(formWithError)
+
+          return data
+        }
+      }
+
+      return data
+    },
+  })
+
+  return formContext
+}
