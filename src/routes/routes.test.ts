@@ -3,6 +3,7 @@ import { generateLink, generateLinkByResource, parseLink } from "./routes"
 import { ActionList } from "react-data-form"
 import { ViewResourceInterface } from "@/ViewResourceInterface"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
+import { encodeQuery } from "@/internal/url/urlEncoder"
 
 const fakeResource = {
   "@id": "reset-password-request",
@@ -36,7 +37,7 @@ describe("generateLink", () => {
     })
     // Sans scope explicite, generateLink retombe sur le scope courant ("public" par défaut).
     expect(link).toBe(
-      "/public/produit/update/1234?filter=%7B%22status%22:%22active%22%7D"
+      `/public/produit/update/1234?filter=${encodeQuery({ status: "active" })}`
     )
   })
 
@@ -49,7 +50,7 @@ describe("generateLink", () => {
       defaultData: { b: 2 },
     })
     expect(link).toBe(
-      "/defaultScope/produit/create?filter=%7B%22a%22:1%7D&defaultData=%7B%22b%22:2%7D"
+      `/defaultScope/produit/create?filter=${encodeQuery({ a: 1 })}&defaultData=${encodeQuery({ b: 2 })}`
     )
   })
 
@@ -59,7 +60,9 @@ describe("generateLink", () => {
       resourceAction: ActionList.create,
       defaultData: { test: true },
     })
-    expect(link).toBe("/public/produit/create?defaultData=%7B%22test%22:true%7D")
+    expect(link).toBe(
+      `/public/produit/create?defaultData=${encodeQuery({ test: true })}`
+    )
   })
 
   it("does not add defaultData outside the create action", () => {
@@ -84,7 +87,7 @@ describe("generateLink", () => {
       },
     })
     expect(link).toBe(
-      "/public/company/read/1/booking/create?defaultData=%7B%22company%22:%22/api/companies/1%22%7D"
+      `/public/company/read/1/booking/create?defaultData=${encodeQuery({ company: "/api/companies/1" })}`
     )
   })
 
