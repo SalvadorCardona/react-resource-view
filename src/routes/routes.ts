@@ -5,6 +5,7 @@ import { decodeQuery, encodeQuery } from "@/internal/url/urlEncoder"
 import { JsonLdIri } from "jsonld-item"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { getCurrentScope } from "@/scope/scope"
+import { getPorts } from "@/ports"
 import { isApiIri } from "jsonld-item"
 import { getIdFromIri } from "jsonld-item"
 import { resourceRegistered } from "resource-registry"
@@ -134,34 +135,34 @@ export function generateLinkByResource({
   })
 }
 
-export function generateLink({
+/**
+ * Serialises a view context into the ordered segments both routing modes share.
+ *
+ * The order is `{scope}/{resourceId}/{action}/{id}/{subResource}` followed by
+ * the child view's own three segments, so one parser reads back either mode.
+ */
+function buildSegments({
   resourceId,
   resourceAction,
   id,
-  filter,
   scope,
   subResource,
   childViewResource,
   resource,
-  defaultData,
-}: ViewResourceContextParams): string {
+}: ViewResourceContextParams): string[] {
   const currentResourceId = resource
     ? encodeIri(resource["@id"])
     : resourceId
       ? encodeIri(resourceId)
       : undefined
 
-  const currentScope = scope ?? getCurrentScope()
-  const currentResourceAction = resourceAction ?? undefined
-  const currentId = id ? encodeIri(id) : undefined
-  const currentSubResource = subResource ? encodeIri(subResource) : undefined
-  const args: (string | undefined)[] = []
-
-  args.push(currentScope ?? "")
-  args.push(currentResourceId)
-  args.push(currentResourceAction)
-  args.push(currentId)
-  args.push(currentSubResource)
+  const args: (string | undefined)[] = [
+    scope ?? getCurrentScope() ?? "",
+    currentResourceId,
+    resourceAction ?? undefined,
+    id ? encodeIri(id) : undefined,
+    subResource ? encodeIri(subResource) : undefined,
+  ]
 
   if (childViewResource) {
     args.push(
@@ -175,28 +176,75 @@ export function generateLink({
     args.push(childViewResource.id ? encodeIri(childViewResource.id) : undefined)
   }
 
-  let finalRoute = args.filter((e) => e).join("/")
+  return args.filter((e): e is string => Boolean(e))
+}
 
-  const queryParts: string[] = []
-  if (filter) {
-    queryParts.push("filter=" + encodeQuery(filter))
-  }
+/** The query parameters carried alongside the segments, in either mode. */
+function buildQueryParts({
+  resourceAction,
+  filter,
+  childViewResource,
+  defaultData,
+}: ViewResourceContextParams): string[] {
+  const parts: string[] = []
+  if (filter) parts.push("filter=" + encodeQuery(filter))
+
   const isCreateLink =
-    currentResourceAction === ActionList.create ||
+    resourceAction === ActionList.create ||
     childViewResource?.resourceAction === ActionList.create
   if (defaultData && isCreateLink) {
-    queryParts.push("defaultData=" + encodeQuery(defaultData))
+    parts.push("defaultData=" + encodeQuery(defaultData))
   }
-  if (queryParts.length > 0) {
-    finalRoute += "?" + queryParts.join("&")
+
+  return parts
+}
+
+/**
+ * Builds the URL for a view context, in whichever routing mode is configured.
+ *
+ * In `path` mode — the default — the context lives in the path:
+ * `/admin/articles/update/42?filter=…`
+ *
+ * In `query` mode it lives entirely in the query string:
+ * `/docs.html?view=admin/articles/update/42&filter=…`
+ *
+ * The second exists for static hosting, where a deep path has no server to
+ * answer it and returns a 404, and for embedding the views in a page whose
+ * path is not yours to control.
+ */
+export function generateLink(params: ViewResourceContextParams): string {
+  const segments = buildSegments(params)
+  const queryParts = buildQueryParts(params)
+  const { mode, param, basePath } = getPorts().routing
+
+  if (mode === "query") {
+    const query = [
+      ...(segments.length ? [`${param}=${segments.join("/")}`] : []),
+      ...queryParts,
+    ]
+    return basePath + (query.length ? "?" + query.join("&") : "")
   }
+
+  let finalRoute = segments.join("/")
+  if (queryParts.length > 0) finalRoute += "?" + queryParts.join("&")
 
   return "/" + finalRoute
 }
 
+/**
+ * Reads a URL back into a view context, in whichever mode it was written.
+ *
+ * A URL carrying the routing parameter is read as `query` mode whatever the
+ * configuration says, so a link shared from a statically hosted page keeps
+ * working.
+ */
 export function parseLink(url: string): ViewResourceContextParams {
   const [pathPart, queryPart] = url.replace(/^\//, "").split("?")
-  const segments = pathPart.split("/").filter(Boolean)
+  const searchParamsForMode = new URLSearchParams(queryPart ?? "")
+  const routingParam = getPorts().routing.param
+  const fromQuery = searchParamsForMode.get(routingParam)
+
+  const segments = (fromQuery ?? pathPart).split("/").filter(Boolean)
 
   const [scope, resourceId, resourceAction, id, ...rest] = segments
 
@@ -236,8 +284,8 @@ export function parseLink(url: string): ViewResourceContextParams {
     if (filterRaw) params.filter = decodeQuery(filterRaw) as FilterInterface
     if (dataRaw) {
       const decodedData = decodeQuery(dataRaw)
-      // When the target is a sub-resource being created
-      // ouverte depuis une fiche pro), le defaultData concerne l'enfant.
+      // When the target is a sub-resource being created, defaultData belongs
+      // to the child rather than to the view containing it.
       if (params.childViewResource?.resourceAction === ActionList.create) {
         params.childViewResource.defaultData = decodedData
       } else {

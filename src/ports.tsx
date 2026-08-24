@@ -61,8 +61,28 @@ export interface NavigationPortInterface {
   Navigate: ComponentType<{ to: string; replace?: boolean }>
 }
 
+/**
+ * How a view context is written into the URL.
+ *
+ * `path` puts it in the path — `/admin/articles/update/42` — which reads well
+ * and is the default.
+ *
+ * `query` keeps it entirely in the query string —
+ * `/docs.html?view=admin/articles/update/42`. Use it when the path is not
+ * yours to control: static hosting, where a deep path has no server to answer
+ * it and returns 404, or views embedded in an existing page.
+ */
+export interface RoutingPortInterface {
+  mode: "path" | "query"
+  /** Name of the query parameter carrying the context in `query` mode. */
+  param: string
+  /** Path the links point at in `query` mode, before the `?`. */
+  basePath: string
+}
+
 export interface ResourceViewPortsInterface {
   navigation: NavigationPortInterface
+  routing: RoutingPortInterface
   /**
    * Root URL of the application, used to build absolute links that must escape
    * an iframe. Defaults to the current origin.
@@ -109,6 +129,7 @@ const fallbackNavigation: NavigationPortInterface = {
 
 let ports: ResourceViewPortsInterface = {
   navigation: fallbackNavigation,
+  routing: { mode: "path", param: "view", basePath: "" },
   appUrl: isBrowser() ? window.origin : "http://localhost",
   isDev: false,
   appName: "",
@@ -120,14 +141,21 @@ export function getPorts(): ResourceViewPortsInterface {
 }
 
 /** Settings accepted by {@link configurePorts}; everything is optional. */
-export type ConfigurePortsInput = Partial<ResourceViewPortsInterface>
+export interface ConfigurePortsInput
+  extends Partial<Omit<ResourceViewPortsInterface, "routing">> {
+  routing?: Partial<RoutingPortInterface>
+}
 
 /**
  * Wires the host application into the views. Call it once at startup, before
  * the first view is rendered.
  */
 export function configurePorts(newPorts: ConfigurePortsInput): void {
-  ports = { ...ports, ...newPorts }
+  ports = {
+    ...ports,
+    ...newPorts,
+    routing: { ...ports.routing, ...newPorts.routing },
+  }
 }
 
 /** Reads the navigate function through the configured router. */
