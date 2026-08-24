@@ -1,5 +1,21 @@
 # react-resource-view
 
+## 0.4.0
+
+### Minor Changes
+
+- Add `ownsDocumentHead`, to stop competing with a host router over the head.
+
+  `MetaResource` always wrote the page's title, canonical and social tags. That
+  is right for a single-page application, where nothing else does — but a
+  server-rendered host declares metadata per route, and both writing it leaves
+  the page with two of every tag. A crawler reads whichever came first, which is
+  the host's, so the views' work was both invisible and harmful.
+
+  Set `ownsDocumentHead: false` when the host router owns the head. The title is
+  still kept in step as the visitor moves between views. It defaults to true, so
+  existing applications are unaffected.
+
 ## 0.3.1
 
 ### Patch Changes

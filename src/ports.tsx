@@ -91,6 +91,18 @@ export interface ResourceViewPortsInterface {
   /** Whether to render development affordances, such as the metadata panel. */
   isDev: boolean
 
+  /**
+   * Whether these views should emit the page's `<title>`, canonical and social
+   * tags themselves.
+   *
+   * True suits a single-page application, where nothing else writes the
+   * document head. Set it to false when the host router owns the head — a
+   * server-rendered application declaring its metadata per route — otherwise
+   * both write it and the page ends up with two of each, and a crawler reads
+   * whichever came first.
+   */
+  ownsDocumentHead: boolean
+
   /** Application name, used as the page title suffix. */
   appName: string
 
@@ -132,6 +144,7 @@ let ports: ResourceViewPortsInterface = {
   routing: { mode: "path", param: "view", basePath: "" },
   appUrl: isBrowser() ? window.origin : "http://localhost",
   isDev: false,
+  ownsDocumentHead: true,
   appName: "",
   description: "",
 }

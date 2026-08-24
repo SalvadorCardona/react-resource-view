@@ -4,7 +4,7 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 
 export default function MetaResourceComponent() {
   const currentResource = useCurrentViewResourceContext()
-  const { appName, description, appUrl } = getPorts()
+  const { appName, description, appUrl, ownsDocumentHead } = getPorts()
   // Read through the navigation port rather than `window.location`: there is
   // no `window` while rendering on a server, and a page whose metadata throws
   // renders nothing at all — which is precisely the markup a crawler reads.
@@ -21,6 +21,11 @@ export default function MetaResourceComponent() {
   // A nested resource must not overwrite the page metadata of the view
   // containing it.
   if (currentResource.parentResource) return null
+
+  // The host router declares the head itself; emitting these too would leave
+  // the page with two of every tag. The effect above still keeps the title in
+  // step as the visitor moves between views.
+  if (!ownsDocumentHead) return null
 
   return (
     <>

@@ -14,11 +14,28 @@ describe("MetaResourceComponent", () => {
       appName: "Animalink",
       appUrl: "https://example.test",
       description: "Book an appointment",
+      ownsDocumentHead: true,
       navigation: {
         ...getPorts().navigation,
         useLocation: () => ({ pathname: "/annuaire", searchStr: "" }),
       },
     })
+  })
+
+  it("stands aside when the host router declares the head itself", () => {
+    // Both writing the head leaves the page with two titles and two
+    // canonicals, and a crawler reads whichever came first.
+    configurePorts({ ownsDocumentHead: false })
+
+    const html = renderToStaticMarkup(
+      <CurrentResourceContext.Provider
+        value={{ view: { name: "Annuaire" } } as never}
+      >
+        <MetaResourceComponent />
+      </CurrentResourceContext.Provider>
+    )
+
+    expect(html).toBe("")
   })
 
   it("builds its canonical from the router, not from the address bar", () => {
