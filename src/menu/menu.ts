@@ -63,14 +63,44 @@ export function createItemMenuWithResource({
  *
  * In query mode the context lives in the query string, so comparing the
  * pathname alone would match every entry — or none.
+ *
+ * Browser-only: it reads the address bar directly. On a server it reports
+ * every entry as inactive, which renders markup the browser then disagrees
+ * with. Prefer {@link useIsActiveItemMenu}, which asks the router instead and
+ * therefore answers the same on both sides.
  */
 export function isActiveItemMenu(item: MenuItemInterface) {
   if (!item.href) return false
+  if (typeof window === "undefined") return false
 
+  return matchesCurrent(
+    item.href,
+    window.location.pathname,
+    window.location.search
+  )
+}
+
+/**
+ * The same test, resolved through the navigation port.
+ *
+ * A router knows the current location while rendering on a server; `window`
+ * does not exist there. Returns a predicate rather than a boolean so a menu
+ * can test each of its entries — a hook cannot be called inside a loop.
+ */
+export function useIsActiveItemMenu(): (item: MenuItemInterface) => boolean {
+  const { pathname, searchStr } = getPorts().navigation.useLocation()
+
+  return (item) =>
+    Boolean(item.href) && matchesCurrent(item.href!, pathname, searchStr)
+}
+
+function matchesCurrent(
+  href: string,
+  pathname: string,
+  searchStr: string
+): boolean {
   const current =
-    getPorts().routing.mode === "query"
-      ? window.location.pathname + window.location.search
-      : window.location.pathname
+    getPorts().routing.mode === "query" ? pathname + searchStr : pathname
 
-  return current.startsWith(item.href)
+  return current.startsWith(href)
 }
