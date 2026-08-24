@@ -11,9 +11,6 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.7.0(@date-fns/tz@1.5.0)(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@tanstack/react-router':
-        specifier: ^1.170.0
-        version: 1.170.32(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -69,6 +66,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@26.2.0)(jiti@2.7.0))
+      '@tanstack/react-router':
+        specifier: ^1.170.18
+        version: 1.170.32(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -126,6 +126,9 @@ importers:
       shadcn:
         specifier: ^4.18.0
         version: 4.19.0(typescript@6.0.3)
+      ssr-safe-storage:
+        specifier: ^0.1.0
+        version: 0.1.0
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
