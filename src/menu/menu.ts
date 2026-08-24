@@ -4,6 +4,7 @@ import { getIdFromIri } from "jsonld-item"
 import { FC } from "react"
 import { IconType } from "@/ViewInterface"
 import { getCurrentScope } from "@/scope/scope"
+import { getPorts } from "@/ports"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 
 export interface MenuItemInterface {
@@ -18,7 +19,7 @@ export interface MenuItemInterface {
   /**
    * When true and the current page matches one of this entry's `items`, the
    * header renders a sub-navigation bar
-   * permettant de naviguer entre ces pages soeurs.
+   * so the reader can move between those sibling pages.
    */
   subNavigation?: boolean
   /**
@@ -57,6 +58,19 @@ export function createItemMenuWithResource({
   }
 }
 
+/**
+ * Whether a menu entry points at what is currently on screen.
+ *
+ * In query mode the context lives in the query string, so comparing the
+ * pathname alone would match every entry — or none.
+ */
 export function isActiveItemMenu(item: MenuItemInterface) {
-  return item.href ? window.location.pathname.startsWith(item.href) : false
+  if (!item.href) return false
+
+  const current =
+    getPorts().routing.mode === "query"
+      ? window.location.pathname + window.location.search
+      : window.location.pathname
+
+  return current.startsWith(item.href)
 }
