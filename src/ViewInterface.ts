@@ -26,8 +26,8 @@ export interface ViewInterface<_Read = IdAbleInterface> {
     eventSourced?: boolean
     redirectToAfterUpdate?: string
     /**
-     * Affiche un bouton d'export dans la vue liste. L'export utilise l'API
-     * Platform (format CSV) en respectant les filtres courants de la liste.
+     * Shows an export button on the list view. The export goes through the
+     * API (CSV format) and honours the filters currently applied to the list.
      */
     canExport?: boolean
   }

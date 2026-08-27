@@ -37,9 +37,9 @@ export function resolveViewResourceContext(currentView: ViewResourceContextParam
     }
   }
 
-  // The view's default filters apply key by key, beneath those of
-  // l'URL : une valeur choisie par l'utilisateur reste prioritaire, et les
-  // the other default filters still apply.
+  // The view's default filters apply key by key, beneath those of the URL: a
+  // value the user picked stays on top, and the other default filters still
+  // apply.
   const defaultFilter = view?.defaultFilter
   const filter = defaultFilter
     ? { ...defaultFilter, ...(currentView.filter ?? {}) }

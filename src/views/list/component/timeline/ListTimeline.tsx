@@ -10,7 +10,6 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns"
-import { fr } from "date-fns/locale"
 import { Calendar, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
 import { Button } from "@/ui/button"
 import { cn } from "@/ui/cn"
@@ -27,6 +26,7 @@ import {
 } from "@/views/list/component/timeline/timelineViewOptionFactory"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 import getIdFromObject from "@/internal/id/getIdFromObject"
+import { getDateLocale, getWeekStartsOn } from "@/ports"
 
 const UNASSIGNED_GROUP_ID = "__unassigned__"
 
@@ -109,7 +109,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
   const [daysToShow, setDaysToShow] = useState<number>(view.daysToShow ?? 14)
 
   const viewStart = useMemo(
-    () => startOfWeek(currentDate, { weekStartsOn: 1 }),
+    () => startOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() }),
     [currentDate]
   )
   const viewEnd = useMemo(
@@ -163,7 +163,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
       }
     }
     return Array.from(seen.values()).sort((a, b) =>
-      a.label.localeCompare(b.label, "fr")
+      a.label.localeCompare(b.label, getDateLocale().code)
     )
   }, [view.resolveGroups, rows, rowsWithDates])
 
@@ -221,14 +221,14 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
           <h2 className="font-semibold text-base">
-            {format(viewStart, "d MMM", { locale: fr })} -{" "}
-            {format(viewEnd, "d MMM yyyy", { locale: fr })}
+            {format(viewStart, "d MMM", { locale: getDateLocale() })} -{" "}
+            {format(viewEnd, "d MMM yyyy", { locale: getDateLocale() })}
           </h2>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={goToToday}>
-            <Trans>Aujourd&apos;hui</Trans>
+            <Trans>Today</Trans>
           </Button>
 
           <div className="flex items-center border rounded-md overflow-hidden">
@@ -295,7 +295,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
                   )}
                 >
                   <div className="text-[10px] uppercase text-muted-foreground font-medium">
-                    {format(day, "EEE", { locale: fr })}
+                    {format(day, "EEE", { locale: getDateLocale() })}
                   </div>
                   <div
                     className={cn(

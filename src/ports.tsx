@@ -1,5 +1,7 @@
 import * as React from "react"
 import { ComponentType, FC, ReactNode } from "react"
+import type { Locale } from "date-fns"
+import { enUS } from "date-fns/locale"
 
 /**
  * What the views need from the application hosting them.
@@ -108,6 +110,18 @@ export interface ResourceViewPortsInterface {
 
   /** Description written into the page metadata. */
   description: string
+
+  /**
+   * Locale the views format their dates with — the calendar's month names, the
+   * timeline's day headers — and which decides the day a week starts on.
+   * Defaults to English (US); pass a date-fns locale to change it:
+   *
+   * ```ts
+   * import { fr } from "date-fns/locale"
+   * configurePorts({ dateLocale: fr })
+   * ```
+   */
+  dateLocale: Locale
 }
 
 const isBrowser = (): boolean => typeof window !== "undefined"
@@ -147,6 +161,7 @@ let ports: ResourceViewPortsInterface = {
   ownsDocumentHead: true,
   appName: "",
   description: "",
+  dateLocale: enUS,
 }
 
 export function getPorts(): ResourceViewPortsInterface {
@@ -170,6 +185,16 @@ export function configurePorts(newPorts: ConfigurePortsInput): void {
     routing: { ...ports.routing, ...newPorts.routing },
   }
 }
+
+/** The configured date-fns locale. */
+export const getDateLocale = (): Locale => getPorts().dateLocale
+
+/**
+ * The day a week starts on for the configured locale — Sunday in en-US, Monday
+ * in French. The calendar and the timeline lay their weeks out from it.
+ */
+export const getWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 =>
+  getDateLocale().options?.weekStartsOn ?? 0
 
 /** Reads the navigate function through the configured router. */
 export const useNavigate = (): ((

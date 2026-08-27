@@ -10,7 +10,7 @@ export interface UseLimitResult {
   limit?: LimitStateInterface
   /** True while an asynchronous limit is still resolving. */
   isLoading: boolean
-  /** `true` lorsque la limite est atteinte (`current >= max`). */
+  /** `true` once the limit is reached (`current >= max`). */
   isReached: boolean
 }
 

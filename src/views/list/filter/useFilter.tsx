@@ -97,12 +97,11 @@ export default function useFilter({
   }
 
   /**
-   * « Nettoyer la recherche » ne vide que ce que l'utilisateur a saisi. Deux
-   * two kinds of filter survive:
+   * "Clear the search" only empties what the user typed. Two kinds of filter
+   * survive:
    * - those injected by the context — generated inputs, such as the parent set
    *   by a sub-view's `onInitViewResource` — which define the scope of the
-   *   list: losing them would show the rows of every
-   *   entreprises ;
+   *   list: losing them would show the rows of every company;
    * - the view's default filters, which are the list's resting state.
    */
   const resetFilter = (filter: FilterInterface = {}) => {

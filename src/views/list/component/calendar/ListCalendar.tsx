@@ -19,7 +19,6 @@ import {
   subMonths,
   subWeeks,
 } from "date-fns"
-import { fr } from "date-fns/locale"
 import {
   Calendar,
   CalendarDays,
@@ -39,6 +38,7 @@ import {
   RowInterface,
 } from "@/ViewInterface"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { getDateLocale, getWeekStartsOn } from "@/ports"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 import {
   CalendarViewMode,
@@ -231,15 +231,15 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
     const monthStart = startOfMonth(currentDate)
     const monthEnd = endOfMonth(currentDate)
     return eachDayOfInterval({
-      start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-      end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+      start: startOfWeek(monthStart, { weekStartsOn: getWeekStartsOn() }),
+      end: endOfWeek(monthEnd, { weekStartsOn: getWeekStartsOn() }),
     })
   }, [currentDate])
 
   const weekDays = useMemo(() => {
     return eachDayOfInterval({
-      start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-      end: endOfWeek(currentDate, { weekStartsOn: 1 }),
+      start: startOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() }),
+      end: endOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() }),
     })
   }, [currentDate])
 
@@ -265,13 +265,13 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
   const handleToday = () => setCurrentDate(new Date())
 
   const getViewTitle = () => {
-    if (mode === "month") return format(currentDate, "MMMM yyyy", { locale: fr })
+    if (mode === "month") return format(currentDate, "MMMM yyyy", { locale: getDateLocale() })
     if (mode === "week") {
-      const start = startOfWeek(currentDate, { weekStartsOn: 1 })
-      const end = endOfWeek(currentDate, { weekStartsOn: 1 })
-      return `${format(start, "d MMM", { locale: fr })} - ${format(end, "d MMM yyyy", { locale: fr })}`
+      const start = startOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() })
+      const end = endOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() })
+      return `${format(start, "d MMM", { locale: getDateLocale() })} - ${format(end, "d MMM yyyy", { locale: getDateLocale() })}`
     }
-    return format(currentDate, "EEEE d MMMM yyyy", { locale: fr })
+    return format(currentDate, "EEEE d MMMM yyyy", { locale: getDateLocale() })
   }
 
   const getEventPosition = (start: Date, end: Date) => {
@@ -296,7 +296,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
             </span>
           </Button>
           <Button variant="outline" size="sm" onClick={handleToday}>
-            <Trans>Aujourd&apos;hui</Trans>
+            <Trans>Today</Trans>
           </Button>
           <Button variant="outline" size="icon" onClick={handleNext}>
             <ChevronRight className="size-4" />
@@ -520,7 +520,7 @@ function DayView({
           {format(day, "d")}
         </div>
         <p className="mt-1 text-sm capitalize text-muted-foreground">
-          {format(day, "EEEE", { locale: fr })}
+          {format(day, "EEEE", { locale: getDateLocale() })}
         </p>
       </div>
       <ScrollArea className="h-[500px]">
@@ -598,7 +598,7 @@ function WeekView({
             )}
           >
             <p className="text-xs capitalize text-muted-foreground">
-              {format(day, "EEE", { locale: fr })}
+              {format(day, "EEE", { locale: getDateLocale() })}
             </p>
             <div
               className={cn(
@@ -794,7 +794,7 @@ function DayOverflow({
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
         <div className="border-b px-3 py-2 text-sm font-medium capitalize">
-          {format(day, "EEEE d MMMM", { locale: fr })}
+          {format(day, "EEEE d MMMM", { locale: getDateLocale() })}
         </div>
         <ScrollArea className="max-h-72">
           <div className="flex flex-col gap-1 p-2">

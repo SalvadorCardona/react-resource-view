@@ -87,7 +87,7 @@ function FormFilter() {
               onClick={() => filterContext.resetFilter({})}
             >
               <CircleX />
-              <Trans>Nettoyer la recherche</Trans>
+              <Trans>Clear the search</Trans>
             </Button>
           )}
           <ListFilterBar>
