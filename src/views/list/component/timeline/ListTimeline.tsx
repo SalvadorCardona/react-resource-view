@@ -282,7 +282,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
         <div className="min-w-max">
           <div className="flex sticky top-0 z-20 bg-card border-b">
             <div className="w-40 md:w-52 flex-shrink-0 px-3 py-2 font-medium text-sm border-r bg-muted/50 sticky left-0 z-30">
-              {groupKey ? <Trans>Groups</Trans> : <Trans>Bookings</Trans>}
+              <Trans>{view.groupsLabel ?? (groupKey ? "Groups" : "Bookings")}</Trans>
             </div>
             <div className="flex flex-1">
               {days.map((day, idx) => (
@@ -352,8 +352,10 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
       </div>
 
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
-        <span>{visibleCount} entries over the period</span>
-        <span>{groups.length} ligne(s)</span>
+        <Trans params={{ count: String(visibleCount) }}>
+          {"{{count}} entries over the period"}
+        </Trans>
+        <Trans params={{ count: String(groups.length) }}>{"{{count}} rows"}</Trans>
       </div>
     </div>
   )

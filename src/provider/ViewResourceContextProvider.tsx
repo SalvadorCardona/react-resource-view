@@ -1,4 +1,13 @@
-import { createContext, FC, ReactNode, useEffect, useRef, useState } from "react"
+import {
+  createContext,
+  Dispatch,
+  FC,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import {
   ViewResourceContext,
@@ -27,7 +36,13 @@ export interface CurrentViewResourceContext extends ViewResourceContext {
   fetchData: () => void
   setSelected: (data: JsonLdIriAble) => void
   setFilter: (object: FilterInterface) => void
-  setViewResource: (viewResource: ViewResourceContext) => void
+  /**
+   * Accepts an updater, like React's own setters. Prefer that form: a plain
+   * value is built from the context of the render it was read in, and would
+   * revert whatever else changed in between — a request landing, a filter
+   * being applied.
+   */
+  setViewResource: Dispatch<SetStateAction<ViewResourceContext>>
   selected: string[]
   isSelected: (data: JsonLdIriAble) => boolean
   parentResource?: ViewResourceContext
@@ -71,10 +86,10 @@ export default function ViewResourceContextProvider({
   })
 
   const setFilter = (filter: FilterInterface) => {
-    setViewResource({
-      ...viewResource,
+    setViewResource((current) => ({
+      ...current,
       filter,
-    })
+    }))
     if (!parentResource) {
       setUrlParam("filter", encodeQuery(cleanValuesInObject(filter)))
     }
@@ -106,7 +121,10 @@ export default function ViewResourceContextProvider({
       const viewProcessed = await processViewResourceContext(viewResource)
       if (token !== fetchTokenRef.current) return
 
-      setViewResource(viewProcessed)
+      // A request brings back rows, nothing else. Writing the whole context
+      // back would restore the one captured when the request left — undoing
+      // the layout, the filter or the selection chosen while it was in flight.
+      setViewResource((current) => ({ ...current, data: viewProcessed.data }))
     } catch (e) {
       if (token !== fetchTokenRef.current) return
       console.warn("Fetch Error", e)

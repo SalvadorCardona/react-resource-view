@@ -18,6 +18,8 @@ export interface TimelineViewOptionInterface<
   endDateKey?: string
   titleKey?: string
   groupKey?: string
+  /** Header of the column listing the rows — "Rooms", "Staff", "Vehicles"… */
+  groupsLabel?: string
   unassignedLabel?: string
   colorByStatus?: Record<string, string>
   statusKey?: string
