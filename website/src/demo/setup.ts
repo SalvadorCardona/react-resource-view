@@ -12,7 +12,14 @@ import { tanstackAdapter } from "react-resource-view/tanstack"
  * documents, so a port that is awkward to configure here would be awkward to
  * configure anywhere.
  */
-/** The one route on this site that renders a full application. */
+/**
+ * The one route on this site that renders a full application.
+ *
+ * Written without the site's base on purpose. Links built by the view package
+ * are handed to the router, which prepends its own basepath — adding it here
+ * too would send the reader to /react-resource-view/react-resource-view/… on
+ * GitHub Pages.
+ */
 export const PLAYGROUND_PATH = "/playground"
 
 let configured = false

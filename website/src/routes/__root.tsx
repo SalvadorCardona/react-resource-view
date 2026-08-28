@@ -33,6 +33,13 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // BASE_URL already ends in a slash, and carries the /<repository>/ prefix
+      // GitHub Pages serves a project site under.
+      {
+        rel: "icon",
+        href: `${import.meta.env.BASE_URL}favicon.svg`,
+        type: "image/svg+xml",
+      },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
