@@ -9,12 +9,14 @@ export default function ChangeViewOptionComponent() {
   return (
     <>
       <Tabs
-        defaultValue={currentResource.viewVariant}
+        // Controlled: the highlighted tab is the layout actually on screen,
+        // never a selection the context did not keep.
+        value={currentResource.viewVariant}
         onValueChange={(viewName) =>
-          currentResource.setViewResource({
-            ...currentResource.viewResource,
-            viewVariant: viewName,
-          })
+          currentResource.setViewResource((current) => ({
+            ...current,
+            viewVariant: String(viewName),
+          }))
         }
       >
         <TabsList>

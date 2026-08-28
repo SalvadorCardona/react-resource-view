@@ -9,8 +9,8 @@ export function setUrlParam(paramKey: string, paramValue: string): void {
   url.searchParams.set(paramKey, paramValue)
   window.history.replaceState({}, "", url.toString())
 
-  // Restore the scroll position on the browser's next paint
-  // Cela aide quand du code asynchrone suit le changement d'URL.
+  // Restore the scroll position on the browser's next paint, which helps when
+  // asynchronous work follows the URL change.
   window.requestAnimationFrame(() => {
     window.scrollTo(prevScroll.x, prevScroll.y)
   })

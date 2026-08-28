@@ -44,7 +44,7 @@ export interface LimitInterface {
   /**
    * Computes the current state of the limit, both the count and the maximum.
    * It receives the resource context, so the count can be derived without
-   * l'API. Peut retourner une valeur directe ou une promesse.
+   * calling the API. Returns either a value or a promise.
    */
   getLimit: (
     context: ViewResourceContext

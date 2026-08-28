@@ -96,10 +96,10 @@ export function MultiViewTab() {
       subResource,
     })
     const currentScrollY = window.scrollY
-    currentResource.setViewResource({
-      ...currentResource.viewResource,
+    currentResource.setViewResource((current) => ({
+      ...current,
       subResource: subResource,
-    })
+    }))
     // The navigate port may resolve synchronously depending on the router.
     void Promise.resolve(
       navigate({ to: link, replace: true, resetScroll: false })

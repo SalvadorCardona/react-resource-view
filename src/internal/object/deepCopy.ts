@@ -6,9 +6,9 @@ export function deepCopy<T>(
     return obj
   }
 
-  // ReactElement (and ReactPortal, etc.) are identified by the
-  // `$$typeof` qui est un Symbol. Ils sont immuables et contiennent des
-  // circular references (children → owner → …), so they are returned as-is.
+  // ReactElement (and ReactPortal, etc.) are identified by their `$$typeof`
+  // Symbol. They are immutable and hold circular references
+  // (children → owner → …), so they are returned as-is.
   if (typeof (obj as { $$typeof?: unknown }).$$typeof === "symbol") {
     return obj
   }
