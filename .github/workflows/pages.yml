@@ -18,6 +18,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The documentation site is a standalone project with its own lockfile; it
+    # consumes both packages from npm rather than from this working tree.
+    defaults:
+      run:
+        working-directory: website
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,11 +33,16 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
 
-      # Pages serves the site from /<repository>/, not from the domain root.
-      - run: pnpm run docs:build
+      - run: pnpm run typecheck
+
+      # Pages serves the site from /<repository>/, not from the domain root, and
+      # has no server to render on request — so the build prerenders every route
+      # to static HTML behind that prefix.
+      - run: pnpm run build
         env:
           DOCS_BASE: /react-resource-view/
 
@@ -39,7 +50,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: website/dist/client
 
   deploy:
     needs: build

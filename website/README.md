@@ -22,8 +22,8 @@ bespoke one written for the site — and the server rendering costs nothing extr
 pnpm install
 pnpm dev        # http://localhost:3000
 pnpm typecheck
-pnpm build      # dist/client + dist/server
-pnpm start      # serves the build on $PORT (3000 by default)
+pnpm build      # prerenders every route into dist/client, plus dist/server
+pnpm start      # serves the build with a live server on $PORT (3000 by default)
 ```
 
 This is a standalone project: it has its own `package.json` and lockfile, and it
@@ -69,9 +69,36 @@ navigation model, so the page file only holds its own content.
 
 ## Deploying
 
-Any Node host works: build, then run `pnpm start` with `PORT` set. The output is
-a static `dist/client` plus an SSR handler, so a platform adapter can serve the
-first from a CDN and the second from a function.
+The build produces both halves, and the target decides which one is used.
+
+### GitHub Pages — what this repository does
+
+`.github/workflows/pages.yml` builds this project on every push to `main` and
+publishes `website/dist/client`. Pages has no server to render on request, so
+every route is prerendered to static HTML at build time: the reader still gets
+server-rendered prose, produced earlier rather than per request. The demos are
+unaffected — they were always mounted in the browser.
+
+Pages serves a project site from `/<repository>/`, so the build takes the prefix
+through `DOCS_BASE`:
+
+```bash
+DOCS_BASE=/react-resource-view/ pnpm build
+```
+
+That one variable reaches the Vite asset base, the router's basepath and the
+links the view package builds. Building without it targets the domain root.
+
+Two details Pages needs are handled in `public/`: `.nojekyll`, so paths are
+served untouched, and the favicon.
+
+### A Node host
+
+Build, then run `pnpm start` with `PORT` set — `server.mjs` bridges `node:http`
+onto the fetch handler in `dist/server/server.js`, and pages are rendered per
+request. A platform that takes a fetch handler directly can import that file and
+ignore `server.mjs`; it can also serve `dist/client` from a CDN, since the
+prerendered HTML is valid either way.
 
 ## Licence
 
