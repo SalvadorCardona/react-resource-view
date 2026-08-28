@@ -8,3 +8,7 @@ coverage/
 *.log
 docs/dist/
 docs/dist/
+website/dist/
+website/.output/
+website/.nitro/
+website/.tanstack/
