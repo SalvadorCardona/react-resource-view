@@ -5,7 +5,17 @@ import reactHooks from "eslint-plugin-react-hooks"
 import prettier from "eslint-config-prettier"
 
 export default [
-  { ignores: ["dist/**", "docs/dist/**", "node_modules/**", "coverage/**"] },
+  {
+    // `website/` is a standalone project with its own toolchain and its own
+    // dependencies, none of which are installed by this package.
+    ignores: [
+      "dist/**",
+      "docs/dist/**",
+      "website/**",
+      "node_modules/**",
+      "coverage/**",
+    ],
+  },
   js.configs.recommended,
   {
     files: ["**/*.{ts,tsx}"],

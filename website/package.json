@@ -1,0 +1,41 @@
+{
+  "name": "react-resource-view-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "start": "node server.mjs",
+    "typecheck": "tsc --noEmit",
+    "preview": "pnpm run build && pnpm run start"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.170.32",
+    "@tanstack/react-start": "^1.168.49",
+    "@tanstack/router-plugin": "^1.168.35",
+    "date-fns": "^4.4.0",
+    "jsonld-api-client": "^0.1.0",
+    "jsonld-item": "^0.1.0",
+    "jsonld-repository": "^0.1.0",
+    "lucide-react": "^0.577.0",
+    "react": "19.2.7",
+    "react-data-form": "^0.1.0",
+    "react-dom": "19.2.7",
+    "react-mini-i18n": "^0.1.0",
+    "react-resource-view": "^0.5.0",
+    "resource-registry": "^0.1.0",
+    "shiki": "^4.4.3",
+    "sonner": "^2.0.8",
+    "ssr-safe-storage": "^0.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2"
+  }
+}
