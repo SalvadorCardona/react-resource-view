@@ -7,11 +7,14 @@ import prettier from "eslint-config-prettier"
 export default [
   {
     // `website/` is a standalone project with its own toolchain and its own
-    // dependencies, none of which are installed by this package.
+    // dependencies, none of which are installed by this package. `.claude/`
+    // holds agent skills restored from `skills-lock.json` — third-party code
+    // this package neither writes nor ships.
     ignores: [
       "dist/**",
       "docs/dist/**",
       "website/**",
+      ".claude/**",
       "node_modules/**",
       "coverage/**",
     ],

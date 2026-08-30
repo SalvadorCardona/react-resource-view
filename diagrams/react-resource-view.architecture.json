@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "react-resource-view",
+    "locale": "en",
+    "output": "../website/public/architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "declare",
+        "label": "Declaring a resource",
+        "focus": ["host-app", "ports", "registry", "provider"],
+        "note": "The application declares its resources and wires its router in, once at startup."
+      },
+      {
+        "id": "resolve",
+        "label": "Resolving the URL",
+        "focus": ["routes", "registry", "context", "scope"],
+        "note": "A URL carries the scope, the resource, the action and the filters; the context reads them back."
+      },
+      {
+        "id": "render",
+        "label": "Rendering the view",
+        "focus": ["context", "views", "variants", "forms"],
+        "note": "One context feeds the view of the current action, and the layout the reader picked."
+      },
+      {
+        "id": "fetch",
+        "label": "Reaching the API",
+        "focus": ["context", "repository", "api"],
+        "note": "Every resource carries its own repository, so the views never talk to the API themselves."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [55, 80],
+    "cols": 4,
+    "cellW": 170,
+    "cellH": 74,
+    "gapX": 150,
+    "gapY": 100
+  },
+  "components": [
+    {
+      "id": "host-app",
+      "type": "external",
+      "label": "Your application",
+      "sublabel": "React 19, any router",
+      "row": 1,
+      "col": 0,
+      "size": [160, 66]
+    },
+    {
+      "id": "ports",
+      "type": "backend",
+      "label": "ports.tsx",
+      "sublabel": "navigation, routing, locale",
+      "tag": "configurePorts()",
+      "row": 0,
+      "col": 1,
+      "size": [160, 66]
+    },
+    {
+      "id": "routes",
+      "type": "backend",
+      "label": "routes.ts",
+      "sublabel": "generateLink, parseLink",
+      "row": 0,
+      "col": 2,
+      "size": [160, 66]
+    },
+    {
+      "id": "registry",
+      "type": "database",
+      "label": "resource-registry",
+      "sublabel": "one module-level registry",
+      "tag": "createViewResource()",
+      "row": 0,
+      "col": 3,
+      "size": [160, 66]
+    },
+    {
+      "id": "provider",
+      "type": "frontend",
+      "label": "ResourceViewProvider",
+      "sublabel": "entry point",
+      "row": 1,
+      "col": 1,
+      "size": [160, 66]
+    },
+    {
+      "id": "context",
+      "type": "frontend",
+      "label": "ViewResourceContext",
+      "sublabel": "fetch, filter, selection",
+      "row": 1,
+      "col": 2,
+      "size": [160, 66]
+    },
+    {
+      "id": "repository",
+      "type": "backend",
+      "label": "jsonld-repository",
+      "sublabel": "http or localStorage",
+      "row": 1,
+      "col": 3,
+      "size": [160, 66]
+    },
+    {
+      "id": "api",
+      "type": "cloud",
+      "label": "JSON-LD / Hydra API",
+      "sublabel": "API Platform",
+      "row": 2,
+      "col": 3,
+      "size": [160, 66]
+    },
+    {
+      "id": "scope",
+      "type": "security",
+      "label": "Scope",
+      "sublabel": "scoped resources and menus",
+      "row": 2,
+      "col": 1,
+      "size": [160, 66]
+    },
+    {
+      "id": "views",
+      "type": "frontend",
+      "label": "CRUD views",
+      "sublabel": "list, read, create, update, delete",
+      "row": 2,
+      "col": 2,
+      "size": [210, 66]
+    },
+    {
+      "id": "forms",
+      "type": "external",
+      "label": "react-data-form",
+      "sublabel": "form and formFilter",
+      "row": 3,
+      "col": 3,
+      "size": [160, 66]
+    },
+    {
+      "id": "variants",
+      "type": "frontend",
+      "label": "List variants",
+      "sublabel": "table, card, split, calendar, timeline",
+      "row": 3,
+      "col": 2,
+      "size": [210, 66]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "react-resource-view",
+      "wraps": [
+        "ports",
+        "routes",
+        "provider",
+        "context",
+        "scope",
+        "views",
+        "variants"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "app-renders-provider",
+      "from": "host-app",
+      "to": "provider",
+      "label": "renders the view tree",
+      "variant": "emphasis"
+    },
+    {
+      "id": "app-configures-ports",
+      "from": "host-app",
+      "to": "ports",
+      "label": "wires its router in",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "ports-routing-mode",
+      "from": "ports",
+      "to": "routes",
+      "label": "path or query mode"
+    },
+    {
+      "id": "url-to-context",
+      "from": "routes",
+      "to": "context",
+      "label": "parses the URL back",
+      "labelDy": 40
+    },
+    {
+      "id": "provider-to-context",
+      "from": "provider",
+      "to": "context",
+      "label": "resolved params",
+      "variant": "emphasis"
+    },
+    {
+      "id": "provider-to-scope",
+      "from": "provider",
+      "to": "scope",
+      "label": "ScopeProvider",
+      "variant": "security",
+      "labelDy": 68
+    },
+    {
+      "id": "registry-lookup",
+      "from": "registry",
+      "to": "context",
+      "label": "findResource()",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "context-to-repository",
+      "from": "context",
+      "to": "repository",
+      "label": "read, create, update, remove",
+      "variant": "emphasis"
+    },
+    {
+      "id": "repository-to-api",
+      "from": "repository",
+      "to": "api",
+      "label": "HTTP, JSON-LD",
+      "variant": "emphasis",
+      "labelDy": 67
+    },
+    {
+      "id": "context-to-views",
+      "from": "context",
+      "to": "views",
+      "label": "the view of the current action",
+      "variant": "emphasis",
+      "labelDy": 10,
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "views-to-variants",
+      "from": "views",
+      "to": "variants",
+      "label": "layout kept in the URL",
+      "labelDy": 68
+    },
+    {
+      "id": "views-to-forms",
+      "from": "views",
+      "to": "forms",
+      "label": "form state and validation"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Declare",
+      "items": [
+        "createViewResource() registers a resource once, in a module-level registry",
+        "configurePorts() hands the views a router, a routing mode and a date locale",
+        "A resource with no path falls back to a localStorage repository"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Resolve",
+      "items": [
+        "The URL carries scope, resource, action, id and filters, in the path or in the query",
+        "resolveViewResourceContext() turns them into a resource and its view",
+        "The layout the reader picks is written back to the URL"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Fetch",
+      "items": [
+        "One request per context change; a response arriving late is dropped",
+        "Only the rows are written back, so a filter chosen meanwhile survives",
+        "behavior.eventSourced subscribes to the Mercure topic and refetches"
+      ]
+    }
+  ]
+}

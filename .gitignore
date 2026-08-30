@@ -12,3 +12,9 @@ website/dist/
 website/.output/
 website/.nitro/
 website/.tanstack/
+
+# Agent skills, installed rather than vendored: 7 MB of third-party renderer.
+.claude/skills/
+.agents/
+# Screenshots archify writes beside an artefact; only the kept one is committed.
+website/public/*.visual-check.*
