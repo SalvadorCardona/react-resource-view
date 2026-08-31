@@ -8,18 +8,17 @@ import {
   Languages,
   LayoutGrid,
   Link2,
+  MousePointerClick,
   PlugZap,
   ShieldCheck,
   Sparkles,
-  Terminal,
 } from "lucide-react"
-import { CodeBlock } from "@/components/CodeBlock"
-import { Demo } from "@/components/Demo"
-import { FormDemo } from "@/components/FormDemo"
 import { Header } from "@/components/Header"
+import { HeroBackdrop } from "@/components/HeroBackdrop"
+import { HomeBuilder } from "@/components/HomeBuilder"
+import { InstallCommand } from "@/components/InstallCommand"
+import { LayoutGallery } from "@/components/LayoutGallery"
 import { Logo } from "@/components/Logo"
-import { ResourceDemo } from "@/components/ResourceDemo"
-import { articlesResource } from "@/demo/resources"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 import { cn } from "@/lib/cn"
 
@@ -34,6 +33,7 @@ function LandingPage() {
       <Hero />
       <Packages />
       <OneDescription />
+      <Layouts />
       <Features />
       <Closing />
       <Footer />
@@ -43,22 +43,31 @@ function LandingPage() {
 
 /* -------------------------------------------------------------------------- */
 
+const STATS = [
+  { value: "2", label: "packages" },
+  { value: "40+", label: "field controllers" },
+  { value: "7", label: "layouts" },
+  { value: "0", label: "column definitions" },
+]
+
 function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border">
-      <div className="bg-dotted absolute inset-0 opacity-70" aria-hidden />
-      <div
-        className="absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-accent/40 to-transparent"
-        aria-hidden
-      />
+      <HeroBackdrop />
 
       <div className="relative mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
-        <p className="mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+        <p
+          className="rise mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
+          style={{ animationDelay: "40ms" }}
+        >
           <Sparkles className="size-3.5 text-primary" />
           Two packages, one idea: describe it, don’t draw it
         </p>
 
-        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+        <h1
+          className="rise mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl"
+          style={{ animationDelay: "100ms" }}
+        >
           Forms and CRUD views that come out of a{" "}
           <span className="bg-gradient-to-r from-form to-view bg-clip-text text-transparent">
             description
@@ -66,7 +75,10 @@ function Hero() {
           , not a template
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">
+        <p
+          className="rise mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
+          style={{ animationDelay: "160ms" }}
+        >
           <strong className="font-medium text-foreground">react-data-form</strong>{" "}
           turns an object into a form that holds its own state, validates, and
           reports what your API sends back.{" "}
@@ -77,29 +89,48 @@ function Hero() {
           and delete screens — wired to a JSON-LD API and to the URL.
         </p>
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div
+          className="rise mt-10 flex flex-wrap items-center justify-center gap-3"
+          style={{ animationDelay: "220ms" }}
+        >
+          <a
+            href="#try"
+            className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+          >
+            <MousePointerClick className="size-4" />
+            Try it right here
+          </a>
           <Link
             to="/docs/form"
-            className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-medium transition hover:bg-muted"
           >
             Read the documentation
             <ArrowRight className="size-4" />
           </Link>
           <Link
             to="/playground"
-            className="flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-medium transition hover:bg-muted"
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <Compass className="size-4" />
-            Open the playground
+            Playground
           </Link>
         </div>
 
-        <div className="mx-auto mt-10 w-fit rounded-lg border border-border bg-background/80 px-4 py-2 backdrop-blur">
-          <code className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-            <Terminal className="size-3.5" />
-            pnpm add react-data-form react-resource-view
-          </code>
+        <div className="rise mt-10" style={{ animationDelay: "280ms" }}>
+          <InstallCommand packages="react-data-form react-resource-view" />
         </div>
+
+        <dl
+          className="rise mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4"
+          style={{ animationDelay: "340ms" }}
+        >
+          {STATS.map(({ value, label }) => (
+            <div key={label}>
+              <dt className="text-2xl font-semibold tracking-tight">{value}</dt>
+              <dd className="mt-0.5 text-xs text-muted-foreground">{label}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )
@@ -142,7 +173,7 @@ function Packages() {
               key={section.id}
               to={`/docs/${section.id}`}
               className={cn(
-                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition hover:shadow-lg",
+                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl",
                 isForm ? "hover:border-form/50" : "hover:border-view/50"
               )}
             >
@@ -153,48 +184,63 @@ function Packages() {
                 )}
               />
 
-              <div className="flex items-start justify-between gap-4">
-                <div
+              {/* A wash of the package's own hue, on hover. */}
+              <span
+                className={cn(
+                  "pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100",
+                  isForm
+                    ? "bg-gradient-to-br from-form-soft/50 to-transparent"
+                    : "bg-gradient-to-br from-view-soft/50 to-transparent"
+                )}
+                aria-hidden
+              />
+
+              <div className="relative">
+                <div className="flex items-start justify-between gap-4">
+                  <div
+                    className={cn(
+                      "flex size-11 items-center justify-center rounded-xl transition duration-300 group-hover:scale-110",
+                      isForm ? "bg-form-soft text-form" : "bg-view-soft text-view"
+                    )}
+                  >
+                    <Icon className="size-5" />
+                  </div>
+                  <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
+                </div>
+
+                <h2 className="mt-5 text-xl font-semibold tracking-tight">
+                  {section.label}
+                </h2>
+                <p
                   className={cn(
-                    "flex size-11 items-center justify-center rounded-xl",
-                    isForm ? "bg-form-soft text-form" : "bg-view-soft text-view"
+                    "mt-1 font-mono text-xs",
+                    isForm ? "text-form" : "text-view"
                   )}
                 >
-                  <Icon className="size-5" />
-                </div>
-                <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
+                  {section.pkg}
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {section.tagline}
+                </p>
+
+                <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                  {points.map((point) => (
+                    <li key={point} className="flex gap-2.5">
+                      <span
+                        className={cn(
+                          "mt-2 size-1 shrink-0 rounded-full",
+                          isForm ? "bg-form" : "bg-view"
+                        )}
+                      />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+
+                <code className="mt-6 block overflow-x-auto rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                  {install}
+                </code>
               </div>
-
-              <h2 className="mt-5 text-xl font-semibold tracking-tight">
-                {section.label}
-              </h2>
-              <p
-                className={cn(
-                  "mt-1 font-mono text-xs",
-                  isForm ? "text-form" : "text-view"
-                )}
-              >
-                {section.pkg}
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground">{section.tagline}</p>
-
-              <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                {points.map((point) => (
-                  <li key={point} className="flex gap-2.5">
-                    <span
-                      className={cn(
-                        "mt-2 size-1 shrink-0 rounded-full",
-                        isForm ? "bg-form" : "bg-view"
-                      )}
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-
-              <code className="mt-6 block overflow-x-auto rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[11px] text-muted-foreground">
-                {install}
-              </code>
             </Link>
           )
         })}
@@ -205,32 +251,9 @@ function Packages() {
 
 /* -------------------------------------------------------------------------- */
 
-const DESCRIPTION_SNIPPET = `const articleForm = {
-  inputs: {
-    title: { label: "Title", required: true },
-    author: { label: "Author" },
-    status: {
-      label: "Status",
-      controller: SelectInputController,
-      valueOptions: ARTICLE_STATUSES,
-    },
-    readingTime: { label: "Minutes", controller: NumberInputController },
-    publishedAt: { label: "Published on", controller: DatePickerInputController },
-  },
-}
-
-// The same description is the form…
-useForm({ form: articleForm })
-
-// …and the list's columns.
-createViewResource("articles", {
-  path: "/api/articles",
-  view: { form: articleForm, viewVariants: [tableViewOptionFactory()] },
-})`
-
 function OneDescription() {
   return (
-    <section className="border-y border-border bg-muted/25 py-20">
+    <section id="try" className="scroll-mt-20 border-y border-border bg-muted/25 py-20">
       <div className="mx-auto max-w-6xl px-4 lg:px-8">
         <header className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-wider text-primary">
@@ -242,34 +265,40 @@ function OneDescription() {
           <p className="mt-3 text-muted-foreground">
             A list has no separate column definition. The fields you describe are the
             form the reader edits, the columns the table shows and the payload your
-            API receives. Both examples below read the same object.
+            API receives — so take the description below apart and watch both halves
+            follow.
           </p>
         </header>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div>
-            <CodeBlock filename="articles.ts">{DESCRIPTION_SNIPPET}</CodeBlock>
-          </div>
-
-          <div className="space-y-6">
-            <Demo label="The form">
-              <FormDemo
-                showPayload={false}
-                form={{
-                  label: { title: "New article", submit: "Publish" },
-                  inputs: {
-                    title: { label: "Title", required: true },
-                    author: { label: "Author" },
-                  },
-                }}
-              />
-            </Demo>
-
-            <Demo label="The list, same fields">
-              <ResourceDemo resource={articlesResource} variant="table" />
-            </Demo>
-          </div>
+        <div className="mt-10">
+          <HomeBuilder />
         </div>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+function Layouts() {
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+      <header className="max-w-2xl">
+        <p className="text-xs font-medium uppercase tracking-wider text-view">
+          Read many ways
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          Seven layouts, one resource
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          A layout is a line in <code className="font-mono text-sm">viewVariants</code>
+          , not a screen you build. Declare several and the reader picks — the
+          filters, the permissions and the forms carry over untouched.
+        </p>
+      </header>
+
+      <div className="mt-10">
+        <LayoutGallery />
       </div>
     </section>
   )
@@ -312,15 +341,22 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+    <section className="mx-auto max-w-6xl px-4 pb-20 lg:px-8">
       <h2 className="max-w-2xl text-3xl font-semibold tracking-tight">
         Opinionated about description, agnostic about everything else
       </h2>
 
       <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map(({ icon: Icon, title, body }) => (
-          <article key={title} className="bg-background p-6">
-            <Icon className="size-5 text-primary" />
+          <article
+            key={title}
+            className="group relative bg-background p-6 transition-colors hover:bg-muted/40"
+          >
+            <span
+              className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100"
+              aria-hidden
+            />
+            <Icon className="size-5 text-primary transition-transform duration-300 group-hover:-translate-y-0.5" />
             <h3 className="mt-4 font-semibold tracking-tight">{title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {body}

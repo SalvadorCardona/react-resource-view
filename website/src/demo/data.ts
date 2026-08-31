@@ -37,6 +37,15 @@ export interface Session {
 export const ARTICLES_ID = "docs_articles"
 export const SESSIONS_ID = "docs_sessions"
 
+/**
+ * The landing page's own copy of the articles.
+ *
+ * The builder there rebuilds its resource every time the reader changes the
+ * description, and a resource is registered under its IRI — so it needs an IRI
+ * of its own, or it would replace the one every documentation demo reads.
+ */
+export const HOME_ARTICLES_ID = "home_articles"
+
 const ARTICLES: Article[] = [
   {
     "@id": `/${ARTICLES_ID}/1`,
@@ -253,6 +262,17 @@ export function seedDemoData(): void {
 
   setInStorage(ARTICLES_ID, collection(ARTICLES_ID, ARTICLES))
   setInStorage(SESSIONS_ID, collection(SESSIONS_ID, buildSessions()))
+  setInStorage(
+    HOME_ARTICLES_ID,
+    collection(
+      HOME_ARTICLES_ID,
+      ARTICLES.map((article) => ({
+        ...article,
+        "@id": `/${HOME_ARTICLES_ID}/${article.id}`,
+        "@type": HOME_ARTICLES_ID,
+      }))
+    )
+  )
 }
 
 export const ARTICLE_STATUSES = [
