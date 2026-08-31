@@ -95,7 +95,16 @@ export const articlesResource = createViewResource<Article>(ARTICLES_ID, {
   },
   views: {
     [ActionList.list]: { name: "Articles" },
-    [ActionList.create]: { name: "New article" },
+    // A demo sits inside a page of prose. Sending the reader to the playground
+    // to edit a row would take the documentation off the screen, so both forms
+    // open over the list instead — which is also the behaviour an application
+    // embedding a view in a dashboard wants.
+    [ActionList.create]: {
+      name: "New article",
+      behavior: { openIn: "popup" },
+    },
+    [ActionList.update]: { behavior: { openIn: "popup" } },
+    [ActionList.read]: { behavior: { openIn: "popup" } },
   },
 })
 
@@ -149,5 +158,12 @@ export const sessionsResource = createViewResource<Session>(SESSIONS_ID, {
       }),
       tableViewOptionFactory(),
     ],
+  },
+  // Same reasoning as the articles: a schedule embedded in a page of prose
+  // edits itself over the page, not somewhere else.
+  views: {
+    [ActionList.create]: { behavior: { openIn: "popup" } },
+    [ActionList.update]: { behavior: { openIn: "popup" } },
+    [ActionList.read]: { behavior: { openIn: "popup" } },
   },
 })
