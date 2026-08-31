@@ -1,4 +1,4 @@
-import { FormInterface } from "react-data-form"
+import { ActionList, FormInterface } from "react-data-form"
 import { FC, ReactNode } from "react"
 import { FormInputInterface } from "react-data-form"
 import { ValueOptionInterface } from "react-data-form"
@@ -21,6 +21,16 @@ export interface ViewInterface<_Read = IdAbleInterface> {
   identifierKeyList?: ValueOptionInterface[]
   behavior?: {
     openIn?: "popup" | "window"
+    /**
+     * The actions each row of a list offers.
+     *
+     * Defaults to read, update and delete. A list whose rows are already
+     * editable in place has little use for a read button, and dropping it buys
+     * back the width three buttons cost — so it is a per-view decision rather
+     * than a fixed one. Permissions still apply on top: an action listed here
+     * without the matching `can*` renders nothing.
+     */
+    rowActions?: ActionList[]
     closeAfterUpdate?: boolean
     refreshDataAfterUpdate?: boolean
     eventSourced?: boolean

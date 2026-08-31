@@ -31,6 +31,10 @@ export default function ListSplit({ rows = [] }: ListComponentPropsInterface) {
       resourceAction: ActionList.list,
       resource: currentResource.resource,
       id: id,
+      // Selecting a row is a navigation, and a link that forgot the layout
+      // dropped the reader back into the first variant declared — clicking an
+      // item in the split view switched it to the table.
+      viewVariantId: currentResource.viewVariant,
     })
   }
 
@@ -52,7 +56,9 @@ export default function ListSplit({ rows = [] }: ListComponentPropsInterface) {
   if (!rows) return <Trans>No data yet</Trans>
 
   return (
-    <div className="flex flex-col bg-background h-[calc(100dvh-13rem)] min-h-[400px]">
+    // Tall enough to be a working screen, capped so the layout can also be
+    // embedded in a page without swallowing it whole.
+    <div className="flex flex-col bg-background h-[min(calc(100dvh-13rem),40rem)] min-h-[400px]">
       <div className="flex flex-1 min-h-0">
         <div
           className={cn(
@@ -98,8 +104,8 @@ export default function ListSplit({ rows = [] }: ListComponentPropsInterface) {
                 )
               })}
               {rows.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  Nothing found yet
+                <div className="py-12 text-center text-sm text-muted-foreground">
+                  <Trans>Nothing found yet</Trans>
                 </div>
               )}
             </div>

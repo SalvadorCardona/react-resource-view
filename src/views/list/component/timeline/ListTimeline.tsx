@@ -263,14 +263,18 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
             >
               <ZoomIn className="h-4 w-4" />
             </Button>
-            <span className="px-2 text-xs text-muted-foreground">{daysToShow}j</span>
+            <span className="px-2 text-xs text-muted-foreground">
+              <Trans params={{ count: String(daysToShow) }}>
+                {"{{count}} days"}
+              </Trans>
+            </span>
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-none"
               onClick={() => setDaysToShow((p) => Math.min(28, p + 7))}
               disabled={daysToShow >= 28}
-              aria-label="Agrandir la plage"
+              aria-label="Widen the range"
             >
               <ZoomOut className="h-4 w-4" />
             </Button>
@@ -324,6 +328,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
                 entries={groupEntries}
                 calculateBarPosition={calculateBarPosition}
                 statusKey={statusKey}
+                colorByStatus={view.colorByStatus}
                 titleKey={view.titleKey}
               />
             )
@@ -338,6 +343,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
               entries={unassignedRows}
               calculateBarPosition={calculateBarPosition}
               statusKey={statusKey}
+              colorByStatus={view.colorByStatus}
               titleKey={view.titleKey}
               dashed
             />
@@ -352,10 +358,19 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
       </div>
 
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
-        <Trans params={{ count: String(visibleCount) }}>
-          {"{{count}} entries over the period"}
-        </Trans>
-        <Trans params={{ count: String(groups.length) }}>{"{{count}} rows"}</Trans>
+        {/* Each count in its own element: two bare text runs side by side are
+            a single anonymous flex item, which is why they read as one glued
+            sentence instead of sitting at either end. */}
+        <span>
+          <Trans params={{ count: String(visibleCount) }}>
+            {"{{count}} entries over the period"}
+          </Trans>
+        </span>
+        <span>
+          <Trans params={{ count: String(groups.length) }}>
+            {"{{count}} rows"}
+          </Trans>
+        </span>
       </div>
     </div>
   )
@@ -381,6 +396,8 @@ interface TimelineRowProps {
     endsAfterView: boolean
   } | null
   statusKey?: string
+  /** Bar colour per value of `statusKey`. Any CSS colour, variables included. */
+  colorByStatus?: Record<string, string>
   titleKey?: string
   dashed?: boolean
 }
@@ -391,6 +408,8 @@ function TimelineRow({
   days,
   entries,
   calculateBarPosition,
+  statusKey,
+  colorByStatus,
   titleKey,
   dashed = false,
 }: TimelineRowProps) {
@@ -461,12 +480,22 @@ function TimelineRow({
             const title = getTitle(entry.data, titleKey)
             const lane = laneAssignments[idx]
             const top = verticalPadding + lane * (laneHeight + laneGap)
+            // The view declares a colour per status; without one every bar
+            // falls back to the primary wash it has always used.
+            const status = statusKey
+              ? (entry.data as Record<string, unknown>)[statusKey]
+              : undefined
+            const color =
+              colorByStatus && typeof status === "string"
+                ? colorByStatus[status]
+                : undefined
 
             return (
               <Popover key={"bar-" + (getIdFromObject(entry.data) ?? idx)}>
                 <PopoverTrigger
                   className={cn(
-                    "bg-primary/30 absolute flex items-center px-2 text-xs font-medium truncate border transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer text-left ",
+                    "absolute flex items-center px-2 text-xs font-medium truncate border transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer text-left",
+                    !color && "bg-primary/30",
                     dashed && "border-dashed border-2",
                     position.startsBeforeView ? "rounded-l-none" : "rounded-l-md",
                     position.endsAfterView ? "rounded-r-none" : "rounded-r-md"
@@ -476,6 +505,12 @@ function TimelineRow({
                     width: `calc(${position.width}% - 4px)`,
                     top,
                     height: laneHeight,
+                    ...(color
+                      ? {
+                          backgroundColor: `color-mix(in oklch, ${color} 30%, transparent)`,
+                          borderColor: `color-mix(in oklch, ${color} 55%, transparent)`,
+                        }
+                      : {}),
                   }}
                   title={title}
                 >

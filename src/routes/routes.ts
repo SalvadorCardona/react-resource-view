@@ -118,12 +118,15 @@ export function generateLinkByResource({
   filter,
   defaultData,
   id,
+  viewVariantId,
 }: {
   resource: ViewResourceInterface
   resourceAction: ActionList
   filter?: FilterInterface
   defaultData?: Record<string, any>
   id?: string | undefined
+  /** The layout on screen, so a link built from inside a list keeps it. */
+  viewVariantId?: string
 }): string {
   return generateLink({
     resourceId: resource["@id"],
@@ -132,6 +135,7 @@ export function generateLinkByResource({
     filter: filter,
     defaultData,
     id,
+    viewVariantId,
   })
 }
 
@@ -185,9 +189,15 @@ function buildQueryParts({
   filter,
   childViewResource,
   defaultData,
+  viewVariantId,
 }: ViewResourceContextParams): string[] {
   const parts: string[] = []
   if (filter) parts.push("filter=" + encodeQuery(filter))
+  // The chosen layout travels with the link. Without it, any navigation from
+  // inside a list — the split view selecting a row on every click — lands on a
+  // URL that says nothing about the variant, and the view falls back to the
+  // first one declared.
+  if (viewVariantId) parts.push("variant=" + encodeURIComponent(viewVariantId))
 
   const isCreateLink =
     resourceAction === ActionList.create ||
@@ -281,7 +291,9 @@ export function parseLink(url: string): ViewResourceContextParams {
     const searchParams = new URLSearchParams(queryPart)
     const filterRaw = searchParams.get("filter")
     const dataRaw = searchParams.get("defaultData")
+    const variantRaw = searchParams.get("variant")
     if (filterRaw) params.filter = decodeQuery(filterRaw) as FilterInterface
+    if (variantRaw) params.viewVariantId = variantRaw
     if (dataRaw) {
       const decodedData = decodeQuery(dataRaw)
       // When the target is a sub-resource being created, defaultData belongs
