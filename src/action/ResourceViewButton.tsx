@@ -11,7 +11,6 @@ import { useBoolean } from "@/internal/useBoolean"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { getResourceConfig } from "@/ResourceConfig"
-import { ButtonGroup } from "@/ui/button-group"
 import { Dialog, DialogContent, DialogDescription } from "@/ui/dialog"
 import { ScrollArea } from "@/ui/scroll-area"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
@@ -30,16 +29,6 @@ const ACTION_ICONS = {
   [ActionList.update]: Edit,
   [ActionList.delete]: Trash,
 } as const
-
-export function ListResourceViewButton(props: Omit<ResourceButtonProps, "action">) {
-  return (
-    <ButtonGroup>
-      <ResourceViewButton action={ActionList.read} {...props} />
-      <ResourceViewButton action={ActionList.update} {...props} />
-      <ResourceViewButton action={ActionList.delete} {...props} />
-    </ButtonGroup>
-  )
-}
 
 export default function ResourceViewButton({
   action,

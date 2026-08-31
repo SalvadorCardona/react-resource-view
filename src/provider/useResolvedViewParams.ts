@@ -16,12 +16,20 @@ function useUrlParamDecoded(paramKey: string): unknown | undefined {
   return queryParam ? decodeQuery(queryParam) : undefined
 }
 
+/** The same, for a parameter that is a plain string rather than an encoded object. */
+function useUrlParam(paramKey: string): string | undefined {
+  const { searchStr } = useLocation()
+
+  return new URLSearchParams(searchStr).get(paramKey) ?? undefined
+}
+
 export function useResolvedViewParams(
   parent?: ViewResourceContextParams
 ): ViewResourceContextParams {
   const scopeContext = useScopeContext()
   const urlDefaultData = useUrlParamDecoded("defaultData")
   const urlFilter = useUrlParamDecoded("filter") as FilterInterface
+  const urlVariant = useUrlParam("variant")
   const scopeDefaults = scopeContext?.scope?.defaultViewResourceContextParams
 
   return {
@@ -38,5 +46,11 @@ export function useResolvedViewParams(
       parent?.defaultData ??
       (typeof urlDefaultData === "object" ? (urlDefaultData as object) : undefined),
     filter: typeof urlFilter === "object" ? (urlFilter as object) : undefined,
+    // These params are rebuilt one field at a time, so anything not named here
+    // is dropped on the way in. The chosen layout was: a host handing one to
+    // `ResourceViewProvider`, or a link carrying one, both lost it and landed
+    // on the first variant declared.
+    viewVariantId:
+      parent?.viewVariantId ?? urlVariant ?? scopeDefaults?.viewVariantId,
   }
 }

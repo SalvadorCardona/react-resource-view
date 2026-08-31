@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/ui/cn"
 import { Button } from "@/ui/button"
 import { XIcon } from "lucide-react"
+import { Trans } from "react-mini-i18n"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -68,7 +69,11 @@ function DialogContent({
             }
           >
             <XIcon />
-            <span className="sr-only">Fermer</span>
+            {/* The only label on this button, so it goes through the
+                dictionary like every other string the reader can meet. */}
+            <span className="sr-only">
+              <Trans>Fermer</Trans>
+            </span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>

@@ -16,7 +16,9 @@ export default function ListColumn({ rows = [] }: ListComponentPropsInterface) {
   if (!identifierKeyList) return <>no identifierKeyList</>
 
   return (
-    <div className={"flex gap-2"}>
+    // The columns keep their width and the board scrolls, rather than each
+    // column shrinking until its cards are unreadable.
+    <div className={"flex items-start gap-3 overflow-x-auto pb-2"}>
       {identifierKeyList.map((currentIdentifier) => (
         <RowWrapperColumnComponent
           key={currentIdentifier.value as string}

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import { SECTIONS, type DocSection } from "@/lib/navigation"
+import { SECTIONS, stripTrailingSlash, type DocSection } from "@/lib/navigation"
 import { cn } from "@/lib/cn"
 
 /**
@@ -12,7 +12,11 @@ import { cn } from "@/lib/cn"
  * a combined documentation site usually loses.
  */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  // Without the normalisation the server and the browser disagree on every
+  // statically hosted page — see `stripTrailingSlash`.
+  const pathname = useRouterState({
+    select: (state) => stripTrailingSlash(state.location.pathname),
+  })
 
   return (
     <nav aria-label="Documentation" className="space-y-8 pb-16">

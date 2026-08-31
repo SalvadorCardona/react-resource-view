@@ -38,6 +38,7 @@ export function configureLibraries(): void {
     Mois: "Month",
     "Aujourd'hui": "Today",
     Continuer: "Continue",
+    Fermer: "Close",
     Suivant: "Next",
     Exporter: "Export",
     "Nettoyer la recherche": "Clear the search",

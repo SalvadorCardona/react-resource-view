@@ -13,18 +13,24 @@ export default function MetaResourceComponent() {
   const pageTitle = viewName === appName ? viewName : `${viewName} · ${appName}`
   const canonical = `${appUrl}${pathname}`
 
+  // Only when the head belongs to this package. A host that declares its own
+  // head gives every route a title of its own, and writing over it from here
+  // would leave every page carrying the name of whichever view happens to be
+  // embedded in it — an article list inside a documentation page renaming the
+  // documentation page.
+  const owned = ownsDocumentHead && !currentResource.parentResource
+
   useEffect(() => {
-    if (currentResource.parentResource) return
+    if (!owned) return
     document.title = pageTitle
-  }, [pageTitle, currentResource.parentResource])
+  }, [pageTitle, owned])
 
   // A nested resource must not overwrite the page metadata of the view
   // containing it.
   if (currentResource.parentResource) return null
 
   // The host router declares the head itself; emitting these too would leave
-  // the page with two of every tag. The effect above still keeps the title in
-  // step as the visitor moves between views.
+  // the page with two of every tag.
   if (!ownsDocumentHead) return null
 
   return (

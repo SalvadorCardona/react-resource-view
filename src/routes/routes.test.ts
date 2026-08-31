@@ -274,3 +274,38 @@ describe("parseLink", () => {
     expect(parsed).toEqual(original)
   })
 })
+
+
+describe("the chosen layout", () => {
+  it("travels with the link", () => {
+    // A list navigating to itself — the split view selecting a row — must say
+    // which layout it is in, or the reader lands back in the first one.
+    expect(
+      generateLink({
+        scope: "admin",
+        resourceId: "articles",
+        resourceAction: ActionList.list,
+        id: "42",
+        viewVariantId: "split",
+      })
+    ).toBe("/admin/articles/list/42?variant=split")
+  })
+
+  it("is read back", () => {
+    expect(parseLink("admin/articles/list/42?variant=split")).toMatchObject({
+      resourceAction: ActionList.list,
+      id: "42",
+      viewVariantId: "split",
+    })
+  })
+
+  it("is left out when the caller names none", () => {
+    expect(
+      generateLink({
+        scope: "admin",
+        resourceId: "articles",
+        resourceAction: ActionList.list,
+      })
+    ).toBe("/admin/articles/list")
+  })
+})

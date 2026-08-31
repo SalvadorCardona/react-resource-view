@@ -6,7 +6,7 @@ import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { ListComponentPropsInterface } from "@/ViewInterface"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 
-import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
+import { RecordCard } from "@/views/list/component/RecordCard"
 
 // Tailwind only generates classes written out in full in the sources. A class
 // built at runtime (`"md:grid-cols-" + grid`) is never detected, and works only
@@ -29,10 +29,18 @@ export function ListCard({ rows = [] }: ListComponentPropsInterface) {
 
   return (
     <div className={"w-full"}>
-      <div className={cn("grid grid-cols-1 gap-5", GRID_CLASSES[grid])}>
-        {rows.map((row, e) => {
-          return <DefaultRowComponent key={"row-" + e} row={row} />
-        })}
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4",
+          grid > 1 && "sm:grid-cols-2",
+          GRID_CLASSES[grid]
+        )}
+      >
+        {rows.map((row, e) => (
+          // The grid used to drop the row component straight onto the page, so
+          // a "card" layout produced cards with no card around them.
+          <RecordCard key={"row-" + e} row={row} withActions />
+        ))}
       </div>
       <div className={"mt-5"}>
         <ListPagination />

@@ -300,7 +300,17 @@ export function findNeighbours(pathname: string): {
   return { previous: ALL_PAGES[index - 1], next: ALL_PAGES[index + 1] }
 }
 
-function stripTrailingSlash(pathname: string): string {
+/**
+ * The same path, without its trailing slash.
+ *
+ * Static hosting serves a page as a directory index, so a reader arriving on
+ * /docs/form is redirected to /docs/form/ and the router reports the path with
+ * the slash — while every `href` in the navigation is written without one.
+ * Comparing the two forms directly makes the server and the browser disagree
+ * about which page is current, which is a hydration mismatch: everything that
+ * compares a path against an `href` goes through here.
+ */
+export function stripTrailingSlash(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith("/")
     ? pathname.slice(0, -1)
     : pathname
