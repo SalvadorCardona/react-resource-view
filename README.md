@@ -23,6 +23,14 @@ Built on [`react-data-form`](https://github.com/SalvadorCardona/react-data-form)
 for the forms. Which API answers, and how it spells a page or a filter, is a
 [dialect](#connecting-an-api) — JSON-LD is the default, not a requirement.
 
+## Documentation
+
+Everything below, at length and with the examples running rather than quoted:
+[the documentation site](https://salvadorcardona.github.io/react-resource-view/docs/resource-view)
+— a page per layout, per filter, per dialect — and a
+[playground](https://salvadorcardona.github.io/react-resource-view/playground),
+a whole application built from two resource declarations.
+
 ## Architecture
 
 [![The pieces of react-resource-view and how they fit together](diagrams/react-resource-view.png)](https://salvadorcardona.github.io/react-resource-view/architecture.html)
