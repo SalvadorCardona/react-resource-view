@@ -10,6 +10,7 @@ import { FC, ReactNode } from "react"
 import { ActionList } from "react-data-form"
 import { Index } from "coooking-pubsub"
 import { ViewResourceContext } from "@/ViewResourceContext"
+import { ApiDialectInterface } from "@/api/apiDialectInterface"
 
 export type PermissionType = (() => boolean) | boolean
 
@@ -68,6 +69,13 @@ export interface ViewResourceInterface<
   canCreate?: PermissionType
   canUpdate?: PermissionType
   resourceBuild?: boolean
+  /**
+   * How this resource's API spells its URLs, its pages, its filters and its
+   * errors. Defaults to the dialect given to `configureApi`; declare one here
+   * only for a resource that lives on another backend than the rest — a
+   * Supabase table beside a Strapi collection.
+   */
+  dialect?: ApiDialectInterface
   decoratorComponent?: FC<{ children: ReactNode }>
   /**
    * Creation quota for this resource. Read by `ResourceViewButton` to hide the

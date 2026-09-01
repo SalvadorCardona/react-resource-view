@@ -1,18 +1,24 @@
-import { ApiJsonLdError } from "jsonld-api-client"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { toast } from "sonner"
-import { BaseJsonLdItemInterface } from "jsonld-item"
-import { getItems, JsonLdCollection } from "jsonld-item"
+import { BaseJsonLdItemInterface, IdAbleInterface } from "jsonld-item"
+import { JsonLdCollection } from "jsonld-item"
 import getIdFromObject from "@/internal/id/getIdFromObject"
-import { getIdFromIri } from "jsonld-item"
 import { RowInterface } from "@/ViewInterface"
 import { translate } from "react-mini-i18n"
+import { getCollectionItems } from "@/api/collection"
+import { normalizeApiError } from "@/api/apiRequestError"
+import { resolveDialect } from "@/api/apiConfig"
 
 export interface ListViewOutputsInterface<T> {
   originalData?: JsonLdCollection<T> | null
   data?: T[]
-  removeData?: (data: BaseJsonLdItemInterface) => void
-  updateData?: (data: BaseJsonLdItemInterface, persist?: boolean) => void
+  /**
+   * Identity is whatever the resource's dialect reads — an `@id`, an `id`, a
+   * `documentId` — so these take a record that merely has one, rather than a
+   * record shaped like JSON-LD.
+   */
+  removeData?: (data: IdAbleInterface) => void
+  updateData?: (data: IdAbleInterface, persist?: boolean) => void
   rows: RowInterface[]
 }
 
@@ -21,8 +27,8 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
   const resource = currentResource.resource
   const originalData = currentResource.data as JsonLdCollection
 
-  const updateData = (newData: BaseJsonLdItemInterface, persist: boolean = true) => {
-    const identifier = getIdFromObject(newData)
+  const updateData = (newData: IdAbleInterface, persist: boolean = true) => {
+    const identifier = getIdFromObject(newData, true, resource)
 
     if (!identifier) {
       throw new Error("Id not found in objet")
@@ -32,7 +38,7 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
 
     resource
       .updateItem({
-        id: getIdFromIri(identifier),
+        id: identifier,
         ...newData,
       })
       .then(() => {
@@ -45,7 +51,7 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
       })
   }
 
-  const removeData = (data: BaseJsonLdItemInterface) => {
+  const removeData = (data: IdAbleInterface) => {
     resource
       .removeItem(data)
       .then(() => {
@@ -53,21 +59,18 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
         toast(translate("Deleted"))
       })
       .catch((e) => {
-        const data: ApiJsonLdError = e.data
-        if (!data?.violations) {
-          toast("Suppression impossible", {
-            description: e.data,
-          })
-          return
-        }
+        const apiError = normalizeApiError(e, resolveDialect(resource))
+        const violations = apiError?.violations ?? []
 
-        toast("Suppression impossible", {
-          description: data.violations?.map((e) => e.message).join(", ") as string,
+        toast(translate("Deletion is not possible"), {
+          description: violations.length
+            ? violations.map((violation) => violation.message).join(", ")
+            : (apiError?.detail ?? undefined),
         })
       })
   }
 
-  const data = getItems(originalData)
+  const data = getCollectionItems<BaseJsonLdItemInterface>(originalData, resource)
 
   const rows: RowInterface[] = data.map((e) => {
     return {

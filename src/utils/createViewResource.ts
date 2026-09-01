@@ -9,8 +9,8 @@ import { ViewInterface } from "@/ViewInterface"
 import { createView } from "@/utils/createView"
 import { createPubSub } from "coooking-pubsub"
 import { localStorageRepository } from "jsonld-repository"
-import { httpRepository } from "jsonld-repository"
 import { createResource } from "resource-registry"
+import { createRepository } from "@/api/createRepository"
 
 export function createViewResource<
   Item extends BaseJsonLdItemInterface,
@@ -54,9 +54,11 @@ export function createViewResource<
 
   resource.onChange = createPubSub()
 
+  // The dialect is read here rather than per request: a resource declaring one
+  // pins its backend, everything else follows `configureApi`.
   const repository = !resource.path
     ? localStorageRepository({ path: resource["@id"] })
-    : httpRepository({ path: resource.path })
+    : createRepository({ path: resource.path, dialect: resource.dialect })
 
   resource["@type"] = "view-resource"
   resource.resourceBuild = true

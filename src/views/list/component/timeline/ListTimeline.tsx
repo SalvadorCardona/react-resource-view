@@ -86,7 +86,7 @@ function defaultResolveGroupForRow(
   }
 
   if (typeof raw === "object") {
-    const id = raw["@id"] ?? raw.id
+    const id = getIdFromObject(raw)
     const label = raw.name ?? raw.label ?? raw.title ?? id
     if (!id) return undefined
     return { id: String(id), label: String(label) }

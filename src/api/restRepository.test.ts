@@ -1,0 +1,214 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { restRepository } from "@/api/restRepository"
+import { configureApi, resetApiConfig } from "@/api/apiConfig"
+import { strapiDialect } from "@/api/dialect/strapiDialect"
+import { supabaseDialect } from "@/api/dialect/supabaseDialect"
+import { ApiRequestError } from "@/api/apiRequestError"
+
+interface FakeResponse {
+  status?: number
+  body?: unknown
+  headers?: Record<string, string>
+}
+
+/** A fetch answering one canned response, and recording what it was asked. */
+function fakeFetch(...responses: FakeResponse[]) {
+  const calls: { url: string; init: RequestInit }[] = []
+  let index = 0
+
+  const implementation = vi.fn(async (url: string, init: RequestInit) => {
+    calls.push({ url: String(url), init })
+    const { status = 200, body, headers = {} } = responses[index++] ?? {}
+    return new Response(body === undefined ? null : JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json", ...headers },
+    })
+  })
+
+  return { implementation: implementation as unknown as typeof fetch, calls }
+}
+
+afterEach(() => {
+  resetApiConfig()
+})
+
+describe("the repository, against Strapi", () => {
+  const dialect = strapiDialect()
+
+  it("reads a list into the envelope every view reads", async () => {
+    const { implementation, calls } = fakeFetch({
+      body: {
+        data: [
+          { id: 1, documentId: "kx8f2", title: "First" },
+          { id: 2, documentId: "m91ab", title: "Second" },
+        ],
+        meta: { pagination: { page: 1, pageSize: 25, total: 57 } },
+      },
+    })
+    configureApi({ baseUrl: "https://cms.example.com", fetch: implementation })
+
+    const repository = restRepository({ path: "articles", dialect })
+    const { data } = await repository.getCollection({ page: 1 })
+
+    expect(calls[0].url).toContain("https://cms.example.com/api/articles")
+    expect(calls[0].url).toContain("pagination%5Bpage%5D=1")
+    expect(data.totalItems).toBe(57)
+    // `items` is what the views read; `member` keeps it a JSON-LD collection,
+    // so anything written against the old shape still reads it.
+    expect(data.items).toHaveLength(2)
+    expect(data.member).toBe(data.items)
+    expect(data.items[0].title).toBe("First")
+  })
+
+  it("flattens the v4 envelope on the way in", async () => {
+    const { implementation } = fakeFetch({
+      body: {
+        data: [{ id: 1, attributes: { title: "First" } }],
+        meta: { pagination: { total: 1 } },
+      },
+    })
+    configureApi({ fetch: implementation })
+
+    const { data } = await restRepository({
+      path: "articles",
+      dialect,
+    }).getCollection()
+
+    expect(data.items[0]).toEqual({ id: 1, title: "First" })
+  })
+
+  it("carries the bearer token the application supplies", async () => {
+    const { implementation, calls } = fakeFetch({ body: { data: [], meta: {} } })
+    configureApi({ fetch: implementation, getAuthToken: () => "a-token" })
+
+    await restRepository({ path: "articles", dialect }).getCollection()
+
+    expect((calls[0].init.headers as Record<string, string>)["Authorization"]).toBe(
+      "Bearer a-token"
+    )
+  })
+
+  it("creates an entry and reads back what Strapi stored", async () => {
+    const { implementation, calls } = fakeFetch({
+      status: 201,
+      body: { data: { id: 3, documentId: "zz1", title: "Draft" } },
+    })
+    configureApi({ fetch: implementation })
+
+    const { data } = await restRepository({ path: "articles", dialect }).createItem({
+      title: "Draft",
+    })
+
+    expect(calls[0].init.method).toBe("POST")
+    expect(JSON.parse(calls[0].init.body as string)).toEqual({
+      data: { title: "Draft" },
+    })
+    expect(data).toEqual({ id: 3, documentId: "zz1", title: "Draft" })
+  })
+
+  it("updates the entry the record's own identifier points at", async () => {
+    const { implementation, calls } = fakeFetch({
+      body: { data: { id: 1, documentId: "kx8f2", title: "New" } },
+    })
+    configureApi({ fetch: implementation })
+
+    await restRepository({ path: "articles", dialect }).updateItem({
+      documentId: "kx8f2",
+      title: "New",
+    })
+
+    expect(calls[0].init.method).toBe("PUT")
+    expect(calls[0].url).toContain("/api/articles/kx8f2")
+  })
+
+  it("throws a failure the forms can read, rather than a bare status", async () => {
+    const { implementation } = fakeFetch({
+      status: 400,
+      body: {
+        error: {
+          status: 400,
+          name: "ValidationError",
+          message: "1 error occurred",
+          details: { errors: [{ path: ["title"], message: "title is required" }] },
+        },
+      },
+    })
+    configureApi({ fetch: implementation })
+
+    const promise = restRepository({ path: "articles", dialect }).createItem({})
+
+    await expect(promise).rejects.toBeInstanceOf(ApiRequestError)
+    await expect(promise).rejects.toMatchObject({ status: 400 })
+  })
+})
+
+describe("the repository, against Supabase", () => {
+  const dialect = supabaseDialect({ apiKey: "anon-key" })
+
+  it("reads the bare array and the count out of the response headers", async () => {
+    const { implementation, calls } = fakeFetch({
+      body: [{ id: 1, title: "First" }],
+      headers: { "content-range": "0-0/573" },
+    })
+    configureApi({ baseUrl: "https://project.supabase.co", fetch: implementation })
+
+    const { data } = await restRepository({
+      path: "articles",
+      dialect,
+    }).getCollection({
+      page: 2,
+      itemsPerPage: 25,
+    })
+
+    expect(calls[0].url).toContain("https://project.supabase.co/rest/v1/articles")
+    expect(calls[0].url).toContain("offset=25")
+    expect(data.items).toEqual([{ id: 1, title: "First" }])
+    // The header is gone by the time a view reads the collection again, so the
+    // total is kept in the envelope rather than re-read.
+    expect(data.totalItems).toBe(573)
+  })
+
+  it("carries the project key alongside the user's token", async () => {
+    const { implementation, calls } = fakeFetch({ body: [] })
+    configureApi({ fetch: implementation, getAuthToken: () => "user-jwt" })
+
+    await restRepository({ path: "articles", dialect }).getCollection()
+
+    const headers = calls[0].init.headers as Record<string, string>
+    expect(headers["apikey"]).toBe("anon-key")
+    expect(headers["Authorization"]).toBe("Bearer user-jwt")
+  })
+
+  it("reads one row rather than the array it would otherwise be wrapped in", async () => {
+    const { implementation } = fakeFetch({ body: { id: 42, title: "First" } })
+    configureApi({ fetch: implementation })
+
+    const { data } = await restRepository({ path: "articles", dialect }).getItem({
+      id: "42",
+    })
+
+    expect(data).toEqual({ id: 42, title: "First" })
+  })
+
+  it("answers a delete that returns no content", async () => {
+    const { implementation, calls } = fakeFetch({ status: 204 })
+    configureApi({ fetch: implementation })
+
+    await restRepository({ path: "articles", dialect }).removeItem({ id: "42" })
+
+    expect(calls[0].init.method).toBe("DELETE")
+    expect(calls[0].url).toContain("id=eq.42")
+  })
+
+  it("reports the constraint the database refused on", async () => {
+    const { implementation } = fakeFetch({
+      status: 409,
+      body: { code: "23505", message: "duplicate key", details: "already exists" },
+    })
+    configureApi({ fetch: implementation })
+
+    await expect(
+      restRepository({ path: "articles", dialect }).createItem({ slug: "hello" })
+    ).rejects.toMatchObject({ status: 409 })
+  })
+})

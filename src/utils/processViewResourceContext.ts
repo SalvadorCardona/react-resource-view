@@ -8,7 +8,16 @@ export async function processViewResourceContext(
   const currentView = resolveViewResourceContext(viewResourceContextParams)
 
   if (currentView.resourceAction === ActionList.list) {
-    const response = await currentView.resource?.getCollection(currentView.filter, {
+    // The page size travels with the request rather than staying a display
+    // setting: Strapi and Supabase page by an explicit size, and a list whose
+    // pagination counts by 30 while the API answers 10 at a time is wrong on
+    // both counts. An explicit filter still wins.
+    const filter =
+      currentView.view?.itemsPerPage !== undefined
+        ? { itemsPerPage: currentView.view.itemsPerPage, ...currentView.filter }
+        : currentView.filter
+
+    const response = await currentView.resource?.getCollection(filter, {
       viewResourceContext: currentView,
     })
     currentView.data = response?.data ?? currentView.data

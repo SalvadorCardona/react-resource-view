@@ -6,57 +6,42 @@ import { Trans, translate } from "react-mini-i18n"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { FilterInterface } from "@/views/list/filter/useFilter"
-import { getClientConfig } from "jsonld-api-client"
+import { ApiDialectInterface } from "@/api/apiDialectInterface"
+import { getApiConfig, resolveDialect } from "@/api/apiConfig"
+import { resolveRequestUrl } from "@/api/restRepository"
 
 /**
- * Builds the export query string from the list's current filters.
- *
- * It reuses the very keys and values sent to the collection GET, so the export
- * matches the search already on screen.
- */
-function buildExportQuery(filter: FilterInterface): string {
-  const params = new URLSearchParams()
-  Object.entries(filter ?? {}).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === "") return
-    if (Array.isArray(value)) {
-      value.forEach((item) => params.append(`${key}[]`, String(item)))
-      return
-    }
-    params.append(key, String(value))
-  })
-  // The export covers every filtered row, not just the page being viewed, so
-  // server-side pagination is switched off.
-  params.set("pagination", "false")
-  return params.toString()
-}
-
-/**
- * Downloads the CSV export from the API.
+ * Downloads the CSV export the dialect described.
  *
  * It goes through `fetch` rather than a plain anchor so the request can carry
- * the authentication and scope headers, exactly like the client middleware does.
+ * the authentication and the headers the dialect asks for — an anchor carries
+ * neither.
  */
 async function downloadExport(
+  dialect: ApiDialectInterface,
   path: string,
   filter: FilterInterface,
   fileName: string
 ): Promise<void> {
-  const query = buildExportQuery(filter)
-  const url = `${path}.csv${query ? `?${query}` : ""}`
+  const request = dialect.exportRequest?.(path, filter)
+  if (!request) return
 
-  const headers: Record<string, string> = { Accept: "text/csv" }
-  // Same credentials as every other request: read from the client config
-  // rather than from a session package this view would otherwise depend on.
-  const token = getClientConfig().getAuthToken()
-  if (token) {
-    headers["Authorization"] = "Bearer " + token
-  }
-  const scope = getClientConfig().getScope()
-  if (scope) {
-    headers["X-Scope"] = scope
+  const config = getApiConfig()
+  const headers: Record<string, string> = {
+    Accept: "text/csv",
+    ...config.getHeaders(),
+    ...(request.headers ?? {}),
   }
 
-  const response = await fetch(url, { headers })
+  const token = config.getAuthToken()
+  if (token && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`
+  }
+
+  const response = await config.fetch(
+    resolveRequestUrl(request.url, config.baseUrl),
+    { method: request.method, headers }
+  )
   if (!response.ok) {
     throw new Error(`Export failed with status ${response.status}`)
   }
@@ -78,7 +63,12 @@ export function ExportButton() {
   const [isExporting, setIsExporting] = useState(false)
 
   const view = currentResource.view
-  if (!view?.behavior?.canExport) {
+  const dialect = resolveDialect(currentResource.resource)
+
+  // A backend with no CSV endpoint — Strapi, as it stands — describes no
+  // export request, and the button stays out of the way rather than offering
+  // a download that would 404.
+  if (!view?.behavior?.canExport || !dialect.exportRequest) {
     return null
   }
 
@@ -90,7 +80,7 @@ export function ExportButton() {
     try {
       const filter = listViewContext.filterContext?.filter ?? {}
       const fileName = `${view.name ?? currentResource.resource?.name ?? "export"}.csv`
-      await downloadExport(path, filter, fileName)
+      await downloadExport(dialect, path, filter, fileName)
     } catch {
       toast.error(translate("The export failed. Please try again."))
     } finally {

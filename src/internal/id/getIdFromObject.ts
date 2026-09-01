@@ -1,16 +1,22 @@
 import { IdAbleInterface } from "jsonld-item"
-import { getIdFromIri } from "jsonld-item"
+import { ApiDialectInterface } from "@/api/apiDialectInterface"
+import { resolveDialect } from "@/api/apiConfig"
+import { RecordOfAny } from "@/internal/type/RecordOfAny"
 
+/**
+ * The identity of a record, as its API spells it.
+ *
+ * `forceId` asks for the short form a URL segment takes — the number behind a
+ * JSON-LD IRI, Strapi's `documentId`, a Supabase primary key — rather than the
+ * identity the rest of the application refers to the record by.
+ */
 export default function getIdFromObject(
   object: IdAbleInterface,
-  forceId: boolean = false
+  forceId: boolean = false,
+  resource?: { dialect?: ApiDialectInterface } | null
 ): string | undefined {
-  if (object["@id"]) {
-    if (forceId) {
-      return getIdFromIri(object["@id"])
-    }
-    return object["@id"]
-  }
+  const dialect = resolveDialect(resource)
+  const record = object as RecordOfAny
 
-  return object["id"] ?? undefined
+  return forceId ? dialect.getIdentifier(record) : dialect.getId(record)
 }

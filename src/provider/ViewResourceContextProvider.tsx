@@ -14,7 +14,6 @@ import {
   ViewResourceContextParams,
 } from "@/ViewResourceContext"
 import { useMercure } from "jsonld-api-client"
-import { buildTopic } from "jsonld-api-client"
 import { MultiViewTab } from "@/components/MultiViewTab"
 import { ChildViewResourceDialog } from "@/components/ChildViewResourceDialog"
 import MetaResourceComponent from "@/components/MetaResource"
@@ -26,6 +25,7 @@ import { setUrlParam } from "@/internal/url/setUrlParam"
 import { encodeQuery } from "@/internal/url/urlEncoder"
 import { cleanValuesInObject } from "@/internal/object/cleanValuesInObject"
 import { getLdIri, JsonLdIriAble } from "jsonld-item"
+import { resolveDialect } from "@/api/apiConfig"
 
 export interface CurrentViewResourceContextParams extends ViewResourceContextParams {
   decoratorComponent?: FC<{ children: ReactNode }>
@@ -134,10 +134,15 @@ export default function ViewResourceContextProvider({
     }
   }
 
-  useMercure(
-    buildTopic(viewResource.resource?.path ?? viewResource.resource?.["@id"]),
-    !!viewResource.view?.behavior?.eventSourced
-  ).onChange(fetchData)
+  // Only a dialect that knows a push channel names one. Strapi and Supabase
+  // name none, so no EventSource is opened against a hub they do not run.
+  const realtimeTopic = resolveDialect(viewResource.resource).realtimeTopic?.(
+    viewResource.resource?.path ?? viewResource.resource?.["@id"]
+  )
+
+  useMercure(realtimeTopic, !!viewResource.view?.behavior?.eventSourced).onChange(
+    fetchData
+  )
 
   useEffect(() => {
     if (needFetch) {

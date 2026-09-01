@@ -1,27 +1,27 @@
 # react-resource-view
 
-CRUD views for JSON-LD / Hydra APIs. You declare a resource — its path, its
-form, its layout — and the package renders the list, the detail, the create and
-edit forms, and the delete confirmation, wired to the API and to the URL.
+CRUD views for REST APIs — API Platform, Strapi, Supabase. You declare a
+resource — its path, its form, its layout — and the package renders the list,
+the detail, the create and edit forms, and the delete confirmation, wired to
+the API and to the URL.
 
 ```tsx
 import { createViewResource, ResourceView } from "react-resource-view"
 import { tableViewOptionFactory } from "react-resource-view"
 
-const articles = createViewResource({
-  "@id": "articles",
+const articles = createViewResource("articles", {
   path: "/api/articles",
   name: "Articles",
   view: {
     form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
-    viewVariants: [tableViewOptionFactory({ columns: ["title", "published"] })],
+    viewVariants: [tableViewOptionFactory()],
   },
 })
 ```
 
 Built on [`react-data-form`](https://github.com/SalvadorCardona/react-data-form)
-for the forms and [`jsonld-repository`](https://github.com/SalvadorCardona/jsonld-repository)
-for the data.
+for the forms. Which API answers, and how it spells a page or a filter, is a
+[dialect](#connecting-an-api) — JSON-LD is the default, not a requirement.
 
 ## Architecture
 
@@ -30,11 +30,129 @@ for the data.
 A resource is declared once and registered. The URL says which resource, which
 action and which filters; the context resolves that into a view, fetches through
 the resource's own repository, and renders. The package never talks to a router
-or to an API itself — both arrive through `configurePorts`.
+itself, nor to one API in particular: the router arrives through
+`configurePorts`, the API through `configureApi`.
 
 The picture above is a still of an interactive diagram:
 [open it](https://salvadorcardona.github.io/react-resource-view/architecture.html)
 to trace a relationship, focus a component, or follow the four guided views.
+
+## Connecting an API
+
+The views know a resource has rows, pages and filters. How a given backend
+spells those — the URL an item lives at, the query string a filter becomes, the
+envelope a collection arrives in, where the validation errors hide — is a
+**dialect**, set once at startup:
+
+```ts
+import { configureApi, strapiDialect } from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://cms.example.com",
+  getAuthToken: () => (isLogged() ? getUserToken() : undefined),
+  dialect: strapiDialect(),
+})
+```
+
+| Dialect             | Backend             | What it knows                                                                                                |
+| ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `jsonLdDialect()`   | API Platform, Hydra | `member` / `totalItems`, IRIs, `page` and `itemsPerPage`, Hydra `violations`, Mercure, CSV export            |
+| `strapiDialect()`   | Strapi v4 and v5    | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`          |
+| `supabaseDialect()` | Supabase, PostgREST | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation` |
+
+JSON-LD is the default, so an application already talking to API Platform needs
+none of this — and keeps going through the client it configured with
+`configureClient` (see [The rest of the configuration](#the-rest-of-the-configuration)).
+
+### Strapi
+
+```ts
+import { configureApi, strapiDialect, createViewResource } from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://cms.example.com",
+  getAuthToken: () => getApiToken(),
+  dialect: strapiDialect(),
+})
+
+const articles = createViewResource("articles", {
+  path: "articles", // → /api/articles
+  name: "Articles",
+  view: {
+    form: { inputs: { title: { label: "Title" } } },
+    itemsPerPage: 25,
+  },
+})
+```
+
+`strapiDialect` takes `apiPath` (default `/api`), `populate` (default `"*"` —
+without it the relation columns come back empty), `identifier` (`documentId` on
+v5, `id` on v4) and `defaultOperator` (`$eq`; pass `$containsi` to make every
+text filter a case-insensitive search). The v4 `{ id, attributes }` envelope is
+flattened on the way in, so a resource declared once reads the same on both
+versions.
+
+### Supabase
+
+```ts
+import {
+  configureApi,
+  supabaseDialect,
+  createViewResource,
+} from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://xyzcompany.supabase.co",
+  getAuthToken: () => getSession()?.access_token,
+  dialect: supabaseDialect({ apiKey: import.meta.env.VITE_SUPABASE_ANON_KEY }),
+})
+
+const articles = createViewResource("articles", {
+  path: "articles", // → /rest/v1/articles
+  name: "Articles",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})
+```
+
+`supabaseDialect` takes `apiKey` (a value or a function), `primaryKey` (default
+`id` — PostgREST addresses a row by a filter on it, having no item route),
+`select` (default `*`; `"*,author(*)"` embeds a relation), `schema`,
+`defaultTextOperator` and `restPath`.
+
+### Two backends at once
+
+A resource may carry a dialect of its own, which wins over the configured one:
+
+```ts
+const invoices = createViewResource("invoices", {
+  path: "invoices",
+  dialect: supabaseDialect({ apiKey }),
+})
+```
+
+### Filters, pages and sorts
+
+They are written once, in the package's own vocabulary, and the dialect
+translates them:
+
+| Key                 | Means              | Strapi                 | Supabase          |
+| ------------------- | ------------------ | ---------------------- | ----------------- |
+| `page`              | 1-based page       | `pagination[page]`     | `offset`          |
+| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           |
+| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` |
+| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  |
+| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` |
+
+A value spelled as an object carries its own operator through untouched —
+`{ title: { $containsi: "hell" } }` on Strapi, `{ createdAt: { gte: "2024-01-01" } }`
+on Supabase.
+
+### Another API entirely
+
+A dialect is one object — `buildRequest`, `readCollection`, `readItem`,
+`getId`, `getIdentifier`, `normalizeError` — and `ApiDialectInterface` is
+exported to implement it. A resource that brings its own `getCollection`,
+`getItem` and the rest still bypasses all of this, as it always could.
 
 ## Installation
 
@@ -103,7 +221,10 @@ configurePorts({
 })
 ```
 
-The API connection is configured separately, on the client:
+The API connection is configured separately, through
+[`configureApi`](#connecting-an-api). On the JSON-LD dialect it can also come
+from the client itself, which is what an existing API Platform application
+already does:
 
 ```ts
 import { configureClient } from "jsonld-api-client"
@@ -115,19 +236,22 @@ configureClient({
 })
 ```
 
+`configureApi` falls back to those settings when it is given none of its own,
+so nothing has to move.
+
 ## Layouts
 
 A list renders through one of several variants, chosen with a factory:
 
-| Factory | Layout |
-| --- | --- |
-| `tableViewOptionFactory` | Data table, editable in place |
-| `cardViewOptionFactory` | Card grid |
-| `columnViewOptionFactory` | Columns, grouped by a key |
-| `splitViewFactory` | List on the left, details on the right |
-| `calendarViewOptionFactory` | Calendar, by day or week |
-| `timelineViewOptionFactory` | Timeline, grouped by row |
-| `itemViewOptionFactory` | Plain item list |
+| Factory                     | Layout                                 |
+| --------------------------- | -------------------------------------- |
+| `tableViewOptionFactory`    | Data table, editable in place          |
+| `cardViewOptionFactory`     | Card grid                              |
+| `columnViewOptionFactory`   | Columns, grouped by a key              |
+| `splitViewFactory`          | List on the left, details on the right |
+| `calendarViewOptionFactory` | Calendar, by day or week               |
+| `timelineViewOptionFactory` | Timeline, grouped by row               |
+| `itemViewOptionFactory`     | Plain item list                        |
 
 Several variants can coexist on one resource; the view keeps the reader's
 choice in the URL.
@@ -135,7 +259,9 @@ choice in the URL.
 ## Filters
 
 `formFilter` declares the filter form, and `defaultFilter` the filters applied
-as long as the URL carries none of its own:
+as long as the URL carries none of its own. Both are written in the package's
+own vocabulary; the [dialect](#filters-pages-and-sorts) translates them for the
+API:
 
 ```ts
 view: {

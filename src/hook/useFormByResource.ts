@@ -1,9 +1,10 @@
 import { useForm, FormContextOutput } from "react-data-form"
 import { ApiJsonLdError } from "jsonld-api-client"
 import { addErrorFromViolations } from "react-data-form"
+import { normalizeApiError } from "@/api/apiRequestError"
+import { resolveDialect } from "@/api/apiConfig"
 import getFormByCurrentResourceContext from "@/views/update/getFormByCurrentResourceContext"
 import { FormBuiltInterface, FormInterface } from "react-data-form"
-import { ApiError } from "jsonld-api-client"
 import { ActionList } from "react-data-form"
 import { toast } from "sonner"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
@@ -91,7 +92,11 @@ export default function useFormByResource<DataMain extends object = object>({
         ...newData,
       }
 
-      const idInObjet = getIdFromObject(formContext.form.originalData)
+      const idInObjet = getIdFromObject(
+        formContext.form.originalData,
+        false,
+        resource
+      )
       if (idInObjet) {
         newDataWithId.id = idInObjet
       }
@@ -126,7 +131,7 @@ export default function useFormByResource<DataMain extends object = object>({
         if (action === ActionList.create && !closeAfterUpdate) {
           router({
             to: generateLink({
-              id: getIdFromObject(response.data) as string,
+              id: getIdFromObject(response.data, false, resource) as string,
               resourceId: resource?.["@id"] as string,
               resourceAction: ActionList.update,
             }),
@@ -137,26 +142,33 @@ export default function useFormByResource<DataMain extends object = object>({
 
         return response.data
       } catch (error) {
-        if (error instanceof ApiError) {
-          const apiError = error.response.data as ApiJsonLdError
+        // Whatever the backend called it — Hydra violations, a Strapi
+        // `error.details.errors`, a PostgREST message — the dialect reads it
+        // into the one shape the form knows how to show.
+        const apiError = normalizeApiError(error, resolveDialect(resource))
 
+        if (apiError) {
           // With no field violations — a 400 such as "slot no longer
           // available" — the API's detail is the only explanation to show.
           toast.error(formContext.form.label.error, {
-            description: apiError?.violations?.length
+            description: apiError.violations?.length
               ? undefined
-              : (apiError?.detail ?? undefined),
+              : (apiError.detail ?? undefined),
           })
 
           const formWithError = addErrorFromViolations(
             formContext.form as FormBuiltInterface,
-            apiError
+            apiError as ApiJsonLdError
           )
 
           formContext.updateForm(formWithError)
 
           return data
         }
+
+        // Not an API failure — a network outage, a bug. Nothing to pin on a
+        // field, and nothing gained by dressing it up as a validation message.
+        console.error(error)
       }
 
       return data
