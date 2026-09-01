@@ -31,6 +31,8 @@ Everything below, at length and with the examples running rather than quoted:
 [playground](https://salvadorcardona.github.io/react-resource-view/playground),
 a whole application built from two resource declarations.
 
+[![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://salvadorcardona.github.io/react-resource-view/playground)
+
 ## Architecture
 
 [![The pieces of react-resource-view and how they fit together](diagrams/react-resource-view.png)](https://salvadorcardona.github.io/react-resource-view/architecture.html)
