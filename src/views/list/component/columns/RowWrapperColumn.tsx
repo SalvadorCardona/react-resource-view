@@ -7,6 +7,7 @@ import { Trans } from "react-mini-i18n"
 import { RowInterface } from "@/ViewInterface"
 import { cn } from "@/ui/cn"
 import { RecordCard } from "@/views/list/component/RecordCard"
+import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 
 export interface RowWrapperColumnComponentPropsInterface {
   valueIdentifier: ValueOptionInterface
@@ -24,6 +25,7 @@ export default function RowWrapperColumnComponent({
   rows,
 }: RowWrapperColumnComponentPropsInterface) {
   const listViewContext = useListViewContext()
+  const currentResource = useCurrentViewResourceContext()
   // Highlighting every column while one card is in the air said nothing about
   // where it would land. Only the column under the pointer lights up.
   const [isOver, setIsOver] = useState(false)
@@ -36,10 +38,9 @@ export default function RowWrapperColumnComponent({
     e.preventDefault()
     setIsOver(false)
     const id = e.dataTransfer.getData("text")
-    listViewContext.updateData(
-      { "@id": id, [identifierKey]: valueIdentifier.value },
-      true
-    )
+    // `id` rather than `@id`: the card carries the identifier its own dialect
+    // addresses it by, and only a JSON-LD API would recognise an IRI here.
+    listViewContext.updateData({ id, [identifierKey]: valueIdentifier.value }, true)
     handleDragging(false)
   }
 
@@ -81,7 +82,7 @@ export default function RowWrapperColumnComponent({
       <div className="flex flex-col gap-2 px-2 pb-2">
         {columnRows.map((row) => {
           const data = row.data as BaseJsonLdItemInterface
-          const id = getIdFromObject(data) as string
+          const id = getIdFromObject(data, true, currentResource.resource) as string
 
           return (
             <div

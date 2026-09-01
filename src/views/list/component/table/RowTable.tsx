@@ -8,7 +8,6 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { FormContext } from "react-data-form"
 import { ActionList } from "react-data-form"
-import { getIdFromIri } from "jsonld-item"
 import { JsonLDItem } from "jsonld-item"
 import ListResourceViewButton from "@/action/ListResourceViewButton"
 import { FormInterface } from "react-data-form"
@@ -41,8 +40,9 @@ export function RowTable({ row }: RowComponentPropsInterface) {
   const currentResource = useCurrentViewResourceContext()
   const listViewContext = useListViewContext()
 
-  const uri = getIdFromObject(row?.data)
-  const id = getIdFromIri(uri ?? "")
+  // The short form the URL takes: the number behind an IRI, a `documentId`, a
+  // primary key — whichever the resource's dialect addresses a row by.
+  const id = getIdFromObject(row?.data, true, currentResource.resource)
 
   const currentForm: FormInterface = {
     components: {

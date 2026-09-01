@@ -22,7 +22,7 @@ const basePath = import.meta.env.BASE_URL
 configurePorts({
   routing: { mode: "query", param: "view", basePath },
   appName: "react-resource-view",
-  description: "CRUD views for JSON-LD / Hydra APIs.",
+  description: "CRUD views for REST APIs — API Platform, Strapi, Supabase.",
   appUrl: typeof window !== "undefined" ? window.location.origin : "",
 })
 

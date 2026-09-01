@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/installation")({
       {
         name: "description",
         content:
-          "Install the package, let Tailwind scan it, connect a router and point the JSON-LD client at your API.",
+          "Install the package, let Tailwind scan it, connect a router and point it at your API — API Platform, Strapi or Supabase.",
       },
     ],
   }),
@@ -33,6 +33,15 @@ const ROUTER = `import { configurePorts } from "react-resource-view"
 import { tanstackAdapter } from "react-resource-view/tanstack"
 
 configurePorts({ navigation: tanstackAdapter })`
+
+const API = `import { configureApi, strapiDialect } from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://api.example.com",
+  getAuthToken: () => (isLogged() ? getUserToken() : undefined),
+  // The default is jsonLdDialect(); strapiDialect() and supabaseDialect() ship too.
+  dialect: strapiDialect(),
+})`
 
 const CLIENT = `import { configureClient } from "jsonld-api-client"
 
@@ -128,8 +137,59 @@ function Installation() {
       <H2 id="api">Point it at your API</H2>
 
       <P>
-        The API connection is configured separately, on <C>jsonld-api-client</C> —
-        the views themselves never mention a URL.
+        The API connection is configured separately — the views themselves never
+        mention a URL. <C>configureApi</C> says where the API is and which{" "}
+        <A href="/docs/resource-view/backends">dialect</A> it speaks:
+      </P>
+
+      <CodeBlock filename="setup.ts">{API}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "baseUrl",
+            type: "string",
+            default: "the current origin",
+            description: "Root URL of the API.",
+          },
+          {
+            name: "getAuthToken",
+            type: "() => string | undefined",
+            description: (
+              <>
+                Bearer token attached to every request. Return <C>undefined</C> when
+                nobody is signed in.
+              </>
+            ),
+          },
+          {
+            name: "getHeaders",
+            type: "() => Record<string, string>",
+            default: "{}",
+            description:
+              "Extra headers on every request — a tenant header, a Supabase apikey supplied outside the dialect.",
+          },
+          {
+            name: "dialect",
+            type: "ApiDialectInterface",
+            default: "jsonLdDialect()",
+            description: (
+              <>
+                How the API spells its URLs, its pages, its filters and its errors.
+                See <A href="/docs/resource-view/backends">backends & dialects</A>.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <H3>On API Platform</H3>
+
+      <P>
+        The JSON-LD dialect is the default, and it goes through the client of{" "}
+        <C>jsonld-api-client</C> — middleware, scope header and typed paths included.
+        Configuring that client is enough; <C>configureApi</C> falls back to its
+        settings when it is given none of its own.
       </P>
 
       <CodeBlock filename="setup.ts">{CLIENT}</CodeBlock>
@@ -215,9 +275,10 @@ function Installation() {
           register it through <A href="/docs/resource-view/scopes">a scope</A>.
         </Li>
         <Li>
-          <strong>An empty list against a working API</strong> — check the collection
-          comes back as Hydra, with <C>member</C> (or <C>collection</C>) and{" "}
-          <C>totalItems</C>.
+          <strong>An empty list against a working API</strong> — the dialect and the
+          API disagree on the envelope. Hydra answers <C>member</C> and{" "}
+          <C>totalItems</C>, Strapi <C>{`{ data, meta }`}</C>, Supabase a bare array:
+          check the one you configured matches the one that answered.
         </Li>
         <Li>
           <strong>Unstyled markup</strong> — a missing <C>@source</C> line.
@@ -227,7 +288,7 @@ function Installation() {
       <H3>Order of setup</H3>
       <Ol>
         <Li>
-          <C>configureClient</C> — where the API is.
+          <C>configureApi</C> — where the API is, and which dialect it speaks.
         </Li>
         <Li>
           <C>configurePorts</C> — router, metadata, locale.

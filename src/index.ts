@@ -4,6 +4,17 @@
  * Generated file: re-exports the module's public API.
  */
 
+export * from "@/api/apiConfig"
+export * from "@/api/apiDialectInterface"
+export * from "@/api/apiRequestError"
+export * from "@/api/collection"
+export * from "@/api/collectionShape"
+export * from "@/api/createRepository"
+export * from "@/api/dialect/jsonLdDialect"
+export * from "@/api/dialect/strapiDialect"
+export * from "@/api/dialect/supabaseDialect"
+export * from "@/api/queryString"
+export * from "@/api/restRepository"
 export * from "@/ResourceConfig"
 export * from "@/ViewInterface"
 export * from "@/ViewResourceContext"

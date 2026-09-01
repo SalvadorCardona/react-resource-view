@@ -18,7 +18,7 @@ const overviewResource = createViewResource("overview", {
       <>
         <PageHeader
           title="react-resource-view"
-          intro="CRUD views for JSON-LD / Hydra APIs. Declare a resource, and the package renders the list, the details, the forms and the delete confirmation — wired to your API and to the URL."
+          intro="CRUD views for REST APIs — API Platform, Strapi, Supabase. Declare a resource, and the package renders the list, the details, the forms and the delete confirmation — wired to your API and to the URL."
         />
 
         <Section

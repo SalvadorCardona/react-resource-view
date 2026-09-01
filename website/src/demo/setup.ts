@@ -81,7 +81,7 @@ export function configureLibraries(): void {
     routing: { mode: "query", param: "view", basePath: PLAYGROUND_PATH },
     appName: "Resource & Form",
     description:
-      "Documentation for react-data-form and react-resource-view: data-driven React forms and CRUD views for JSON-LD APIs.",
+      "Documentation for react-data-form and react-resource-view: data-driven React forms and CRUD views for REST APIs — API Platform, Strapi, Supabase.",
     // The site's router owns the document head; letting the views write it too
     // would put two titles and two canonical links on every page.
     ownsDocumentHead: false,

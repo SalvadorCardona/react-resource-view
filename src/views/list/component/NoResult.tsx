@@ -6,15 +6,27 @@ import { FC } from "react"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ResourceViewButton from "@/action/ResourceViewButton"
 import { ActionList } from "react-data-form"
+import { getCollectionItems, getCollectionTotal } from "@/api/collection"
 
 export function NoResult() {
   const listViewContext = useListViewContext()
-  const currentView: ViewListInterface = useCurrentViewResourceContext().view
+  const currentResource = useCurrentViewResourceContext()
+  const currentView: ViewListInterface = currentResource.view
+  const collection = listViewContext?.originalData
+  const resource = currentResource.resource
 
-  if (
-    typeof listViewContext?.originalData?.totalItems === "undefined" ||
-    listViewContext?.originalData?.totalItems > 0
-  ) {
+  if (!collection) {
+    return null
+  }
+
+  // An API that reports no total still answers with its rows, and an empty
+  // page is an empty result — otherwise Supabase, which counts only when
+  // asked, would never say so.
+  const totalItems =
+    getCollectionTotal(collection, resource) ??
+    getCollectionItems(collection, resource).length
+
+  if (totalItems > 0) {
     return null
   }
 
@@ -37,8 +49,7 @@ export function NoResultComponent({ title, body, icon }: NoResultPropsInterface)
     : () => {
         return (
           <span>
-            Nothing matched your search. Try different criteria, or come back
-            later.
+            Nothing matched your search. Try different criteria, or come back later.
           </span>
         )
       }

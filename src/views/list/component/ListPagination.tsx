@@ -3,10 +3,12 @@ import { Trans } from "react-mini-i18n"
 import { ViewListInterface } from "@/ViewInterface"
 import { Button } from "@/ui/button"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { getCollectionTotal } from "@/api/collection"
 
 export default function ListPagination() {
   const listViewContext = useListViewContext()
-  const currentView: ViewListInterface = useCurrentViewResourceContext().view
+  const currentResource = useCurrentViewResourceContext()
+  const currentView: ViewListInterface = currentResource.view
 
   if (!listViewContext.originalData) {
     return null
@@ -19,7 +21,10 @@ export default function ListPagination() {
   const itemPerPage = currentView.itemsPerPage ?? 30
 
   const currentPage = listViewContext.filterContext.filter["page"] ?? 1
-  const totalItems = listViewContext.originalData?.totalItems ?? 0
+  // An API that reports no total cannot be paged through: better no
+  // pagination at all than a page count invented from the rows on screen.
+  const totalItems =
+    getCollectionTotal(listViewContext.originalData, currentResource.resource) ?? 0
   const totalPages = Math.ceil((totalItems as number) / itemPerPage)
   const startItem = (currentPage - 1) * itemPerPage + 1
   const endItem = Math.min(currentPage * itemPerPage, totalItems)
