@@ -86,7 +86,7 @@ function Hero() {
             react-resource-view
           </strong>{" "}
           takes one resource declaration and renders its list, detail, create, edit
-          and delete screens — wired to a JSON-LD API and to the URL.
+          and delete screens — wired to your API and to the URL.
         </p>
 
         <div
@@ -319,8 +319,8 @@ const FEATURES = [
   },
   {
     icon: Boxes,
-    title: "Built for JSON-LD",
-    body: "Hydra collections, IRIs and API Platform violations are first-class — and nothing stops you pointing them at a plain REST API instead.",
+    title: "API Platform, Strapi, Supabase",
+    body: "A dialect holds what each backend spells differently — pages, filters, envelopes, errors — so one declared resource renders against any of the three, or a fourth you write.",
   },
   {
     icon: ShieldCheck,

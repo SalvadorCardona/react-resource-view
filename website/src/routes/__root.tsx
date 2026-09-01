@@ -14,7 +14,7 @@ import appCss from "@/styles/app.css?url"
 // as in the browser.
 configureLibraries()
 
-const TITLE = "Resource & Form — React forms and CRUD views for JSON-LD APIs"
+const TITLE = "Resource & Form — React forms and CRUD views for REST APIs"
 const DESCRIPTION =
   "Documentation for react-data-form and react-resource-view: describe a form as data, declare a resource, and get the list, the detail and the CRUD forms wired to your API."
 

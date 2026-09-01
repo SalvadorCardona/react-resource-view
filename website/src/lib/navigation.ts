@@ -14,6 +14,7 @@ import {
   KeyRound,
   Layers,
   LayoutGrid,
+  Network,
   ListChecks,
   PanelsTopLeft,
   PenLine,
@@ -199,6 +200,13 @@ export const VIEW_SECTION: DocSection = {
           title: "Declaring a resource",
           summary: "createViewResource, its views, and the repository behind them.",
           icon: PanelsTopLeft,
+        },
+        {
+          href: "/docs/resource-view/backends",
+          title: "Backends & dialects",
+          summary:
+            "One declaration against API Platform, Strapi or Supabase — and how to add a fourth.",
+          icon: Network,
         },
       ],
     },

@@ -279,9 +279,12 @@ function Resources() {
 
       <Ul>
         <Li>
-          <strong>With a path</strong> — an HTTP repository against{" "}
-          <C>jsonld-api-client</C>, speaking Hydra: <C>GET /api/articles</C>,{" "}
-          <C>PATCH /api/articles/42</C>, and so on.
+          <strong>With a path</strong> — an HTTP repository speaking the configured{" "}
+          <A href="/docs/resource-view/backends">dialect</A>:{" "}
+          <C>GET /api/articles</C> and <C>PATCH /api/articles/42</C> on API Platform,{" "}
+          <C>GET /api/articles?pagination[page]=1</C> on Strapi,{" "}
+          <C>GET /rest/v1/articles?limit=30</C> on Supabase. A resource may carry a{" "}
+          <C>dialect</C> of its own, for an application reading two backends at once.
         </Li>
         <Li>
           <strong>Without one</strong> — a localStorage repository keyed on the

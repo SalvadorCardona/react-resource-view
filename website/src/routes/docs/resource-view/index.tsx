@@ -15,7 +15,7 @@ export const Route = createFileRoute("/docs/resource-view/")({
       {
         name: "description",
         content:
-          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to a JSON-LD API and to the URL.",
+          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to your API — API Platform, Strapi or Supabase — and to the URL.",
       },
     ],
   }),
@@ -130,8 +130,11 @@ function ViewIntroduction() {
           adapter for TanStack Router ships with the package.
         </Li>
         <Li>
-          <strong>It has no HTTP client of its own.</strong> The API connection is
-          configured on <C>jsonld-api-client</C>, separately.
+          <strong>It knows no API in particular.</strong> Which backend answers, and
+          how it spells a page or a filter, is a{" "}
+          <A href="/docs/resource-view/backends">dialect</A> — API Platform, Strapi
+          and Supabase ship with the package — configured separately through{" "}
+          <C>configureApi</C>.
         </Li>
         <Li>
           <strong>It is not an admin panel.</strong> There is no generated dashboard

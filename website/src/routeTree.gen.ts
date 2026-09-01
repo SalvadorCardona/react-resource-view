@@ -26,6 +26,7 @@ import { Route as DocsFormRegistryRouteImport } from './routes/docs/form/registr
 import { Route as DocsFormStepsRouteImport } from './routes/docs/form/steps'
 import { Route as DocsFormValidationRouteImport } from './routes/docs/form/validation'
 import { Route as DocsResourceViewIndexRouteImport } from './routes/docs/resource-view/index'
+import { Route as DocsResourceViewBackendsRouteImport } from './routes/docs/resource-view/backends'
 import { Route as DocsResourceViewCalendarRouteImport } from './routes/docs/resource-view/calendar'
 import { Route as DocsResourceViewFiltersRouteImport } from './routes/docs/resource-view/filters'
 import { Route as DocsResourceViewInstallationRouteImport } from './routes/docs/resource-view/installation'
@@ -124,6 +125,12 @@ const DocsResourceViewIndexRoute = DocsResourceViewIndexRouteImport.update({
   path: '/resource-view/',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsResourceViewBackendsRoute =
+  DocsResourceViewBackendsRouteImport.update({
+    id: '/resource-view/backends',
+    path: '/resource-view/backends',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewCalendarRoute =
   DocsResourceViewCalendarRouteImport.update({
     id: '/resource-view/calendar',
@@ -201,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
@@ -261,6 +270,7 @@ export interface FileRoutesById {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/installation'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/installation'
@@ -352,6 +364,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/installation'
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/backends': {
+      id: '/docs/resource-view/backends'
+      path: '/resource-view/backends'
+      fullPath: '/docs/resource-view/backends'
+      preLoaderRoute: typeof DocsResourceViewBackendsRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/calendar': {
       id: '/docs/resource-view/calendar'
       path: '/resource-view/calendar'
@@ -587,6 +607,7 @@ interface DocsRouteChildren {
   DocsFormRegistryRoute: typeof DocsFormRegistryRoute
   DocsFormStepsRoute: typeof DocsFormStepsRoute
   DocsFormValidationRoute: typeof DocsFormValidationRoute
+  DocsResourceViewBackendsRoute: typeof DocsResourceViewBackendsRoute
   DocsResourceViewCalendarRoute: typeof DocsResourceViewCalendarRoute
   DocsResourceViewFiltersRoute: typeof DocsResourceViewFiltersRoute
   DocsResourceViewInstallationRoute: typeof DocsResourceViewInstallationRoute
@@ -615,6 +636,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsFormRegistryRoute: DocsFormRegistryRoute,
   DocsFormStepsRoute: DocsFormStepsRoute,
   DocsFormValidationRoute: DocsFormValidationRoute,
+  DocsResourceViewBackendsRoute: DocsResourceViewBackendsRoute,
   DocsResourceViewCalendarRoute: DocsResourceViewCalendarRoute,
   DocsResourceViewFiltersRoute: DocsResourceViewFiltersRoute,
   DocsResourceViewInstallationRoute: DocsResourceViewInstallationRoute,
