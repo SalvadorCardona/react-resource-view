@@ -44,6 +44,17 @@ export default function useFormByResource<DataMain extends object = object>({
   const redirectToAfterUpdate = view?.behavior?.redirectToAfterUpdate ?? false
 
   const refreshDataAfterUpdate = view?.behavior?.refreshDataAfterUpdate ?? false
+  /**
+   * A form opening in a dialog has nowhere to send anyone.
+   *
+   * After a creation the form moves on to the new record's edit screen, so a
+   * full-page "New user" does not sit there claiming to be empty. In a dialog
+   * that same navigation leaves the page the dialog is drawn on: the list
+   * underneath disappears, its filters and its page with it, and what the
+   * user gets for filling in three fields is a screen they never asked for.
+   * The dialog closes itself on the resource's `onChange` instead.
+   */
+  const opensInPopup = view?.behavior?.openIn === "popup"
   const resource = findResource({
     resourceId: currentResource.resourceId as string,
     resource: currentResource.resource,
@@ -128,12 +139,16 @@ export default function useFormByResource<DataMain extends object = object>({
           return response.data
         }
 
-        if (action === ActionList.create && !closeAfterUpdate) {
+        if (action === ActionList.create && !closeAfterUpdate && !opensInPopup) {
           router({
             to: generateLink({
               id: getIdFromObject(response.data, false, resource) as string,
               resourceId: resource?.["@id"] as string,
               resourceAction: ActionList.update,
+              // Without it the link is built in whatever scope is current
+              // rather than the resource's own, and a back office creating a
+              // record walks out of its own area.
+              scope: resource?.scope,
             }),
           })
 

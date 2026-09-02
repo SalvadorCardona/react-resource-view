@@ -4,12 +4,7 @@ import { Trans, translate } from "react-mini-i18n"
 import { toast } from "sonner"
 import { Button } from "@/ui/button"
 import { IdAbleInterface } from "jsonld-item"
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/ui/card"
+import { CardContent, CardDescription, CardHeader } from "@/ui/card"
 
 export default function RemoveViewComponent() {
   const currentResourceContext = useCurrentViewResourceContext()
@@ -18,12 +13,20 @@ export default function RemoveViewComponent() {
 
   return (
     <CardContent>
+      {/* No title of its own: the view is already named by whatever frames
+          it — the dialog it opens in, or the heading an application draws
+          above a screen — and a second "Delete?" under "Delete a user" says
+          the same thing twice. What is left is the one thing the name does
+          not carry: that there is no way back. */}
       <CardHeader>
-        <CardTitle>Supprimer ?</CardTitle>
-        <CardDescription>This cannot be undone.</CardDescription>
+        <CardDescription>
+          <Trans>This cannot be undone.</Trans>
+        </CardDescription>
       </CardHeader>
       <CardContent className={"flex gap-5 mt-5"}>
-        <AlertDialogCancel>Annuler</AlertDialogCancel>
+        <AlertDialogCancel>
+          <Trans>Cancel</Trans>
+        </AlertDialogCancel>
         <Button
           onClick={async () => {
             try {
@@ -34,11 +37,11 @@ export default function RemoveViewComponent() {
                 description: translate("The item has been removed"),
               })
             } catch {
-              toast.error("Erreur lors de la suppression")
+              toast.error(translate("The item could not be removed"))
             }
           }}
         >
-          <Trans>Continuer</Trans>
+          <Trans>Continue</Trans>
         </Button>
       </CardContent>
     </CardContent>

@@ -20,7 +20,6 @@ const mockHttpRepo = {
   replaceItem: vi.fn(),
 }
 
-
 const mockLocalStorageRepo = {
   getCollection: vi.fn(),
   getItem: vi.fn(),
@@ -124,6 +123,30 @@ describe("createResource", () => {
       expect((resource.views as any).list.name).toBe("Vue liste")
       // read inherits global
       expect((resource.views as any).read.name).toBe("Vue globale")
+    })
+
+    it("names an unnamed form after its action, keeping the resource's wording", () => {
+      const resource = createViewResource("my_items", {
+        path: "/api/my_items",
+        view: { name: "Coffee beans" },
+      })
+
+      // The form used to inherit the list's name and be called "Coffee beans"
+      // too, which says nothing about what the screen does. It now says which
+      // action it is — in the words the resource chose, not its identifier.
+      expect((resource.views as any).create.name).toBe("Create — Coffee beans")
+      expect((resource.views as any).update.name).toBe("Edit — Coffee beans")
+      expect((resource.views as any).delete.name).toBe("Delete — Coffee beans")
+    })
+
+    it("leaves a name the action declares alone", () => {
+      const resource = createViewResource("my_items", {
+        path: "/api/my_items",
+        view: { name: "Coffee beans" },
+        views: { update: { name: "Reprice a bag" } },
+      })
+
+      expect((resource.views as any).update.name).toBe("Reprice a bag")
     })
   })
 

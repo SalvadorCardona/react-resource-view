@@ -11,7 +11,7 @@ import { useBoolean } from "@/internal/useBoolean"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { getResourceConfig } from "@/ResourceConfig"
-import { Dialog, DialogContent, DialogDescription } from "@/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog"
 import { ScrollArea } from "@/ui/scroll-area"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
 import { useLimit } from "@/hook/useLimit"
@@ -152,10 +152,18 @@ export default function ResourceViewButton({
             aria-describedby="modal"
             showCloseButton={true}
           >
+            {/* A dialog needs a name — assistive technology announces it,
+                and a form opening over a list has to say which record it is
+                about. The view's own `name` is that name; its `description`
+                is not, because every action inherits the one written for the
+                list and would introduce an edit form with the sentence that
+                introduces the table. */}
+            <DialogHeader>
+              <DialogTitle>
+                <Trans>{view?.name ?? currentAction}</Trans>
+              </DialogTitle>
+            </DialogHeader>
             <ScrollArea className="max-h-[90vh]">
-              {view?.description && (
-                <DialogDescription>{view.description}</DialogDescription>
-              )}
               <ViewResourceContextProvider
                 resourceAction={currentAction}
                 resource={currentResource}

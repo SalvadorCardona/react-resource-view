@@ -37,15 +37,26 @@ export function createViewResource<
       ...(resource?.views?.[viewType] ?? {}),
     }
 
-    if (!currentView.name) {
-      // A readable default title: "Users", "Create — Users"…
+    // A readable default title: "Users", "Create — Users"… English, like every
+    // other string the package ships, and translated through `react-mini-i18n`
+    // where a view renders it.
+    //
+    // The question asked is whether *this action* was named, not whether the
+    // merged view has a name: every action inherits `view.name`, so a resource
+    // whose list is called "Users" used to call its edit form "Users" too, and
+    // the prefixes below never applied to anything.
+    if (!resource?.views?.[viewType]?.name) {
       const actionPrefix: Partial<Record<ActionList, string>> = {
         [ActionList.create]: "Create",
-        [ActionList.update]: "Modifier",
-        [ActionList.delete]: "Supprimer",
+        [ActionList.update]: "Edit",
+        [ActionList.delete]: "Delete",
       }
       const prefix = actionPrefix[viewType]
-      currentView.name = prefix ? `${prefix} — ${resource.name}` : `${resource.name}`
+      // The wording the resource already chose is kept and the action is put
+      // in front of it, so a `view` named "Coffee beans" edits "Coffee beans"
+      // rather than the resource's identifier.
+      const inheritedName = currentView.name ?? resource.name
+      currentView.name = prefix ? `${prefix} — ${inheritedName}` : inheritedName
     }
 
     // @ts-expect-error is setted on the top

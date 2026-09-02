@@ -31,6 +31,13 @@ consumes both libraries **from npm**, at the versions a reader would install.
 It does not build against the working tree of the repository it lives in, so
 the documented API is always the published one.
 
+The price of that is a lag, and it is worth naming: a fix made to `src/` in this
+repository does not reach the deployed site — the playground included — until it
+is released and the version here is raised. A playground that still looks wrong
+after a change to the package is usually this, not the change. Releasing means
+merging the "chore: version packages" pull request changesets keeps open, then
+raising `react-resource-view` in `package.json` and refreshing the lockfile.
+
 `pnpm start` runs `server.mjs`, a small `node:http` bridge over the fetch
 handler `vite build` emits. A host that takes a fetch handler directly can
 import `dist/server/server.js` and ignore that file.
