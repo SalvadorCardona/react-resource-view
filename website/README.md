@@ -41,12 +41,13 @@ import `dist/server/server.js` and ignore that file.
 src/
   routes/
     index.tsx              landing page
-    playground.tsx         a complete app built from two resource declarations
+    playground.tsx         a complete back office, built from two scopes
     docs.tsx               the docs shell: header + split sidebar
     docs/form/*            react-data-form           (11 pages)
     docs/resource-view/*   react-resource-view       (12 pages)
   components/              DocArticle, CodeBlock, Demo, FormDemo, ResourceDemo…
   demo/                    fixtures, the two demo resources, library setup
+  demo/playground/         the playground's administration: resources, scopes, shell
   lib/navigation.ts        the sidebar model — the source of truth for pages
   styles/app.css           the theme, and the shadcn variables both libraries read
 ```
