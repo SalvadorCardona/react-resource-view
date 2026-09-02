@@ -17,7 +17,10 @@
     "typescript"
   ],
   "license": "MIT",
-  "author": "Salvador Cardona",
+  "author": {
+    "name": "Salvador Cardona",
+    "url": "https://cardona.digital"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SalvadorCardona/react-resource-view.git"
@@ -25,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/SalvadorCardona/react-resource-view/issues"
   },
-  "homepage": "https://github.com/SalvadorCardona/react-resource-view#readme",
+  "homepage": "https://cardona.digital",
   "type": "module",
   "sideEffects": [
     "**/*.css"

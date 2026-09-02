@@ -58,6 +58,7 @@ function ViewIntroduction() {
         { id: "url", title: "The URL is the state" },
         { id: "boundaries", title: "What it does not do" },
         { id: "next", title: "Where to go next" },
+        { id: "other-projects", title: "Other projects" },
       ]}
     >
       <P>
@@ -185,6 +186,20 @@ function ViewIntroduction() {
           </Link>
         ))}
       </div>
+
+      <H2 id="other-projects">Other projects</H2>
+
+      <Ul>
+        <Li>
+          <A href="/docs/form">React Data Form</A> — the form library this package
+          renders its fields with, documented on this same site and published
+          separately as <C>react-data-form</C>.
+        </Li>
+        <Li>
+          <A href="https://cardona.digital">cardona.digital</A> — the portfolio of
+          Salvador Cardona, who writes and maintains both packages.
+        </Li>
+      </Ul>
     </DocArticle>
   )
 }

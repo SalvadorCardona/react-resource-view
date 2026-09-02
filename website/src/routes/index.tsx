@@ -4,7 +4,6 @@ import {
   Boxes,
   Braces,
   Compass,
-  Github,
   Languages,
   LayoutGrid,
   Link2,
@@ -36,7 +35,6 @@ function LandingPage() {
       <Layouts />
       <Features />
       <Closing />
-      <Footer />
     </div>
   )
 }
@@ -397,41 +395,21 @@ function Closing() {
             react-resource-view
           </Link>
         </div>
+
+        <p className="mt-7 text-sm text-muted-foreground">
+          Both are written and maintained by Salvador Cardona — the rest of his work
+          is on{" "}
+          <a
+            href="https://cardona.digital"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-4 transition hover:text-foreground"
+          >
+            the author’s portfolio
+          </a>
+          .
+        </p>
       </div>
     </section>
-  )
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between lg:px-8">
-        <p className="flex items-center gap-2">
-          <Logo className="size-5" />
-          MIT · built by Salvador Cardona
-        </p>
-
-        <nav className="flex flex-wrap items-center gap-4">
-          <a
-            href={FORM_SECTION.repository}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 transition hover:text-foreground"
-          >
-            <Github className="size-3.5" />
-            react-data-form
-          </a>
-          <a
-            href={VIEW_SECTION.repository}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 transition hover:text-foreground"
-          >
-            <Github className="size-3.5" />
-            react-resource-view
-          </a>
-        </nav>
-      </div>
-    </footer>
   )
 }
