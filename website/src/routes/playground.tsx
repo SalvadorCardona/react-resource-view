@@ -1,11 +1,8 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router"
 import { ClientOnly } from "@tanstack/react-router"
-import { ActionList } from "react-data-form"
 import { parseLink, ResourceViewProvider } from "react-resource-view"
 import { Toaster } from "sonner"
 import { Header } from "@/components/Header"
-import { seedDemoData } from "@/demo/data"
-import { articlesResource, sessionsResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/playground")({
   head: () => ({
@@ -14,7 +11,7 @@ export const Route = createFileRoute("/playground")({
       {
         name: "description",
         content:
-          "A complete application built from two resource declarations: list, detail, create, edit and delete, all driven by the URL.",
+          "A complete back office built from resource declarations: users, a blog and a catalogue, each with its list, detail and CRUD forms, all driven by the URL.",
       },
       // The context lives in the query string and every state is a different
       // URL; none of them is a page worth indexing on its own.
@@ -27,9 +24,13 @@ export const Route = createFileRoute("/playground")({
 /**
  * The whole of both libraries, running as one application.
  *
- * Everything below comes from the two resource declarations in
- * `src/demo/resources.ts`: the list and its layouts, the filter bar, the create
- * and edit forms, the delete confirmation. There is no screen written by hand.
+ * An administration with three areas — the people who can sign in, the blog it
+ * publishes, the catalogue it sells — and not one screen written by hand: the
+ * lists and their layouts, the filter bars, the create and edit forms, the
+ * delete confirmations all come from the resource declarations in
+ * `src/demo/playground`. The navigation and the page heading around them are
+ * the scope's `decoratorComponent`, which is what the package calls an admin
+ * template.
  *
  * The view context is read back out of the URL with `parseLink`, so a link
  * copied from a documentation demo lands here on the same item.
@@ -49,22 +50,29 @@ function PlaygroundRoute() {
 }
 
 function Playground() {
-  const location = useRouterState({ select: (state) => state.location })
-  seedDemoData()
-
-  const params = parseLink(location.pathname + location.searchStr)
+  // The query string alone, never the path: in query mode the whole context
+  // lives in one parameter, and handing the pathname to `parseLink` would read
+  // "playground" — or the repository prefix GitHub Pages serves the site under
+  // — as the scope of a view.
+  const searchStr = useRouterState({ select: (state) => state.location.searchStr })
 
   return (
     <ResourceViewProvider
-      viewResourceContextParams={{
-        resourceId: articlesResource["@id"] as string,
-        resourceAction: ActionList.list,
-        ...params,
-        scope: "docs",
-      }}
+      viewResourceContextParams={parseLink(searchStr)}
       configuration={{
-        resources: [articlesResource, sessionsResource],
-        defaultScope: "docs",
+        // One import() per area, which is the split point: opening the
+        // playground downloads the administration, following a link from a
+        // documentation page downloads the demos, and neither pays for the
+        // other.
+        scopes: {
+          admin: () =>
+            import("@/demo/playground/adminScope").then((m) => m.adminScope),
+          docs: () => import("@/demo/playground/docsScope").then((m) => m.docsScope),
+        },
+        // A URL naming no scope opens the back office; each scope decides for
+        // itself which of its resources that means.
+        defaultScope: "admin",
+        scopeFallback: <PlaygroundSkeleton />,
       }}
     />
   )

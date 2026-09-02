@@ -238,8 +238,10 @@ function Scopes() {
       <Callout kind="warning" title="Lazy scopes suspend">
         <P>
           A lazily loaded scope suspends on first paint. That is the right trade-off
-          in an application, and the wrong one for a documentation site or a story —
-          which is why this site passes <C>resources</C> directly instead.
+          in an application, and the wrong one for an example sitting in a page of
+          prose — which is why the demos below pass <C>resources</C> directly, while
+          the <A href="/playground">playground</A>, being a real application,
+          declares two lazily loaded scopes: a back office and the demos' own.
         </P>
       </Callout>
 
