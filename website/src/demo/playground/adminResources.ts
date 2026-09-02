@@ -56,11 +56,31 @@ import {
  * playground loads lazily: a reader who never opens the administration never
  * downloads it.
  *
- * Every one of them keeps the default `openIn: "window"` behaviour, unlike the
- * demos embedded in the documentation: this is a real application rather than
- * an example sitting in a page of prose, so a form is a screen of its own and
- * the URL says which record is being edited.
+ * Every one of them opens its forms over the list — see `POPUP` below — and
+ * none of them declares a read view: in a back office the record is edited,
+ * not contemplated, and a screen that shows the same fields without letting
+ * anyone touch them is a second way to do nothing.
  */
+
+/**
+ * How every form of the administration opens: over the list it was started
+ * from, rather than on a screen of its own.
+ *
+ * A back office is a place where records are dispatched one after another —
+ * approve this comment, fix that price, invite that user. Leaving the list to
+ * fill in three fields, and coming back to look for where one was, costs more
+ * than the form itself; the dialog keeps the list underneath and hands it back
+ * untouched, filters and page included.
+ *
+ * `closeAfterUpdate` is what makes a creation end there. Without it the form
+ * moves on to the new record's edit screen — the right thing on a screen of
+ * its own, where the alternative is an empty "New user" nobody asked to see
+ * again, and the wrong thing here: the list the dialog was opened over is
+ * exactly where the next record is created from.
+ */
+const POPUP = {
+  behavior: { openIn: "popup", closeAfterUpdate: true },
+} as const
 
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
@@ -68,6 +88,10 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   // Read by `createItemMenuWithResource`, so the menu of the scope is built
   // from the resources themselves rather than written a second time.
   icon: Users,
+  // What opens the list — `canRead` is the permission both the list and the
+  // detail are checked against. The detail is never linked to: the row actions
+  // of a list are edit and delete, and neither the menu nor the shell offers a
+  // way in.
   canRead: true,
   canCreate: true,
   canUpdate: true,
@@ -75,10 +99,12 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   view: {
     name: "Users",
     description: "Everyone who can sign in to the back office.",
-    // One description drives four screens: the table's columns, the create
-    // form, the edit form and the read-only detail.
+    // One description drives three screens: the table's columns, the create
+    // form and the edit form.
+    // No `label.title`: the form is already named by whatever frames it — the
+    // dialog it opens in, or the shell's page heading — and repeating "User"
+    // under "Edit a user" is a heading that says nothing.
     form: {
-      label: { title: "User" },
       inputs: {
         name: { label: "Name", required: true },
         email: {
@@ -120,9 +146,9 @@ export const usersResource = createViewResource<User>(USERS_ID, {
     ],
   },
   views: {
-    [ActionList.create]: { name: "New user" },
-    [ActionList.update]: { name: "Edit a user" },
-    [ActionList.read]: { name: "User" },
+    [ActionList.create]: { name: "New user", ...POPUP },
+    [ActionList.update]: { name: "Edit a user", ...POPUP },
+    [ActionList.delete]: { name: "Delete a user", ...POPUP },
   },
 })
 
@@ -138,7 +164,6 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
     name: "Posts",
     description: "The blog, from the first draft to the day it goes out.",
     form: {
-      label: { title: "Post" },
       inputs: {
         title: { label: "Title", required: true },
         author: { label: "Author" },
@@ -180,9 +205,9 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
     ],
   },
   views: {
-    [ActionList.create]: { name: "New post" },
-    [ActionList.update]: { name: "Edit a post" },
-    [ActionList.read]: { name: "Post" },
+    [ActionList.create]: { name: "New post", ...POPUP },
+    [ActionList.update]: { name: "Edit a post", ...POPUP },
+    [ActionList.delete]: { name: "Delete a post", ...POPUP },
   },
 })
 
@@ -199,7 +224,6 @@ export const commentsResource = createViewResource<Comment>(COMMENTS_ID, {
     name: "Comments",
     description: "What readers left under the posts, waiting for a decision.",
     form: {
-      label: { title: "Comment" },
       inputs: {
         author: { label: "Author", required: true },
         post: { label: "Post" },
@@ -229,8 +253,8 @@ export const commentsResource = createViewResource<Comment>(COMMENTS_ID, {
     ],
   },
   views: {
-    [ActionList.update]: { name: "Moderate a comment" },
-    [ActionList.read]: { name: "Comment" },
+    [ActionList.update]: { name: "Moderate a comment", ...POPUP },
+    [ActionList.delete]: { name: "Delete a comment", ...POPUP },
   },
 })
 
@@ -246,7 +270,6 @@ export const productsResource = createViewResource<Product>(PRODUCTS_ID, {
     name: "Products",
     description: "The catalogue, its prices and what is left in the warehouse.",
     form: {
-      label: { title: "Product" },
       inputs: {
         name: { label: "Name", required: true },
         sku: { label: "SKU" },
@@ -283,9 +306,9 @@ export const productsResource = createViewResource<Product>(PRODUCTS_ID, {
     ],
   },
   views: {
-    [ActionList.create]: { name: "New product" },
-    [ActionList.update]: { name: "Edit a product" },
-    [ActionList.read]: { name: "Product" },
+    [ActionList.create]: { name: "New product", ...POPUP },
+    [ActionList.update]: { name: "Edit a product", ...POPUP },
+    [ActionList.delete]: { name: "Delete a product", ...POPUP },
   },
 })
 
@@ -301,7 +324,6 @@ export const ordersResource = createViewResource<Order>(ORDERS_ID, {
     name: "Orders",
     description: "What the shop has sold, and where each parcel stands.",
     form: {
-      label: { title: "Order" },
       inputs: {
         reference: { label: "Reference", required: true },
         customer: { label: "Customer" },
@@ -326,7 +348,6 @@ export const ordersResource = createViewResource<Order>(ORDERS_ID, {
     viewVariants: [tableViewOptionFactory()],
   },
   views: {
-    [ActionList.update]: { name: "Edit an order" },
-    [ActionList.read]: { name: "Order" },
+    [ActionList.update]: { name: "Edit an order", ...POPUP },
   },
 })

@@ -39,7 +39,11 @@ export function RecordCard({
       <div className="min-w-0">{children ?? <DefaultRowComponent row={row} />}</div>
 
       {withActions && (
-        <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+        // `mt-auto` pins the actions to the bottom edge: the grid stretches
+        // every card of a row to the tallest one, and without it a card whose
+        // record is one line shorter puts its buttons a line higher than its
+        // neighbours.
+        <div className="mt-auto flex flex-wrap gap-2 border-t border-border pt-3">
           <ListResourceViewButton data={row.data} />
         </div>
       )}
