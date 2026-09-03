@@ -317,6 +317,11 @@ rm website/public/architecture.visual-check.*
 `deliver` refuses to write an artefact that fails its own layout and
 composition checks, so a diagram that lands is a diagram that reads.
 
+## Author
+
+Written and maintained by Salvador Cardona — full-stack web developer. The rest
+of his work, and how to reach him, is on [cardona.digital](https://cardona.digital).
+
 ## License
 
 MIT

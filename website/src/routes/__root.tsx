@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router"
+import { Footer } from "@/components/Footer"
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle"
 import { configureLibraries } from "@/demo/setup"
 import appCss from "@/styles/app.css?url"
@@ -73,6 +74,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       </head>
       <body className="min-h-screen">
         {children}
+        <Footer />
         <Scripts />
       </body>
     </html>
