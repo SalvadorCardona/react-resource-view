@@ -46,6 +46,14 @@ export const SESSIONS_ID = "docs_sessions"
  */
 export const HOME_ARTICLES_ID = "home_articles"
 
+/**
+ * The articles the "your own variant" page runs a scaffolded layout over.
+ *
+ * Same reason as above: that page declares a resource of its own so the extra
+ * layout shows up there and nowhere else.
+ */
+export const VARIANT_ARTICLES_ID = "variant_articles"
+
 const ARTICLES: Article[] = [
   {
     "@id": `/${ARTICLES_ID}/1`,
@@ -270,6 +278,17 @@ export function seedDemoData(): void {
         ...article,
         "@id": `/${HOME_ARTICLES_ID}/${article.id}`,
         "@type": HOME_ARTICLES_ID,
+      }))
+    )
+  )
+  setInStorage(
+    VARIANT_ARTICLES_ID,
+    collection(
+      VARIANT_ARTICLES_ID,
+      ARTICLES.map((article) => ({
+        ...article,
+        "@id": `/${VARIANT_ARTICLES_ID}/${article.id}`,
+        "@type": VARIANT_ARTICLES_ID,
       }))
     )
   )

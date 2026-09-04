@@ -13,6 +13,9 @@ website/.output/
 website/.nitro/
 website/.tanstack/
 
+# The workspace the command-line test scaffolds into.
+cli/.generated-*
+
 # Agent skills, installed rather than vendored: 7 MB of third-party renderer.
 .claude/skills/
 .agents/

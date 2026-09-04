@@ -24,6 +24,7 @@ import {
   Sparkles,
   SquareStack,
   Table2,
+  Terminal,
   Wand2,
 } from "lucide-react"
 
@@ -236,6 +237,13 @@ export const VIEW_SECTION: DocSection = {
           title: "Calendar & timeline",
           summary: "Laying a collection out over time.",
           icon: CalendarRange,
+        },
+        {
+          href: "/docs/resource-view/custom-variant",
+          title: "Create your own variant",
+          summary:
+            "One command writes the eighth layout: a single file, yours to draw.",
+          icon: Terminal,
         },
       ],
     },

@@ -86,7 +86,9 @@ function ViewIntroduction() {
       <P>
         Everything below comes from a declaration of that shape — no screen was
         written by hand. Switch the layout, filter the list, open a row, edit it,
-        delete it.
+        delete it. A layout the package does not ship is one command away —{" "}
+        <A href="/docs/resource-view/custom-variant">create your own view variant</A>
+        .
       </P>
 
       <Demo label="A resource, running" code={DECLARATION} wide>
@@ -166,6 +168,11 @@ function ViewIntroduction() {
             to: "/docs/resource-view/layouts",
             title: "Choosing a layout",
             body: "Seven variants over one collection, switched by the reader.",
+          },
+          {
+            to: "/docs/resource-view/custom-variant",
+            title: "Create your own view variant",
+            body: "One command writes the eighth layout: a single file, yours to draw.",
           },
           {
             to: "/docs/resource-view/routing",

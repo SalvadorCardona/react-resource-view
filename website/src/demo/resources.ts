@@ -20,9 +20,11 @@ import {
   ARTICLE_STATUSES,
   ARTICLES_ID,
   SESSIONS_ID,
+  VARIANT_ARTICLES_ID,
   type Article,
   type Session,
 } from "@/demo/data"
+import spotlightViewFactory from "@/demo/spotlightViewFactory"
 
 /**
  * The two resources every view demo on this site is built on.
@@ -163,6 +165,35 @@ export const sessionsResource = createViewResource<Session>(SESSIONS_ID, {
   // edits itself over the page, not somewhere else.
   views: {
     [ActionList.create]: { behavior: { openIn: "popup" } },
+    [ActionList.update]: { behavior: { openIn: "popup" } },
+    [ActionList.read]: { behavior: { openIn: "popup" } },
+  },
+})
+
+/**
+ * The same articles, with an eighth layout the package does not ship.
+ *
+ * `spotlightViewFactory.tsx` next to this file was not written by hand: it is
+ * what `npx react-resource-view create-view-variant Spotlight` printed, kept as
+ * it came out so the "your own variant" page can run the file it documents.
+ * The layout lives on a resource of its own rather than on the shared articles,
+ * so the other pages keep the five layouts they describe.
+ */
+export const spotlightResource = createViewResource<Article>(VARIANT_ARTICLES_ID, {
+  name: "Articles",
+  scope: "docs",
+  canRead: true,
+  canCreate: true,
+  canUpdate: true,
+  canDelete: true,
+  view: {
+    name: "Articles",
+    form: articleForm,
+    viewVariants: [spotlightViewFactory(), tableViewOptionFactory()],
+  },
+  views: {
+    [ActionList.list]: { name: "Articles" },
+    [ActionList.create]: { name: "New article", behavior: { openIn: "popup" } },
     [ActionList.update]: { behavior: { openIn: "popup" } },
     [ActionList.read]: { behavior: { openIn: "popup" } },
   },

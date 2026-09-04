@@ -61,6 +61,8 @@ const heatmapView = createView({
   itemComponent: MyHeatValue, // receives { formInput }
 })`
 
+const SCAFFOLD = `npx react-resource-view create-view-variant Heatmap --dir src/views`
+
 const LAYOUTS = [
   {
     icon: Table,
@@ -243,10 +245,25 @@ function Layouts() {
       </P>
 
       <P>
+        You need not type any of it: the package ships a command that writes that
+        file where you want it, components and factory included.
+      </P>
+
+      <CodeBlock lang="bash">{SCAFFOLD}</CodeBlock>
+
+      <P>
+        <A href="/docs/resource-view/custom-variant">
+          Create your own view variant
+        </A>{" "}
+        takes the generated file apart, line by line.
+      </P>
+
+      <P>
         The next three pages take the built-in layouts one family at a time:{" "}
         <A href="/docs/resource-view/table">table and cards</A>,{" "}
         <A href="/docs/resource-view/split">split and columns</A>, and{" "}
-        <A href="/docs/resource-view/calendar">calendar and timeline</A>.
+        <A href="/docs/resource-view/calendar">calendar and timeline</A> — then{" "}
+        <A href="/docs/resource-view/custom-variant">one you write yourself</A>.
       </P>
     </DocArticle>
   )
