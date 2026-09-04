@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="https://salvadorcardona.github.io/react-resource-view/playground">
+    <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi or Supabase and to the URL" width="100%">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/react-resource-view"><img alt="npm" src="https://img.shields.io/npm/v/react-resource-view?color=3b7dd8&label=npm"></a>
+  <a href="https://github.com/SalvadorCardona/react-resource-view/blob/main/LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-f0a35a"></a>
+  <a href="https://salvadorcardona.github.io/react-resource-view/playground"><img alt="Playground" src="https://img.shields.io/badge/playground-live-3ecf8e"></a>
+</p>
+
 # react-resource-view
 
 CRUD views for REST APIs — API Platform, Strapi, Supabase. You declare a
@@ -28,8 +40,9 @@ for the forms. Which API answers, and how it spells a page or a filter, is a
 Everything below, at length and with the examples running rather than quoted:
 [the documentation site](https://salvadorcardona.github.io/react-resource-view/docs/resource-view)
 — a page per layout, per filter, per dialect — and a
-[playground](https://salvadorcardona.github.io/react-resource-view/playground),
-a whole application built from two resource declarations.
+[playground](https://salvadorcardona.github.io/react-resource-view/playground):
+a whole back office built from seven resource declarations, every edit real,
+every screen a URL, and the source of each screen one click away.
 
 ## Architecture
 
