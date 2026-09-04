@@ -11,6 +11,7 @@ import {
   PlugZap,
   ShieldCheck,
   Sparkles,
+  Terminal,
 } from "lucide-react"
 import { Header } from "@/components/Header"
 import { HeroBackdrop } from "@/components/HeroBackdrop"
@@ -298,6 +299,29 @@ function Layouts() {
       <div className="mt-10">
         <LayoutGallery />
       </div>
+
+      {/* The eighth layout is the reader's, and the command that writes it is
+          the shortest sentence on this page. */}
+      <Link
+        to="/docs/resource-view/custom-variant"
+        className="group mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card p-5 no-underline transition hover:-translate-y-0.5 hover:border-view/50 hover:shadow-lg"
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-view-soft text-view">
+          <Terminal className="size-4" />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-medium">Create your own view variant</span>
+          <span className="block text-sm text-muted-foreground">
+            An eighth layout is one file — three components and a factory. One
+            command writes it where you want it.
+          </span>
+        </span>
+        <code className="ml-auto hidden overflow-x-auto whitespace-nowrap rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[11px] text-muted-foreground lg:block">
+          <span className="text-primary">$</span> npx react-resource-view
+          create-view-variant
+        </code>
+        <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+      </Link>
     </section>
   )
 }
@@ -332,8 +356,8 @@ const FEATURES = [
   },
   {
     icon: LayoutGrid,
-    title: "Seven layouts, one resource",
-    body: "Table, cards, item list, columns, split, calendar and timeline — declared side by side, switched by the reader.",
+    title: "Seven layouts, and yours",
+    body: "Table, cards, item list, columns, split, calendar and timeline — declared side by side, switched by the reader. An eighth of your own is one command and one file.",
   },
 ]
 

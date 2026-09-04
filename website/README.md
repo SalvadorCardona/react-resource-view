@@ -51,7 +51,7 @@ src/
     playground.tsx         a complete back office, built from two scopes
     docs.tsx               the docs shell: header + split sidebar
     docs/form/*            react-data-form           (11 pages)
-    docs/resource-view/*   react-resource-view       (12 pages)
+    docs/resource-view/*   react-resource-view       (13 pages)
   components/              DocArticle, CodeBlock, Demo, FormDemo, ResourceDemo…
   demo/                    fixtures, the two demo resources, library setup
   demo/playground/         the playground's administration: scopes, shell, overview

@@ -34,8 +34,12 @@
     "**/*.css"
   ],
   "files": [
-    "dist"
+    "dist",
+    "cli/index.mjs"
   ],
+  "bin": {
+    "react-resource-view": "./cli/index.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

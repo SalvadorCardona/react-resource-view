@@ -277,6 +277,35 @@ A list renders through one of several variants, chosen with a factory:
 Several variants can coexist on one resource; the view keeps the reader's
 choice in the URL.
 
+### A layout of your own
+
+A variant is a `createView` call over three components, so the eighth layout is
+a single file — and one command writes it:
+
+```bash
+npx react-resource-view create-view-variant Heatmap --dir src/views
+```
+
+Run it bare and it asks for the name and the directory. It writes
+`src/views/heatmapViewFactory.tsx`: the list, row and item components, the
+factory that declares them, and the options interface to extend. Nothing is
+registered anywhere — declare the factory in `viewVariants` beside the built-in
+ones:
+
+```ts
+import heatmapViewFactory from "./views/heatmapViewFactory"
+
+view: {
+  viewVariants: [tableViewOptionFactory(), heatmapViewFactory()],
+}
+```
+
+`--icon <LucideIcon>` picks the switcher's icon, `--jsx` writes JavaScript,
+`--dry-run` prints the file instead of writing it, and `--yes` never asks — see
+`npx react-resource-view --help`. [Create your own view
+variant](https://salvadorcardona.github.io/react-resource-view/docs/resource-view/custom-variant)
+takes the generated file apart, and runs one.
+
 ## Filters
 
 `formFilter` declares the filter form, and `defaultFilter` the filters applied
