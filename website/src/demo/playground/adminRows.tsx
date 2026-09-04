@@ -44,7 +44,7 @@ function Badge({
 /** The same currency the form ports are configured with — see `configureLibraries`. */
 const PRICE = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" })
 
-function formatPrice(cents: number): string {
+export function formatPrice(cents: number): string {
   return PRICE.format((cents ?? 0) / 100)
 }
 

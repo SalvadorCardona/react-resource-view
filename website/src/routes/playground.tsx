@@ -11,7 +11,7 @@ export const Route = createFileRoute("/playground")({
       {
         name: "description",
         content:
-          "A complete back office built from resource declarations: users, a blog and a catalogue, each with its list, detail and CRUD forms, all driven by the URL.",
+          "A complete back office built from seven resource declarations: users, a blog, a catalogue and a roasting schedule — tables, boards, split views, calendars and timelines, every edit real, every screen a URL, and the source of each one a click away.",
       },
       // The context lives in the query string and every state is a different
       // URL; none of them is a page worth indexing on its own.
@@ -24,13 +24,14 @@ export const Route = createFileRoute("/playground")({
 /**
  * The whole of both libraries, running as one application.
  *
- * An administration with three areas — the people who can sign in, the blog it
- * publishes, the catalogue it sells — and not one screen written by hand: the
- * lists and their layouts, the filter bars, the create and edit forms, the
- * delete confirmations all come from the resource declarations in
- * `src/demo/playground`. The navigation and the page heading around them are
- * the scope's `decoratorComponent`, which is what the package calls an admin
- * template.
+ * An administration with four areas — the people who can sign in, the blog it
+ * publishes, the catalogue it sells, the roasters it runs — and not one screen
+ * written by hand: the lists and their layouts, the filter bars, the create
+ * and edit forms, the delete confirmations all come from the resource
+ * declarations in `src/demo/playground/resources`. The navigation and the
+ * page heading around them are the scope's `decoratorComponent`, which is
+ * what the package calls an admin template — and that heading can show the
+ * declaration a screen came out of, next to the screen.
  *
  * The view context is read back out of the URL with `parseLink`, so a link
  * copied from a documentation demo lands here on the same item.

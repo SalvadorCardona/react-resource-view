@@ -1,5 +1,13 @@
-import { useState, type ReactNode } from "react"
-import { ChevronRight } from "lucide-react"
+import { lazy, Suspense, useState, type ReactNode } from "react"
+import { Link as DocsLink } from "@tanstack/react-router"
+import {
+  Check,
+  ChevronRight,
+  Code2,
+  Database,
+  Link2,
+  RotateCcw,
+} from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   Link,
@@ -8,7 +16,13 @@ import {
   useScopeContext,
   type MenuItemInterface,
 } from "react-resource-view"
+import { resetAdminData } from "@/demo/playground/adminData"
+import { getDeclaration } from "@/demo/playground/declarations"
 import { cn } from "@/lib/cn"
+
+// The panel carries the syntax highlighter, which nothing else in the
+// playground needs; it arrives when the reader asks for it.
+const DeclarationPanel = lazy(() => import("@/demo/playground/DeclarationPanel"))
 
 /**
  * The administration template the playground runs inside.
@@ -20,8 +34,8 @@ import { cn } from "@/lib/cn"
  *
  * Nothing here is written per resource. The menu is the scope's own `menu`,
  * read through `useScopeContext`, and the heading comes from whichever view is
- * on screen: adding a sixth resource to the administration changes this file
- * not at all.
+ * on screen: adding an eighth resource to the administration changes this
+ * file not at all.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const scope = useScopeContext()?.scope
@@ -30,7 +44,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside className="flex flex-col lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start">
         <p className="mb-4 flex items-center gap-2 text-sm font-semibold tracking-tight">
           <span className="size-2 rounded-full bg-view" />
           {scope?.label ?? scope?.name}
@@ -41,6 +55,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <NavEntry key={item.name} item={item} isActive={isActive} />
           ))}
         </nav>
+
+        <SidebarFooter />
       </aside>
 
       <main className="min-w-0">
@@ -159,16 +175,61 @@ function NavLink({
 }
 
 /**
- * The title of the screen currently on show.
+ * Where the data lives, and the way back to the fixtures.
+ *
+ * The edits made here are kept across reloads — that is what makes the
+ * playground read as an application — so a reader who has deleted half the
+ * catalogue to see what happens needs a way to get it back.
+ */
+function SidebarFooter() {
+  return (
+    <div className="mt-6 space-y-3 border-t border-border pt-4 text-xs text-muted-foreground">
+      <p className="flex items-start gap-2 px-3">
+        <Database className="mt-0.5 size-3.5 shrink-0" />
+        <span>
+          Stored in this browser. Every edit is real and survives a reload.{" "}
+          <DocsLink
+            to="/docs/resource-view/backends"
+            className="font-medium text-view hover:underline"
+          >
+            Point it at your API
+          </DocsLink>
+        </span>
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          resetAdminData()
+          // The views fetched on mount; the plainest way to have every one of
+          // them read the fixtures again is to start the page over.
+          window.location.reload()
+        }}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition hover:bg-muted hover:text-foreground"
+      >
+        <RotateCcw className="size-3.5 shrink-0" />
+        Reset the demo data
+      </button>
+    </div>
+  )
+}
+
+/**
+ * The title of the screen currently on show, and two things to do with it.
  *
  * The views render their own controls — the create button, the layout
  * switcher, the filter bar — but no page title: which one to write is a
  * decision about the shell, not about the list. It is read off the view, so an
  * edit form says "Edit a user" and the list it came from says "Users".
+ *
+ * Next to it, "Copy link" hands over the URL the reader is looking at —
+ * layout, filters, page and open record included, which is the point — and
+ * "Declaration" opens the file this screen came out of.
  */
 function PageHeading() {
   const currentResource = useCurrentViewResourceContext()
   const view = currentResource?.view
+  const [showCode, setShowCode] = useState(false)
+  const declaration = getDeclaration(currentResource?.resourceId as string)
 
   if (!view?.name) return null
 
@@ -178,11 +239,77 @@ function PageHeading() {
     currentResource.resourceAction === ActionList.list ? view.description : undefined
 
   return (
-    <header className="mb-5">
-      <h1 className="text-2xl font-semibold tracking-tight">{view.name}</h1>
-      {description && (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    <>
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">{view.name}</h1>
+          {description && (
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <CopyLinkButton />
+          {declaration && (
+            <button
+              type="button"
+              onClick={() => setShowCode((current) => !current)}
+              aria-pressed={showCode}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+                showCode
+                  ? "border-view/50 bg-view-soft text-view"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Code2 className="size-3.5" />
+              Declaration
+              <span className="rounded bg-muted px-1 font-mono text-[10px] text-muted-foreground">
+                {declaration.lines} lines
+              </span>
+            </button>
+          )}
+        </div>
+      </header>
+
+      {showCode && declaration && (
+        <Suspense fallback={<DeclarationSkeleton />}>
+          <DeclarationPanel declaration={declaration} />
+        </Suspense>
       )}
-    </header>
+    </>
+  )
+}
+
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <button
+      type="button"
+      title="This screen is a URL: layout, filters, page and open record included."
+      onClick={() => {
+        void navigator.clipboard.writeText(window.location.href).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1600)
+        })
+      }}
+      className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+    >
+      {copied ? (
+        <Check className="size-3.5 text-primary" />
+      ) : (
+        <Link2 className="size-3.5" />
+      )}
+      {copied ? "Copied" : "Copy link"}
+    </button>
+  )
+}
+
+function DeclarationSkeleton() {
+  return (
+    <div className="mb-6 h-48 animate-pulse rounded-2xl bg-muted" aria-hidden />
   )
 }

@@ -54,7 +54,8 @@ src/
     docs/resource-view/*   react-resource-view       (12 pages)
   components/              DocArticle, CodeBlock, Demo, FormDemo, ResourceDemo…
   demo/                    fixtures, the two demo resources, library setup
-  demo/playground/         the playground's administration: resources, scopes, shell
+  demo/playground/         the playground's administration: scopes, shell, overview
+  demo/playground/resources/  one file per resource — what the "Declaration" button shows
   lib/navigation.ts        the sidebar model — the source of truth for pages
   styles/app.css           the theme, and the shadcn variables both libraries read
 ```
