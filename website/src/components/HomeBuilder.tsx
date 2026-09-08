@@ -344,9 +344,12 @@ export function HomeBuilder() {
   const form = useMemo(() => buildForm(state), [state])
   const snippet = useMemo(() => buildSnippet(state), [state])
 
-  // The provider is remounted on every change rather than updated in place: a
-  // resource is a declaration, and swapping one for another mid-flight is not
-  // something an application ever asks of the view.
+  // The form and the provider are remounted on every change rather than
+  // updated in place: a description is read once — `useForm` builds its form on
+  // mount, and a resource is a declaration — and swapping one for another
+  // mid-flight is not something an application ever asks of them. Without it
+  // the list and the snippet followed the switches while the form, built from
+  // the first description, stayed as it was.
   const signature = useMemo(
     () =>
       activeFields(state)
@@ -440,7 +443,7 @@ export function HomeBuilder() {
           ) : (
             <ClientOnly fallback={<PanelSkeleton />}>
               {panel === "form" ? (
-                <FormDemo form={form} showPayload={false} />
+                <FormDemo key={signature} form={form} showPayload={false} />
               ) : (
                 <BuilderList form={form} signature={signature} />
               )}
