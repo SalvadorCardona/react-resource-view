@@ -7,7 +7,7 @@ import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
 import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
-import { articlesResource } from "@/demo/resources"
+import { articlesResource, drawerArticlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/resources")({
   head: () => ({
@@ -236,6 +236,18 @@ function Resources() {
           },
         ]}
       />
+
+      <Demo
+        label="Create and edit in a drawer — narrow the window to see it change sides"
+        code={OPEN_IN}
+        wide
+      >
+        <ResourceDemo
+          resource={drawerArticlesResource}
+          action={ActionList.list}
+          variant="table"
+        />
+      </Demo>
 
       <Callout kind="tip" title="The drawer is two shapes, not one">
         <P>

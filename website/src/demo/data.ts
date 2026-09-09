@@ -54,6 +54,15 @@ export const HOME_ARTICLES_ID = "home_articles"
  */
 export const VARIANT_ARTICLES_ID = "variant_articles"
 
+/**
+ * The articles the drawer and the asymmetric forms are demonstrated on.
+ *
+ * Same reason again: those two pages open their forms in a panel and ask for
+ * fewer fields when creating than when editing, and neither is what the other
+ * demos should show.
+ */
+export const DRAWER_ARTICLES_ID = "drawer_articles"
+
 const ARTICLES: Article[] = [
   {
     "@id": `/${ARTICLES_ID}/1`,
@@ -289,6 +298,17 @@ export function seedDemoData(): void {
         ...article,
         "@id": `/${VARIANT_ARTICLES_ID}/${article.id}`,
         "@type": VARIANT_ARTICLES_ID,
+      }))
+    )
+  )
+  setInStorage(
+    DRAWER_ARTICLES_ID,
+    collection(
+      DRAWER_ARTICLES_ID,
+      ARTICLES.map((article) => ({
+        ...article,
+        "@id": `/${DRAWER_ARTICLES_ID}/${article.id}`,
+        "@type": DRAWER_ARTICLES_ID,
       }))
     )
   )

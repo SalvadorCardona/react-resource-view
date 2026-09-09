@@ -30,6 +30,7 @@ import { Route as DocsResourceViewBackendsRouteImport } from './routes/docs/reso
 import { Route as DocsResourceViewCalendarRouteImport } from './routes/docs/resource-view/calendar'
 import { Route as DocsResourceViewCustomVariantRouteImport } from './routes/docs/resource-view/custom-variant'
 import { Route as DocsResourceViewFiltersRouteImport } from './routes/docs/resource-view/filters'
+import { Route as DocsResourceViewFormsRouteImport } from './routes/docs/resource-view/forms'
 import { Route as DocsResourceViewInstallationRouteImport } from './routes/docs/resource-view/installation'
 import { Route as DocsResourceViewLayoutsRouteImport } from './routes/docs/resource-view/layouts'
 import { Route as DocsResourceViewPermissionsRouteImport } from './routes/docs/resource-view/permissions'
@@ -149,6 +150,11 @@ const DocsResourceViewFiltersRoute = DocsResourceViewFiltersRouteImport.update({
   path: '/resource-view/filters',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsResourceViewFormsRoute = DocsResourceViewFormsRouteImport.update({
+  id: '/resource-view/forms',
+  path: '/resource-view/forms',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsResourceViewInstallationRoute =
   DocsResourceViewInstallationRouteImport.update({
     id: '/resource-view/installation',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
+  '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
+  '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
+  '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
+    | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/permissions'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
+    | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/permissions'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
+    | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/permissions'
@@ -548,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewFiltersRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/forms': {
+      id: '/docs/resource-view/forms'
+      path: '/resource-view/forms'
+      fullPath: '/docs/resource-view/forms'
+      preLoaderRoute: typeof DocsResourceViewFormsRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/installation': {
       id: '/docs/resource-view/installation'
       path: '/resource-view/installation'
@@ -631,6 +650,7 @@ interface DocsRouteChildren {
   DocsResourceViewCalendarRoute: typeof DocsResourceViewCalendarRoute
   DocsResourceViewCustomVariantRoute: typeof DocsResourceViewCustomVariantRoute
   DocsResourceViewFiltersRoute: typeof DocsResourceViewFiltersRoute
+  DocsResourceViewFormsRoute: typeof DocsResourceViewFormsRoute
   DocsResourceViewInstallationRoute: typeof DocsResourceViewInstallationRoute
   DocsResourceViewLayoutsRoute: typeof DocsResourceViewLayoutsRoute
   DocsResourceViewPermissionsRoute: typeof DocsResourceViewPermissionsRoute
@@ -661,6 +681,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewCalendarRoute: DocsResourceViewCalendarRoute,
   DocsResourceViewCustomVariantRoute: DocsResourceViewCustomVariantRoute,
   DocsResourceViewFiltersRoute: DocsResourceViewFiltersRoute,
+  DocsResourceViewFormsRoute: DocsResourceViewFormsRoute,
   DocsResourceViewInstallationRoute: DocsResourceViewInstallationRoute,
   DocsResourceViewLayoutsRoute: DocsResourceViewLayoutsRoute,
   DocsResourceViewPermissionsRoute: DocsResourceViewPermissionsRoute,
