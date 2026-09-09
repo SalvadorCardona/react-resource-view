@@ -20,7 +20,16 @@ export interface ViewInterface<_Read = IdAbleInterface> {
   identifierKey?: string
   identifierKeyList?: ValueOptionInterface[]
   behavior?: {
-    openIn?: "popup" | "window"
+    /**
+     * Where the action is drawn.
+     *
+     * `window` replaces the page. `popup` centres a dialog over it. `drawer`
+     * slides a panel in — from the right on a desktop, up from the bottom on a
+     * phone, which is where a hand reaches — and it is the one to pick for a
+     * long form: the panel is as tall as the screen, so a record with a dozen
+     * fields is read without the list behind it going anywhere.
+     */
+    openIn?: "popup" | "window" | "drawer"
     /**
      * The actions each row of a list offers.
      *

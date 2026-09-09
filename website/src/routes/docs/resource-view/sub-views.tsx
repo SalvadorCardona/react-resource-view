@@ -226,10 +226,12 @@ function SubViews() {
 
       <Callout kind="note" title="behavior.openIn">
         <P>
-          A view can also ask to open in a popup rather than in place — with{" "}
-          <C>behavior: {'{ openIn: "popup" }'}</C> — together with{" "}
-          <C>closeAfterUpdate</C> and <C>refreshDataAfterUpdate</C>, which decide
-          what happens once the write lands.
+          A view can also ask to open over the page rather than in place — with{" "}
+          <C>behavior: {'{ openIn: "popup" }'}</C> for a dialog, or{" "}
+          <C>{'{ openIn: "drawer" }'}</C> for a panel sliding in from the right,
+          from the bottom on a phone — together with <C>closeAfterUpdate</C> and{" "}
+          <C>refreshDataAfterUpdate</C>, which decide what happens once the write
+          lands.
         </P>
       </Callout>
     </DocArticle>

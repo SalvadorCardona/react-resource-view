@@ -56,6 +56,18 @@ const PER_VIEW = `createViewResource("articles", {
   },
 })`
 
+const OPEN_IN = `createViewResource("articles", {
+  path: "/api/articles",
+  views: {
+    // A screen of its own, at /articles/read/42 — the default.
+    [ActionList.read]: { behavior: { openIn: "window" } },
+    // A dialog over the list.
+    [ActionList.create]: { behavior: { openIn: "popup" } },
+    // A panel sliding in from the right — up from the bottom on a phone.
+    [ActionList.update]: { behavior: { openIn: "drawer" } },
+  },
+})`
+
 const HOOKS = `createViewResource("articles", {
   path: "/api/articles",
 
@@ -91,6 +103,7 @@ function Resources() {
       toc={[
         { id: "basic", title: "The smallest declaration" },
         { id: "five-views", title: "Five views from one description" },
+        { id: "open-in", title: "Where an action opens" },
         { id: "reference", title: "Resource reference" },
         { id: "repository", title: "Where the data comes from" },
         { id: "hooks", title: "Shaping requests" },
@@ -179,6 +192,66 @@ function Resources() {
           everywhere the form appears.
         </P>
       </Callout>
+
+      <H2 id="open-in">Where an action opens</H2>
+
+      <P>
+        An action is a screen, a dialog or a drawer — the same view either way,
+        drawn in a different frame. <C>behavior.openIn</C> is the whole decision,
+        and it is taken per action: a list is read full page, and the form that
+        edits one of its rows does not have to be.
+      </P>
+
+      <CodeBlock>{OPEN_IN}</CodeBlock>
+
+      <Ul>
+        <Li>
+          <C>window</C> — the view replaces the page, at its own URL. Shareable,
+          bookmarkable, and where a list belongs.
+        </Li>
+        <Li>
+          <C>popup</C> — a dialog centred over the page. Short forms and delete
+          confirmations, where what is behind is the context the reader is keeping.
+        </Li>
+        <Li>
+          <C>drawer</C> — a panel sliding in from the right on a desktop, up from
+          the bottom on a phone, where the thumb is. As tall as the screen, so a
+          record with a dozen fields is filled in without the list going anywhere.
+        </Li>
+      </Ul>
+
+      <PropsTable
+        rows={[
+          {
+            name: "behavior.openIn",
+            type: '"window" | "popup" | "drawer"',
+            default: '"window"',
+            description: (
+              <>
+                Set per action, on <C>views.&lt;action&gt;</C>, or once for the whole
+                application through <C>defaultResource</C>. The delete confirmation
+                is the one action that starts as a <C>popup</C>.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <Callout kind="tip" title="The drawer is two shapes, not one">
+        <P>
+          Which side it comes in from is decided at <C>768px</C> — the same
+          breakpoint the views size against — and the side it arrives from is the
+          side it is swiped away towards. So a drawer is dismissed rightwards on a
+          desktop and downwards on a phone, with no configuration either way.
+        </P>
+      </Callout>
+
+      <P>
+        A view drawn over the page does not navigate after a write, whichever frame
+        carries it: it would take the list, its filters and its page away with it.
+        Pair it with <C>closeAfterUpdate</C> and <C>refreshDataAfterUpdate</C> to
+        decide what happens once the write lands.
+      </P>
 
       <H2 id="reference">Resource reference</H2>
 

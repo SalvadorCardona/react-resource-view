@@ -74,6 +74,12 @@ describe("useFormByResource, after a creation", () => {
     expect(navigate).not.toHaveBeenCalled()
   })
 
+  it("stays where it is when the form opened in a drawer", async () => {
+    await createWith({ behavior: { openIn: "drawer" } })
+
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
   it("moves on to the new record's edit screen on a screen of its own", async () => {
     await createWith({ behavior: { openIn: "window" } })
 

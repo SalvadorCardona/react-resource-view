@@ -45,16 +45,18 @@ export default function useFormByResource<DataMain extends object = object>({
 
   const refreshDataAfterUpdate = view?.behavior?.refreshDataAfterUpdate ?? false
   /**
-   * A form opening in a dialog has nowhere to send anyone.
+   * A form drawn over the page — in a dialog or in a drawer — has nowhere to
+   * send anyone.
    *
    * After a creation the form moves on to the new record's edit screen, so a
-   * full-page "New user" does not sit there claiming to be empty. In a dialog
-   * that same navigation leaves the page the dialog is drawn on: the list
+   * full-page "New user" does not sit there claiming to be empty. Over a page
+   * that same navigation leaves the one the form is drawn on: the list
    * underneath disappears, its filters and its page with it, and what the
    * user gets for filling in three fields is a screen they never asked for.
    * The dialog closes itself on the resource's `onChange` instead.
    */
-  const opensInPopup = view?.behavior?.openIn === "popup"
+  const opensOverThePage =
+    view?.behavior?.openIn === "popup" || view?.behavior?.openIn === "drawer"
   const resource = findResource({
     resourceId: currentResource.resourceId as string,
     resource: currentResource.resource,
@@ -139,7 +141,7 @@ export default function useFormByResource<DataMain extends object = object>({
           return response.data
         }
 
-        if (action === ActionList.create && !closeAfterUpdate && !opensInPopup) {
+        if (action === ActionList.create && !closeAfterUpdate && !opensOverThePage) {
           router({
             to: generateLink({
               id: getIdFromObject(response.data, false, resource) as string,

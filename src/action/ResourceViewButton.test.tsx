@@ -32,7 +32,7 @@ function resourceWith(view: object): ViewResourceInterface {
   } as unknown as ViewResourceInterface
 }
 
-async function openDialog(view: object) {
+async function openOverlay(view: object) {
   render(
     <ResourceViewButton action={ActionList.update} resource={resourceWith(view)} />
   )
@@ -41,7 +41,7 @@ async function openDialog(view: object) {
 
 describe("ResourceViewButton, opened in a popup", () => {
   it("names the dialog after the view", async () => {
-    await openDialog({
+    await openOverlay({
       name: "Reprice a bag",
       behavior: { openIn: "popup" },
     })
@@ -52,12 +52,40 @@ describe("ResourceViewButton, opened in a popup", () => {
   })
 
   it("does not introduce a form with the sentence written for the list", async () => {
-    await openDialog({
+    await openOverlay({
       name: "Reprice a bag",
       description: "Everything the shop sells.",
       behavior: { openIn: "popup" },
     })
 
     expect(screen.queryByText("Everything the shop sells.")).toBeNull()
+  })
+})
+
+describe("ResourceViewButton, opened in a drawer", () => {
+  it("slides the view in rather than replacing the page", async () => {
+    await openOverlay({
+      name: "Reprice a bag",
+      behavior: { openIn: "drawer" },
+    })
+
+    expect(
+      screen.getByRole("heading", { name: "Reprice a bag" })
+    ).toBeInTheDocument()
+    expect(screen.getByTestId("view")).toBeInTheDocument()
+  })
+
+  /**
+   * The panel travels along the axis it is swiped away on, and `matchMedia` is
+   * stubbed as a narrow screen for the tests — so what a phone gets is what is
+   * asserted here.
+   */
+  it("comes up from the bottom on a narrow screen", async () => {
+    await openOverlay({
+      name: "Reprice a bag",
+      behavior: { openIn: "drawer" },
+    })
+
+    expect(document.querySelector("[data-swipe-axis='y']")).not.toBeNull()
   })
 })
