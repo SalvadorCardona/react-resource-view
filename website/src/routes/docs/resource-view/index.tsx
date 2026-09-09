@@ -86,7 +86,11 @@ function ViewIntroduction() {
       <P>
         Everything below comes from a declaration of that shape — no screen was
         written by hand. Switch the layout, filter the list, open a row, edit it,
-        delete it. A layout the package does not ship is one command away —{" "}
+        delete it. Where those forms open is one key —{" "}
+        <A href="/docs/resource-view/resources">a page, a dialog or a drawer</A> — and
+        what they ask for need not be the same when creating as when editing, which is{" "}
+        <A href="/docs/resource-view/forms">a form per action</A>. A layout the
+        package does not ship is one command away —{" "}
         <A href="/docs/resource-view/custom-variant">create your own view variant</A>
         .
       </P>
@@ -163,6 +167,11 @@ function ViewIntroduction() {
             to: "/docs/resource-view/resources",
             title: "Declaring a resource",
             body: "createViewResource, its five views, and the repository behind them.",
+          },
+          {
+            to: "/docs/resource-view/forms",
+            title: "Asymmetric forms",
+            body: "One description for four screens — and a different form where creating is not editing.",
           },
           {
             to: "/docs/resource-view/layouts",

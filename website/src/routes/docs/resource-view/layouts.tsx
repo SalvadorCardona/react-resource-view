@@ -63,6 +63,16 @@ const heatmapView = createView({
 
 const SCAFFOLD = `npx react-resource-view create-view-variant Heatmap --dir src/views`
 
+const HEADER = `createViewResource("articles", {
+  name: "Articles",
+  icon: Newspaper,          // the badge, and the same mark the menu uses
+  view: {
+    name: "Articles",       // the heading
+    description: "Everything published, and everything on its way there.",
+    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory()],
+  },
+})`
+
 const LAYOUTS = [
   {
     icon: Table,
@@ -128,6 +138,7 @@ function Layouts() {
       toc={[
         { id: "seven", title: "The seven factories" },
         { id: "declaring", title: "Declaring several" },
+        { id: "header", title: "The header of a list" },
         { id: "identity", title: "How a variant is identified" },
         { id: "shared", title: "What every variant shares" },
         { id: "custom", title: "Writing your own" },
@@ -185,6 +196,47 @@ function Layouts() {
           back to it rather than rendering nothing.
         </P>
       </Callout>
+
+      <H2 id="header">The header of a list</H2>
+
+      <P>
+        The switcher is not a loose control floating above the rows: every list draws
+        one header line, and the switcher sits in it. From left to right — the
+        resource's <C>icon</C> in a badge, the view's <C>name</C> and{" "}
+        <C>description</C>, the layout switcher, then the export and create buttons,
+        with a rule under the lot.
+      </P>
+
+      <CodeBlock>{HEADER}</CodeBlock>
+
+      <P>
+        Nothing is declared to turn it on. It is assembled from what the resource
+        already says, and each piece disappears when there is nothing to draw: no{" "}
+        <C>icon</C>, no badge; no <C>description</C>, one line instead of two; one
+        variant, no switcher; <C>canCreate</C> denied, no button.
+      </P>
+
+      <Callout kind="note" title="A nested list keeps quiet">
+        <P>
+          A list rendered inside another view — a{" "}
+          <A href="/docs/resource-view/sub-views">sub-view tab</A>, a resource
+          embedded in a page of your own — leaves the naming out: whatever contains it
+          has already written its title, and saying it twice is only saying it twice.
+          Its switcher and its buttons stay.
+        </P>
+      </Callout>
+
+      <P>
+        The icon shown is the resource's, not the variant's. A variant carries an icon
+        of its own — it is what the switcher draws — and a header taking that one
+        would change the heading of the collection every time the reader changed the
+        layout.
+      </P>
+
+      <P>
+        The filter bar is not part of it: it is a row of its own, below the rule, and
+        it has <A href="/docs/resource-view/filters">its own page</A>.
+      </P>
 
       <H2 id="identity">How a variant is identified</H2>
 

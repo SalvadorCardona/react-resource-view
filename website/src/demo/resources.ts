@@ -14,11 +14,13 @@ import {
   tableViewOptionFactory,
   timelineViewOptionFactory,
 } from "react-resource-view"
+import { Newspaper } from "lucide-react"
 import { ArticleRow } from "@/demo/ArticleRow"
 import {
   ARTICLE_CATEGORIES,
   ARTICLE_STATUSES,
   ARTICLES_ID,
+  DRAWER_ARTICLES_ID,
   SESSIONS_ID,
   VARIANT_ARTICLES_ID,
   type Article,
@@ -198,3 +200,50 @@ export const spotlightResource = createViewResource<Article>(VARIANT_ARTICLES_ID
     [ActionList.read]: { behavior: { openIn: "popup" } },
   },
 })
+
+/**
+ * The same articles again, opened in a drawer and written in two passes.
+ *
+ * It carries the two things the other demos deliberately do not: forms that
+ * slide in as a panel rather than as a dialog, and a create form that asks for
+ * less than the edit form does. It also names an `icon` and a `description`,
+ * which is what the list draws its header from — so the three latest additions
+ * to the package are all visible on one screen.
+ */
+export const drawerArticlesResource = createViewResource<Article>(
+  DRAWER_ARTICLES_ID,
+  {
+    name: "Articles",
+    scope: "docs",
+    icon: Newspaper,
+    canRead: true,
+    canCreate: true,
+    canUpdate: true,
+    canDelete: true,
+    view: {
+      name: "Articles",
+      description: "Started in two fields, finished in six.",
+      form: articleForm,
+      viewVariants: [tableViewOptionFactory()],
+    },
+    views: {
+      [ActionList.list]: { name: "Articles" },
+      // Creating asks for what a draft cannot exist without; everything else
+      // is filled in later, from the edit form, which is the whole `articleForm`
+      // inherited from `view`.
+      [ActionList.create]: {
+        name: "New article",
+        behavior: { openIn: "drawer" },
+        form: {
+          label: { title: "New article" },
+          inputs: {
+            title: articleForm.inputs.title,
+            category: articleForm.inputs.category,
+          },
+        },
+      },
+      [ActionList.update]: { behavior: { openIn: "drawer" } },
+      [ActionList.read]: { behavior: { openIn: "drawer" } },
+    },
+  }
+)

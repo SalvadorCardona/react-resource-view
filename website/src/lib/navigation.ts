@@ -22,6 +22,7 @@ import {
   Route,
   Settings2,
   Sparkles,
+  SquarePen,
   SquareStack,
   Table2,
   Terminal,
@@ -201,6 +202,13 @@ export const VIEW_SECTION: DocSection = {
           title: "Declaring a resource",
           summary: "createViewResource, its views, and the repository behind them.",
           icon: PanelsTopLeft,
+        },
+        {
+          href: "/docs/resource-view/forms",
+          title: "Asymmetric forms",
+          summary:
+            "One description for four screens — and a different form where creating is not editing.",
+          icon: SquarePen,
         },
         {
           href: "/docs/resource-view/backends",

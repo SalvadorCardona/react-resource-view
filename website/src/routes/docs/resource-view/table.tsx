@@ -51,6 +51,16 @@ tableViewOptionFactory({
   },
 })`
 
+const ROW_ACTIONS = `import { ActionList } from "react-data-form"
+
+tableViewOptionFactory({
+  behavior: {
+    // Read is not in the default — [update, delete] is. Put it back where
+    // the detail view carries more than the row does.
+    rowActions: [ActionList.read, ActionList.update, ActionList.delete],
+  },
+})`
+
 const EXPORT = `views: {
   [ActionList.list]: {
     // A CSV export, produced by the API, honouring the current filters.
@@ -64,6 +74,7 @@ function TableAndCards() {
       toc={[
         { id: "columns", title: "Where the columns come from" },
         { id: "editing", title: "Editing in place" },
+        { id: "row-actions", title: "What a row offers" },
         { id: "cells", title: "Rendering a cell yourself" },
         { id: "cards", title: "Cards" },
         { id: "pagination", title: "Pagination and export" },
@@ -117,6 +128,45 @@ function TableAndCards() {
         Mark a field <C>readonly</C> to show it without letting it be edited from the
         list.
       </P>
+
+      <H2 id="row-actions">What a row offers</H2>
+
+      <P>
+        At the end of every row sits a group of buttons. Which ones is a decision the
+        view takes, because it depends on what the row already does — a table editing
+        its cells in place has little use for a button whose only job is to show the
+        same fields again, and three buttons are three buttons' worth of width taken
+        from the columns.
+      </P>
+
+      <CodeBlock>{ROW_ACTIONS}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "behavior.rowActions",
+            type: "ActionList[]",
+            default: "[update, delete]",
+            description: (
+              <>
+                Declared on the list view, on a variant, or once for the application
+                through <C>defaultResource.views.list</C>. Order is the order the
+                buttons are drawn in.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <Callout kind="note" title="Read is not in the default">
+        <P>
+          It is one entry away — put it back where the detail view carries more than
+          the list does, which is exactly the case{" "}
+          <A href="/docs/resource-view/forms">an asymmetric read form</A> describes.
+          Permissions apply on top either way: an action listed here without the
+          matching <C>can*</C> renders nothing.
+        </P>
+      </Callout>
 
       <H2 id="cells">Rendering a cell yourself</H2>
 
