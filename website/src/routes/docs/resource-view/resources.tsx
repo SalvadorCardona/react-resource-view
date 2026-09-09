@@ -209,7 +209,7 @@ function Resources() {
           {
             name: "icon",
             type: "FC<{ className?: string }>",
-            description: "Shown in menus and tabs.",
+            description: "Shown in menus, in tabs and in the header of a list.",
           },
           {
             name: "scope",
