@@ -1,3 +1,5 @@
+![react-resource-view](https://raw.githubusercontent.com/SalvadorCardona/brand-assets/main/projects/react-resource-view/banner.png)
+
 <p align="center">
   <a href="https://salvadorcardona.github.io/react-resource-view/playground">
     <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi or Supabase and to the URL" width="100%">
