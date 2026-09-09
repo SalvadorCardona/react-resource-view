@@ -12,9 +12,11 @@ import getIdFromObject from "@/internal/id/getIdFromObject"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { getResourceConfig } from "@/ResourceConfig"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/ui/drawer"
 import { ScrollArea } from "@/ui/scroll-area"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
 import { useLimit } from "@/hook/useLimit"
+import { useMediaQuery } from "@/internal/browser/useMediaQuery"
 
 export interface ResourceButtonProps extends ViewResourceContextParams {
   action: ActionList
@@ -51,7 +53,15 @@ export default function ResourceViewButton({
     view?.behavior?.openIn ??
     getResourceConfig()?.defaultResource?.views?.[currentAction]?.behavior?.openIn
 
+  // A dialog and a drawer are the same decision — the view is drawn over the
+  // page instead of replacing it — so everything but the frame is shared.
+  const opensOverThePage = openIn === "popup" || openIn === "drawer"
+
   const isOpen = useBoolean()
+  // A drawer comes in from the side where there is room for it: the right of a
+  // desktop, the bottom of a phone. `md` is the breakpoint the rest of the
+  // package sizes against.
+  const isWideScreen = useMediaQuery("(min-width: 768px)")
 
   // Limits only apply to creation. `getLimit` may be synchronous
   // (comptage local) ou asynchrone (quota via API / abonnement). La limite
@@ -70,13 +80,13 @@ export default function ResourceViewButton({
   const currentDefaultData = defaultData ?? currentResourceContext?.defaultData
 
   useEffect(() => {
-    if (openIn !== "popup") return
+    if (!opensOverThePage) return
     const sub = currentResource.onChange.subscribe(() => {
       isOpen.setFalse()
       currentResourceContext.fetchData()
     })
     return () => sub.unsubscribe()
-  }, [currentResource, openIn])
+  }, [currentResource, opensOverThePage])
 
   if (!permissionResource(currentResource, currentAction)) return null
 
@@ -113,6 +123,25 @@ export default function ResourceViewButton({
   }
 
   const buttonLabel = getButtonLabel()
+
+  /* A dialog needs a name — assistive technology announces it, and a form
+     opening over a list has to say which record it is about. The view's own
+     `name` is that name; its `description` is not, because every action
+     inherits the one written for the list and would introduce an edit form
+     with the sentence that introduces the table. */
+  const overlayTitle = <Trans>{view?.name ?? currentAction}</Trans>
+
+  const overlayView = (
+    <ViewResourceContextProvider
+      resourceAction={currentAction}
+      resource={currentResource}
+      id={currentId}
+      data={data}
+      defaultData={
+        currentAction === ActionList.create ? currentDefaultData : undefined
+      }
+    />
+  )
 
   return (
     <>
@@ -152,32 +181,38 @@ export default function ResourceViewButton({
             aria-describedby="modal"
             showCloseButton={true}
           >
-            {/* A dialog needs a name — assistive technology announces it,
-                and a form opening over a list has to say which record it is
-                about. The view's own `name` is that name; its `description`
-                is not, because every action inherits the one written for the
-                list and would introduce an edit form with the sentence that
-                introduces the table. */}
             <DialogHeader>
-              <DialogTitle>
-                <Trans>{view?.name ?? currentAction}</Trans>
-              </DialogTitle>
+              <DialogTitle>{overlayTitle}</DialogTitle>
             </DialogHeader>
-            <ScrollArea className="max-h-[90vh]">
-              <ViewResourceContextProvider
-                resourceAction={currentAction}
-                resource={currentResource}
-                id={currentId}
-                data={data}
-                defaultData={
-                  currentAction === ActionList.create
-                    ? currentDefaultData
-                    : undefined
-                }
-              />
-            </ScrollArea>
+            <ScrollArea className="max-h-[90vh]">{overlayView}</ScrollArea>
           </DialogContent>
         </Dialog>
+      )}
+      {openIn === "drawer" && isOpen.value && (
+        <Drawer
+          open={isOpen.value}
+          onOpenChange={(e) => {
+            isOpen.setValue(e)
+          }}
+          // The direction the panel travels in is also the direction it is
+          // swiped away in, so one prop settles both.
+          swipeDirection={isWideScreen ? "right" : "down"}
+          showSwipeHandle
+        >
+          <DrawerContent
+            // Given a height of its own rather than the content's, the panel
+            // does not resize itself as fields appear, and the form below
+            // scrolls inside it instead of pushing it around.
+            className="data-[swipe-axis=y]:[--drawer-height:85dvh] md:[--drawer-content-width:40rem]"
+          >
+            <DrawerHeader>
+              <DrawerTitle>{overlayTitle}</DrawerTitle>
+            </DrawerHeader>
+            <ScrollArea className="min-h-0 flex-1" viewportClassName="px-4 pb-4">
+              {overlayView}
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
       )}
     </>
   )
