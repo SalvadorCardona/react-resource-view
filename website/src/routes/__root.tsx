@@ -52,6 +52,14 @@ export const Route = createRootRoute({
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
       },
     ],
+    scripts: [
+      {
+        src: "https://umami.cardona.digital/nx.js",
+        defer: true,
+        "data-website-id": "fd583ba3-6e0f-47f6-9bb9-ae3e0d7f5d3c",
+        "data-domains": "cardona.digital",
+      },
+    ],
   }),
   component: RootComponent,
 })
