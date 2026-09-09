@@ -1,5 +1,44 @@
 # react-resource-view
 
+## 0.7.0
+
+### Minor Changes
+
+- ec43323: Open an action in a drawer.
+
+  `behavior: { openIn: "drawer" }` joins `"popup"` and `"window"`: the view slides
+  in as a panel rather than replacing the page or sitting in the middle of it.
+  From the right on a desktop, up from the bottom below the `md` breakpoint —
+  where a thumb reaches — and swiped away towards the side it came from.
+
+  The panel is as tall as the screen, which is what a long form wants: a record
+  with a dozen fields is filled in without the list behind it going anywhere. Like
+  a dialog, it closes itself on the resource's `onChange` rather than navigating
+  after a creation.
+
+- 089e9df: Give a list a header of its own.
+
+  The create button, the export button and the layout switcher used to be stacked
+  above the rows as three loose controls, and the resource's `icon` — already used
+  by the menu and by the sub-view tabs — appeared nowhere on the screen it belongs
+  to. They are now one line: the icon, the view's `name` and its `description` on
+  the left, the layout switcher beside them, the actions on the right.
+
+  Nothing is declared for it: a resource that names no icon simply shows none, and
+  a list nested inside another view — a sub-view tab — leaves the naming to
+  whatever contains it. The filter bar is untouched.
+
+- 32cac69: Add a command that scaffolds a view variant.
+
+  `npx react-resource-view create-view-variant Heatmap --dir src/views` writes one
+  file — the list, row and item components, the factory that declares them and the
+  options interface to extend — where the project keeps its views. Run bare, it
+  asks for the name and the directory; `--icon`, `--jsx`, `--force`, `--dry-run`
+  and `--yes` cover the rest.
+
+  Nothing about declaring a variant changes: the generated factory goes into
+  `viewVariants` beside the built-in ones.
+
 ## 0.6.0
 
 ### Minor Changes
