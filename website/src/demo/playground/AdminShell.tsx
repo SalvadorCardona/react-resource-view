@@ -216,10 +216,10 @@ function SidebarFooter() {
 /**
  * The title of the screen currently on show, and two things to do with it.
  *
- * The views render their own controls — the create button, the layout
- * switcher, the filter bar — but no page title: which one to write is a
- * decision about the shell, not about the list. It is read off the view, so an
- * edit form says "Edit a user" and the list it came from says "Users".
+ * A list introduces itself: its own header carries the resource's icon, its
+ * name and the sentence describing it, beside the layout switcher and the
+ * create button. So the shell writes a title only for the screens that have
+ * none of their own — an edit form saying "Edit a user".
  *
  * Next to it, "Copy link" hands over the URL the reader is looking at —
  * layout, filters, page and open record included, which is the point — and
@@ -233,24 +233,18 @@ function PageHeading() {
 
   if (!view?.name) return null
 
-  // Every action inherits the resource's `view`, description included, so a
-  // form would otherwise be introduced by the sentence written for its list.
-  const description =
-    currentResource.resourceAction === ActionList.list ? view.description : undefined
+  const isList = currentResource.resourceAction === ActionList.list
 
   return (
     <>
       <header className="mb-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">{view.name}</h1>
-          {description && (
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              {description}
-            </p>
-          )}
-        </div>
+        {!isList && (
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight">{view.name}</h1>
+          </div>
+        )}
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <CopyLinkButton />
           {declaration && (
             <button

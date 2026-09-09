@@ -1,6 +1,5 @@
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
-import ChangeViewVariant from "@/views/list/component/ChangeViewOptionComponent"
 import ListViewProviderComponent from "@/views/list/provider/ListViewProvider"
 import { PageLoader } from "@/ui/Loader"
 import { Trans } from "react-mini-i18n"
@@ -12,9 +11,7 @@ import { ViewResourceInterface } from "@/ViewResourceInterface"
 import { FormInterface } from "react-data-form"
 import { ListComponentPropsInterface } from "@/ViewInterface"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
-import { ActionList } from "react-data-form"
-import ResourceViewButton from "@/action/ResourceViewButton"
-import { ExportButton } from "@/views/list/component/ExportButton"
+import { ListHeader } from "@/views/list/component/ListHeader"
 import {
   ListFilterBar,
   listFilterFormClassName,
@@ -35,11 +32,7 @@ export default function ListView() {
 export const ContentList = () => {
   return (
     <div className={"g:p-0 lg:min-w-75 gap-2 flex flex-col"}>
-      <div className={"flex flex-wrap items-center gap-2"}>
-        <ResourceViewButton action={ActionList.create} />
-        <ExportButton />
-      </div>
-      <ChangeViewVariant />
+      <ListHeader />
       <FormFilter />
       <List />
       <NoResult />
