@@ -20,9 +20,9 @@ vi.mock(
 )
 
 vi.mock(
-  "@/views/list/component/dump/DumpRowComponent",
+  "@/views/list/component/preview/PreviewRowComponent",
   () => ({
-    DumpRowComponent: () => null,
+    PreviewRowComponent: () => null,
   })
 )
 

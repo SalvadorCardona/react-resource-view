@@ -20,6 +20,27 @@ export const DEFAULT_ROW_ACTIONS: ActionList[] = [
 ]
 
 /**
+ * The actions a row offers, in the order they are drawn.
+ *
+ * Read on its own by whoever needs to know whether there is anything to draw
+ * at all — a layout putting the buttons behind a separator has to leave both
+ * out when the resource permits none of them.
+ */
+export function useRowActions(
+  resource?: ResourceButtonProps["resource"]
+): ActionList[] {
+  const currentResourceContext = useCurrentViewResourceContext()
+
+  return (
+    resource?.view?.behavior?.rowActions ??
+    currentResourceContext?.view?.behavior?.rowActions ??
+    getResourceConfig()?.defaultResource?.views?.[ActionList.list]?.behavior
+      ?.rowActions ??
+    DEFAULT_ROW_ACTIONS
+  )
+}
+
+/**
  * The buttons at the end of a row.
  *
  * Which ones are drawn is the view's decision — `behavior.rowActions` — because
@@ -31,14 +52,7 @@ export const DEFAULT_ROW_ACTIONS: ActionList[] = [
 export default function ListResourceViewButton(
   props: Omit<ResourceButtonProps, "action">
 ) {
-  const currentResourceContext = useCurrentViewResourceContext()
-
-  const actions =
-    props.resource?.view?.behavior?.rowActions ??
-    currentResourceContext?.view?.behavior?.rowActions ??
-    getResourceConfig()?.defaultResource?.views?.[ActionList.list]?.behavior
-      ?.rowActions ??
-    DEFAULT_ROW_ACTIONS
+  const actions = useRowActions(props.resource)
 
   return (
     <ButtonGroup>

@@ -1,6 +1,6 @@
 import { RowInterface, ViewInterface } from "@/ViewInterface"
 import { DumpItemComponent } from "@/views/list/component/dump/DumpItemComponent"
-import { DumpRowComponent } from "@/views/list/component/dump/DumpRowComponent"
+import { PreviewRowComponent } from "@/views/list/component/preview/PreviewRowComponent"
 import ListTimeline from "@/views/list/component/timeline/ListTimeline"
 import { CalendarRange } from "lucide-react"
 import { createView } from "@/utils/createView"
@@ -50,7 +50,9 @@ export default function timelineViewOptionFactory<
     icon: CalendarRange,
     itemComponent: DumpItemComponent,
     listComponent: ListTimeline,
-    rowComponent: DumpRowComponent,
+    // What the window opening on a bar holds: a summary, not the record in
+    // full. A resource with something better to show declares its own.
+    rowComponent: PreviewRowComponent,
     ...defaultArgs,
   }) as TimelineViewOptionInterface<Data>
 }

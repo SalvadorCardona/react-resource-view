@@ -67,6 +67,14 @@ const RESOLVE = `timelineViewOptionFactory<Booking>({
   }),
 })`
 
+const PREVIEW = `calendarViewOptionFactory({
+  dateKey: "startAt",
+  titleKey: "title",
+  // What the window opening on an event holds. Omit it for the summary
+  // the calendar and the timeline draw by themselves.
+  rowComponent: SessionPreview,
+})`
+
 const LOCALE = `import { fr } from "date-fns/locale"
 import { configurePorts } from "react-resource-view"
 
@@ -80,6 +88,7 @@ function CalendarAndTimeline() {
         { id: "calendar", title: "Calendar" },
         { id: "timeline", title: "Timeline" },
         { id: "groups", title: "Bands that are not just a key" },
+        { id: "preview", title: "Clicking an event" },
         { id: "locale", title: "Locale" },
         { id: "choosing", title: "Which one, when" },
       ]}
@@ -226,6 +235,25 @@ function CalendarAndTimeline() {
           rows a planner is looking for.
         </P>
       </Callout>
+
+      <H2 id="preview">Clicking an event</H2>
+
+      <P>
+        An event, a timeline bar or a “+2 more” opens a small window on the record:
+        its name, when it happens, and a handful of fields labelled the way{" "}
+        <C>form.inputs</C> labels them — followed by the actions the row offers,{" "}
+        <A href="/docs/resource-view/layouts">as anywhere else</A>. It stops at five
+        fields on purpose: the window is a preview, and the record in full is one
+        click away inside it.
+      </P>
+
+      <P>
+        What fills it is the variant's <C>rowComponent</C>, which both layouts
+        default to the summary described above. A resource with something better to
+        show declares its own, exactly as the card and list layouts do.
+      </P>
+
+      <CodeBlock>{PREVIEW}</CodeBlock>
 
       <H2 id="locale">Locale</H2>
 

@@ -24,7 +24,8 @@ import {
   TimelineGroupInterface,
   TimelineViewOptionInterface,
 } from "@/views/list/component/timeline/timelineViewOptionFactory"
-import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
+import { EventPreview } from "@/views/list/component/preview/EventPreview"
+import { formatEventPeriod } from "@/views/list/component/preview/formatEventPeriod"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { getDateLocale, getWeekStartsOn } from "@/ports"
 
@@ -516,8 +517,15 @@ function TimelineRow({
                 >
                   <span className="truncate">{title || "—"}</span>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 border-0 bg-transparent">
-                  <DefaultRowComponent row={entry.row} />
+                <PopoverContent className="w-80">
+                  <EventPreview
+                    row={entry.row}
+                    title={title}
+                    // A bar spans days: its hours are an implementation
+                    // detail of the record, not what the band is read for.
+                    period={formatEventPeriod(entry.start, entry.end, false)}
+                    color={color}
+                  />
                 </PopoverContent>
               </Popover>
             )
