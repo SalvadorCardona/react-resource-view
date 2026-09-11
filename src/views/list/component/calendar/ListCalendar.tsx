@@ -39,7 +39,8 @@ import {
 } from "@/ViewInterface"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { getDateLocale, getWeekStartsOn } from "@/ports"
-import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
+import { EventPreview } from "@/views/list/component/preview/EventPreview"
+import { formatEventPeriod } from "@/views/list/component/preview/formatEventPeriod"
 import {
   CalendarViewMode,
   CalendarViewOptionInterface,
@@ -721,7 +722,13 @@ function CalendarEvent({
         <span className="truncate">{title || "—"}</span>
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <DefaultRowComponent row={entry.row} />
+        <EventPreview
+          row={entry.row}
+          title={title}
+          period={formatEventPeriod(entry.start, entry.end)}
+          color={color}
+          icon={Icon}
+        />
       </PopoverContent>
     </Popover>
   )
@@ -769,7 +776,13 @@ function PositionedEvent({
         )}
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <DefaultRowComponent row={entry.row} />
+        <EventPreview
+          row={entry.row}
+          title={title}
+          period={formatEventPeriod(entry.start, entry.end)}
+          color={color}
+          icon={Icon}
+        />
       </PopoverContent>
     </Popover>
   )

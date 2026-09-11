@@ -1,6 +1,6 @@
 import { RowInterface, ViewInterface } from "@/ViewInterface"
 import { DumpItemComponent } from "@/views/list/component/dump/DumpItemComponent"
-import { DumpRowComponent } from "@/views/list/component/dump/DumpRowComponent"
+import { PreviewRowComponent } from "@/views/list/component/preview/PreviewRowComponent"
 import { ListCalendar } from "@/views/list/component/calendar/ListCalendar"
 import { CalendarDays, LucideIcon } from "lucide-react"
 import { createView } from "@/utils/createView"
@@ -38,7 +38,9 @@ export default function calendarViewOptionFactory(
     icon: CalendarDays,
     itemComponent: DumpItemComponent,
     listComponent: ListCalendar,
-    rowComponent: DumpRowComponent,
+    // What the window opening on an event holds: a summary, not the record in
+    // full. A resource with something better to show declares its own.
+    rowComponent: PreviewRowComponent,
     ...defaultArgs,
   })
 }
