@@ -1,4 +1,4 @@
-![react-resource-view](https://raw.githubusercontent.com/SalvadorCardona/brand-assets/main/projects/react-resource-view/banner.png)
+
 
 <p align="center">
   <a href="https://salvadorcardona.github.io/react-resource-view/playground">
