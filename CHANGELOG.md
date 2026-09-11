@@ -1,5 +1,34 @@
 # react-resource-view
 
+## 0.8.0
+
+### Minor Changes
+
+- 7120675: Open a small window on a calendar event or a timeline bar.
+
+  Clicking one used to print every key of the record — `@context`, `@id` and the
+  dates already written on the event included — which is a data dump rather than a
+  preview. What opens now names the event, dates it in one line, summarises it in
+  at most five fields labelled the way the resource's `form.inputs` labels them,
+  and hands over to the row's actions for the rest.
+
+  The summary is the variant's `rowComponent`, which both layouts now default to
+  `PreviewRowComponent` instead of `DumpRowComponent`: a resource with something
+  better to show still declares its own, exactly as in the card and list layouts.
+
+### Patch Changes
+
+- f974887: Keep a list header on one line when its description is long.
+
+  The header laid the name, the layout switcher and the create button side by
+  side, each free to wrap on its own. A resource introduced by a full sentence
+  took the whole width for it, and the create button was pushed alone onto the
+  line below, floating under the tabs.
+
+  The text now yields instead of pushing — it is the flexible part of the line —
+  and the switcher, the export and the create button form a single bar, so the
+  width that does run out takes the whole bar down, never one button of it.
+
 ## 0.7.0
 
 ### Minor Changes
