@@ -1,134 +1,45 @@
-import { useState } from "react"
+import type { ReactNode } from "react"
 import { ClientOnly } from "@tanstack/react-router"
-import {
-  CalendarRange,
-  Columns3,
-  GanttChartSquare,
-  LayoutGrid,
-  ListChecks,
-  PanelsTopLeft,
-  Table2,
-  type LucideIcon,
-} from "lucide-react"
 import { ResourceDemo } from "@/components/ResourceDemo"
 import { articlesResource, sessionsResource } from "@/demo/resources"
-import { cn } from "@/lib/cn"
-
-interface LayoutEntry {
-  id: string
-  label: string
-  icon: LucideIcon
-  /** One line, shown under the switcher — what this layout is for. */
-  blurb: string
-  /** Both resources declare the layouts that suit the shape of their records. */
-  schedule?: boolean
-}
-
-/**
- * The seven layouts, in the order the documentation introduces them.
- *
- * Five of them read the articles; a calendar and a timeline need records with a
- * start and an end, so they read the conference schedule instead. That split is
- * the honest one: a layout is declared by the resource whose data it can draw.
- */
-const LAYOUTS: LayoutEntry[] = [
-  {
-    id: "table",
-    label: "Table",
-    icon: Table2,
-    blurb: "One column per field, editable in place.",
-  },
-  {
-    id: "card",
-    label: "Cards",
-    icon: LayoutGrid,
-    blurb: "The same records, drawn by a row component of your own.",
-  },
-  {
-    id: "item",
-    label: "List",
-    icon: ListChecks,
-    blurb: "One record per line, for a narrow column.",
-  },
-  {
-    id: "column",
-    label: "Columns",
-    icon: Columns3,
-    blurb: "Grouped by a field — here the status. A board, without a board library.",
-  },
-  {
-    id: "split",
-    label: "Split",
-    icon: PanelsTopLeft,
-    blurb: "The list on the left, the record open on the right.",
-  },
-  {
-    id: "calendar",
-    label: "Calendar",
-    icon: CalendarRange,
-    blurb: "A week of sessions, placed by their start and end.",
-    schedule: true,
-  },
-  {
-    id: "timeline",
-    label: "Timeline",
-    icon: GanttChartSquare,
-    blurb: "The same sessions, one lane per room.",
-    schedule: true,
-  },
-]
 
 /**
  * Seven layouts over one collection, switched by the reader.
  *
- * The point is not the gallery, it is that nothing below the switcher changes:
- * the resource, the form, the filters and the permissions are declared once,
- * and the layout is a line in `viewVariants`. Picking one here is the same call
- * an application makes when it lets its users pick.
+ * The switcher is not drawn here: every list draws a header of its own, and the
+ * layout switcher sits in it — so a gallery adding a second row of the same
+ * buttons above the view would only say twice what the view already says once.
+ * Picking a layout below is the very call an application makes when it lets its
+ * users pick.
+ *
+ * Five of the seven read the articles; a calendar and a timeline need records
+ * with a start and an end, so they read the conference schedule instead. That
+ * split is the honest one: a layout is declared by the resource whose data it
+ * can draw.
  */
 export function LayoutGallery() {
-  const [current, setCurrent] = useState("table")
-  const layout = LAYOUTS.find((entry) => entry.id === current) ?? LAYOUTS[0]!
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-muted/30 px-3 py-3">
-        <div className="flex flex-wrap gap-1">
-          {LAYOUTS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setCurrent(id)}
-              aria-pressed={current === id}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition",
-                current === id
-                  ? "bg-background font-medium text-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-              )}
-            >
-              <Icon className="size-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-6">
+      <GalleryFrame>
+        <ResourceDemo resource={articlesResource} variant="table" />
+      </GalleryFrame>
 
-        <p className="mt-2.5 px-1 text-xs text-muted-foreground">
-          {layout.blurb}
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        A calendar and a timeline place a record between a start and an end, which
+        an article has not got — so the two below read a conference schedule.
+      </p>
 
-      <div className="p-5">
-        <ClientOnly fallback={<GallerySkeleton />}>
-          {/* Remounted per layout: the variant is the view's opening position,
-              not a prop it keeps watching. */}
-          <ResourceDemo
-            key={layout.id}
-            resource={layout.schedule ? sessionsResource : articlesResource}
-            variant={layout.id}
-          />
-        </ClientOnly>
-      </div>
+      <GalleryFrame>
+        <ResourceDemo resource={sessionsResource} variant="calendar" />
+      </GalleryFrame>
+    </div>
+  )
+}
+
+function GalleryFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <ClientOnly fallback={<GallerySkeleton />}>{children}</ClientOnly>
     </div>
   )
 }
