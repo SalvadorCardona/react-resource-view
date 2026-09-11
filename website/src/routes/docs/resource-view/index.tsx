@@ -170,7 +170,7 @@ function ViewIntroduction() {
           },
           {
             to: "/docs/resource-view/forms",
-            title: "Asymmetric forms",
+            title: "A form per action",
             body: "One description for four screens — and a different form where creating is not editing.",
           },
           {

@@ -54,10 +54,11 @@ const LAZY = `inputs: {
 
 const BUILDER = `import { addForm, createFormArrayInputController } from "react-data-form"
 
-// 1. Register the block types. \`@for\` is the tag the palette filters on.
+// 1. Register the block types. The first \`@for\` tag identifies the block, the
+//    ones after it are what the palette filters on.
 addForm("block.hero", {
   name: "Hero",
-  "@for": ["page-block"],
+  "@for": ["block.hero", "page-block"],
   inputs: {
     title: { label: "Title" },
     subtitle: { label: "Subtitle" },
@@ -66,7 +67,7 @@ addForm("block.hero", {
 
 addForm("block.gallery", {
   name: "Gallery",
-  "@for": ["page-block"],
+  "@for": ["block.gallery", "page-block"],
   inputs: { images: { label: "Images", controller: FileInputController } },
 })
 
@@ -240,6 +241,13 @@ function Nested() {
         The palette is fed by the <A href="/docs/form/registry">form registry</A>:{" "}
         <C>addForm</C> puts a form in it under an identifier, and the <C>@for</C>{" "}
         tags are how a builder selects the subset it accepts.
+      </P>
+
+      <P>
+        What that is for — building pages, laying out a résumé, and everything else
+        whose fields the content decides — is{" "}
+        <A href="/docs/form/asymmetric">Asymmetric forms</A>, with the builder
+        running on the page.
       </P>
 
       <H2 id="gotchas">Things worth knowing</H2>
