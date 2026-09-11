@@ -37,7 +37,11 @@ export function ListHeader() {
       className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border pb-4"
     >
       {introduced && (
-        <div className="flex min-w-0 items-center gap-3">
+        // `flex-1` next to `min-w-0`: what gives way when the line is full is
+        // the text, not the controls. Without it a long description takes its
+        // whole natural width and pushes whatever follows onto the line below
+        // — which is how the create button ended up alone under the tabs.
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {Icon && (
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <Icon className="size-5" />
@@ -56,9 +60,17 @@ export function ListHeader() {
         </div>
       )}
 
-      <ChangeViewVariant />
-
-      <div className="flex w-full flex-wrap items-center gap-2 md:ms-auto md:w-auto">
+      {/* The layout switcher and the actions are one bar, not three loose
+          controls: when the width runs out it is the whole bar that goes to the
+          next line, instead of the create button alone drifting under the tabs.
+          `md:justify-end` keeps it on the side it was already on; on a phone it
+          takes the full width and starts from the left, like the rest of the
+          page. */}
+      <div
+        data-slot="list-header-controls"
+        className="flex w-full flex-wrap items-center gap-2 md:ms-auto md:w-auto md:justify-end"
+      >
+        <ChangeViewVariant />
         <ExportButton />
         <ResourceViewButton action={ActionList.create} />
       </div>

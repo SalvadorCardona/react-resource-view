@@ -109,6 +109,20 @@ describe("the header of a list", () => {
     expect(header).toContainElement(screen.getByRole("button", { name: /create/i }))
   })
 
+  // They share one container so that a name too long for the line takes the
+  // whole bar down with it, rather than the create button alone.
+  it("keeps the switcher and the actions in the same bar", async () => {
+    const { container } = renderList("header_articles")
+
+    await screen.findByRole("heading", { name: "Articles" })
+    const controls = container.querySelector('[data-slot="list-header-controls"]')!
+
+    expect(controls).toContainElement(screen.getByRole("tab", { name: "Alpha" }))
+    expect(controls).toContainElement(
+      screen.getByRole("button", { name: /create/i })
+    )
+  })
+
   // A sub-view tab writes the name of the resource it opens; the list inside
   // it would otherwise write it a second time, right underneath.
   it("leaves a nested list unnamed, since what contains it names it", async () => {
