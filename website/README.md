@@ -48,14 +48,17 @@ import `dist/server/server.js` and ignore that file.
 src/
   routes/
     index.tsx              landing page
-    playground.tsx         a complete back office, built from two scopes
+    playground.tsx         the shell the two playgrounds share
+    playground/index.tsx   a complete back office, built from two scopes
+    playground/builder.tsx a page builder, and the same field as a résumé
     docs.tsx               the docs shell: header + split sidebar
-    docs/form/*            react-data-form           (11 pages)
-    docs/resource-view/*   react-resource-view       (14 pages)
+    docs/form/*            react-data-form           (13 pages)
+    docs/resource-view/*   react-resource-view       (15 pages)
   components/              DocArticle, CodeBlock, Demo, FormDemo, ResourceDemo…
   demo/                    fixtures, the two demo resources, library setup
   demo/playground/         the playground's administration: scopes, shell, overview
   demo/playground/resources/  one file per resource — what the "Declaration" button shows
+  demo/builder/            the block types, the two previews, the studio around them
   lib/navigation.ts        the sidebar model — the source of truth for pages
   styles/app.css           the theme, and the shadcn variables both libraries read
 ```

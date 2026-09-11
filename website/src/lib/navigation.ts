@@ -14,6 +14,7 @@ import {
   KeyRound,
   Layers,
   LayoutGrid,
+  LayoutTemplate,
   Network,
   ListChecks,
   PanelsTopLeft,
@@ -145,6 +146,13 @@ export const FORM_SECTION: DocSection = {
           summary: "Sub-forms, repeatable rows, and the page-builder controller.",
           icon: FolderTree,
         },
+        {
+          href: "/docs/form/asymmetric",
+          title: "Asymmetric forms",
+          summary:
+            "Page builders and résumés: a form whose shape its own content decides.",
+          icon: LayoutTemplate,
+        },
       ],
     },
     {
@@ -205,7 +213,7 @@ export const VIEW_SECTION: DocSection = {
         },
         {
           href: "/docs/resource-view/forms",
-          title: "Asymmetric forms",
+          title: "A form per action",
           summary:
             "One description for four screens — and a different form where creating is not editing.",
           icon: SquarePen,

@@ -12,7 +12,7 @@ import { drawerArticlesResource } from "@/demo/resources"
 export const Route = createFileRoute("/docs/resource-view/forms")({
   head: () => ({
     meta: [
-      { title: "Asymmetric forms — react-resource-view" },
+      { title: "A form per action — react-resource-view" },
       {
         name: "description",
         content:
@@ -192,7 +192,7 @@ function Forms() {
       <H2 id="asymmetric">When creating is not editing</H2>
 
       <P>
-        An asymmetric declaration is the shared form plus one override. Below, the
+        A per-action declaration is the shared form plus one override. Below, the
         create form asks for two fields and the edit form for six — the article is
         started in a sentence and completed later.
       </P>
@@ -359,8 +359,8 @@ function Forms() {
       <H2 id="read-delete">Reading and deleting</H2>
 
       <P>
-        The other two actions are forms as well, and are asymmetric more often than
-        they look.
+        The other two actions are forms as well, and differ from the shared one more
+        often than they look.
       </P>
 
       <CodeBlock>{READ_DELETE}</CodeBlock>

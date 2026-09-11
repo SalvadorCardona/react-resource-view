@@ -55,6 +55,14 @@ export function configureLibraries(): void {
     order: "Order",
     remove: "Remove",
     drag: "Drag",
+    // The page-builder palette. These are keys rather than sentences, so
+    // without an entry here the button reads "form.array.add" — the one place
+    // on the site where a missing translation is visible rather than merely
+    // French.
+    "form.array.add": "Add a block",
+    "form.array.add.title": "Add a block",
+    "form.array.add.description": "Pick what goes in, and it lands at the end.",
+    "max.length.array": "At least {{size}} of them are needed.",
   })
 
   configureFormPorts({

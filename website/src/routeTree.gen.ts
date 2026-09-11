@@ -13,8 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
+import { Route as PlaygroundIndexRouteImport } from './routes/playground/index'
+import { Route as PlaygroundBuilderRouteImport } from './routes/playground/builder'
 import { Route as DocsFormIndexRouteImport } from './routes/docs/form/index'
 import { Route as DocsFormAnatomyRouteImport } from './routes/docs/form/anatomy'
+import { Route as DocsFormAsymmetricRouteImport } from './routes/docs/form/asymmetric'
 import { Route as DocsFormConfigurationRouteImport } from './routes/docs/form/configuration'
 import { Route as DocsFormControllersRouteImport } from './routes/docs/form/controllers'
 import { Route as DocsFormCustomControllerRouteImport } from './routes/docs/form/custom-controller'
@@ -61,6 +64,16 @@ const DocsIndexRoute = DocsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DocsRoute,
 } as any)
+const PlaygroundIndexRoute = PlaygroundIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PlaygroundRoute,
+} as any)
+const PlaygroundBuilderRoute = PlaygroundBuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => PlaygroundRoute,
+} as any)
 const DocsFormIndexRoute = DocsFormIndexRouteImport.update({
   id: '/form/',
   path: '/form/',
@@ -69,6 +82,11 @@ const DocsFormIndexRoute = DocsFormIndexRouteImport.update({
 const DocsFormAnatomyRoute = DocsFormAnatomyRouteImport.update({
   id: '/form/anatomy',
   path: '/form/anatomy',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFormAsymmetricRoute = DocsFormAsymmetricRouteImport.update({
+  id: '/form/asymmetric',
+  path: '/form/asymmetric',
   getParentRoute: () => DocsRoute,
 } as any)
 const DocsFormConfigurationRoute = DocsFormConfigurationRouteImport.update({
@@ -208,9 +226,12 @@ const DocsResourceViewTableRoute = DocsResourceViewTableRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/docs': typeof DocsRouteWithChildren
-  '/playground': typeof PlaygroundRoute
+  '/playground': typeof PlaygroundRouteWithChildren
+  '/playground/builder': typeof PlaygroundBuilderRoute
   '/docs/': typeof DocsIndexRoute
+  '/playground/': typeof PlaygroundIndexRoute
   '/docs/form/anatomy': typeof DocsFormAnatomyRoute
+  '/docs/form/asymmetric': typeof DocsFormAsymmetricRoute
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
@@ -240,9 +261,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/playground': typeof PlaygroundRoute
+  '/playground/builder': typeof PlaygroundBuilderRoute
   '/docs': typeof DocsIndexRoute
+  '/playground': typeof PlaygroundIndexRoute
   '/docs/form/anatomy': typeof DocsFormAnatomyRoute
+  '/docs/form/asymmetric': typeof DocsFormAsymmetricRoute
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
@@ -274,9 +297,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/docs': typeof DocsRouteWithChildren
-  '/playground': typeof PlaygroundRoute
+  '/playground': typeof PlaygroundRouteWithChildren
+  '/playground/builder': typeof PlaygroundBuilderRoute
   '/docs/': typeof DocsIndexRoute
+  '/playground/': typeof PlaygroundIndexRoute
   '/docs/form/anatomy': typeof DocsFormAnatomyRoute
+  '/docs/form/asymmetric': typeof DocsFormAsymmetricRoute
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
@@ -310,8 +336,11 @@ export interface FileRouteTypes {
     | '/'
     | '/docs'
     | '/playground'
+    | '/playground/builder'
     | '/docs/'
+    | '/playground/'
     | '/docs/form/anatomy'
+    | '/docs/form/asymmetric'
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
@@ -341,9 +370,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/playground'
+    | '/playground/builder'
     | '/docs'
+    | '/playground'
     | '/docs/form/anatomy'
+    | '/docs/form/asymmetric'
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
@@ -375,8 +406,11 @@ export interface FileRouteTypes {
     | '/'
     | '/docs'
     | '/playground'
+    | '/playground/builder'
     | '/docs/'
+    | '/playground/'
     | '/docs/form/anatomy'
+    | '/docs/form/asymmetric'
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
@@ -408,7 +442,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DocsRoute: typeof DocsRouteWithChildren
-  PlaygroundRoute: typeof PlaygroundRoute
+  PlaygroundRoute: typeof PlaygroundRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -441,6 +475,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/playground/': {
+      id: '/playground/'
+      path: '/'
+      fullPath: '/playground/'
+      preLoaderRoute: typeof PlaygroundIndexRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
+    '/playground/builder': {
+      id: '/playground/builder'
+      path: '/builder'
+      fullPath: '/playground/builder'
+      preLoaderRoute: typeof PlaygroundBuilderRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
     '/docs/form/': {
       id: '/docs/form/'
       path: '/form'
@@ -453,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/form/anatomy'
       fullPath: '/docs/form/anatomy'
       preLoaderRoute: typeof DocsFormAnatomyRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/form/asymmetric': {
+      id: '/docs/form/asymmetric'
+      path: '/form/asymmetric'
+      fullPath: '/docs/form/asymmetric'
+      preLoaderRoute: typeof DocsFormAsymmetricRouteImport
       parentRoute: typeof DocsRoute
     }
     '/docs/form/configuration': {
@@ -636,6 +691,7 @@ declare module '@tanstack/react-router' {
 interface DocsRouteChildren {
   DocsIndexRoute: typeof DocsIndexRoute
   DocsFormAnatomyRoute: typeof DocsFormAnatomyRoute
+  DocsFormAsymmetricRoute: typeof DocsFormAsymmetricRoute
   DocsFormConfigurationRoute: typeof DocsFormConfigurationRoute
   DocsFormControllersRoute: typeof DocsFormControllersRoute
   DocsFormCustomControllerRoute: typeof DocsFormCustomControllerRoute
@@ -667,6 +723,7 @@ interface DocsRouteChildren {
 const DocsRouteChildren: DocsRouteChildren = {
   DocsIndexRoute: DocsIndexRoute,
   DocsFormAnatomyRoute: DocsFormAnatomyRoute,
+  DocsFormAsymmetricRoute: DocsFormAsymmetricRoute,
   DocsFormConfigurationRoute: DocsFormConfigurationRoute,
   DocsFormControllersRoute: DocsFormControllersRoute,
   DocsFormCustomControllerRoute: DocsFormCustomControllerRoute,
@@ -697,10 +754,24 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface PlaygroundRouteChildren {
+  PlaygroundBuilderRoute: typeof PlaygroundBuilderRoute
+  PlaygroundIndexRoute: typeof PlaygroundIndexRoute
+}
+
+const PlaygroundRouteChildren: PlaygroundRouteChildren = {
+  PlaygroundBuilderRoute: PlaygroundBuilderRoute,
+  PlaygroundIndexRoute: PlaygroundIndexRoute,
+}
+
+const PlaygroundRouteWithChildren = PlaygroundRoute._addFileChildren(
+  PlaygroundRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DocsRoute: DocsRouteWithChildren,
-  PlaygroundRoute: PlaygroundRoute,
+  PlaygroundRoute: PlaygroundRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

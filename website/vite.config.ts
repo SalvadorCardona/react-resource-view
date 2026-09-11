@@ -41,7 +41,11 @@ export default defineConfig({
         // route would be a 404 nobody notices until a reader hits it.
         failOnError: true,
       },
-      pages: [{ path: "/" }, { path: "/playground" }],
+      pages: [
+        { path: "/" },
+        { path: "/playground" },
+        { path: "/playground/builder" },
+      ],
     }),
     viteReact(),
     tailwindcss(),

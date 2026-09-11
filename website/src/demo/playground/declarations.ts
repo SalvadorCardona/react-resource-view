@@ -14,6 +14,7 @@ import {
   ROASTS_ID,
   USERS_ID,
 } from "@/demo/playground/adminData"
+import { stripComments } from "@/lib/stripComments"
 
 export interface Declaration {
   /** The file, as the reader would find it in the repository. */
@@ -41,20 +42,6 @@ const SOURCES: Record<string, { file: string; raw: string }> = {
   [PRODUCTS_ID]: { file: "resources/products.ts", raw: productsSource },
   [ORDERS_ID]: { file: "resources/orders.ts", raw: ordersSource },
   [ROASTS_ID]: { file: "resources/roasts.ts", raw: roastsSource },
-}
-
-function stripComments(source: string): string {
-  return (
-    source
-      // Block comments, JSDoc included.
-      .replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t]*\n/gm, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      // Whole-line comments. An inline `//` inside a string would be a false
-      // match, and none of these files has one.
-      .replace(/^[ \t]*\/\/.*\n/gm, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-  )
 }
 
 const DECLARATIONS: Record<string, Declaration> = Object.fromEntries(

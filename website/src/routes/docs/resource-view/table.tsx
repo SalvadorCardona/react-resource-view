@@ -162,7 +162,7 @@ function TableAndCards() {
         <P>
           It is one entry away — put it back where the detail view carries more than
           the list does, which is exactly the case{" "}
-          <A href="/docs/resource-view/forms">an asymmetric read form</A> describes.
+          <A href="/docs/resource-view/forms">a read form of its own</A> describes.
           Permissions apply on top either way: an action listed here without the
           matching <C>can*</C> renders nothing.
         </P>
