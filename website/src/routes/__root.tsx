@@ -8,6 +8,13 @@ import {
 import { Footer } from "@/components/Footer"
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle"
 import { configureLibraries } from "@/demo/setup"
+import { findPage, findSection, SECTIONS, stripTrailingSlash } from "@/lib/navigation"
+import {
+  canonicalUrl,
+  defaultOgImageUrl,
+  softwareSourceCodeJsonLd,
+  techArticleJsonLd,
+} from "@/lib/seo"
 import appCss from "@/styles/app.css?url"
 
 // Both libraries are configured through module-level singletons, so this has to
@@ -20,47 +27,81 @@ const DESCRIPTION =
   "Documentation for react-data-form and react-resource-view: describe a form as data, declare a resource, and get the list, the detail and the CRUD forms wired to your API."
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#7c5cff" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      // BASE_URL already ends in a slash, and carries the /<repository>/ prefix
-      // GitHub Pages serves a project site under.
-      {
-        rel: "icon",
-        href: `${import.meta.env.BASE_URL}favicon.svg`,
-        type: "image/svg+xml",
-      },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
-      },
-    ],
-    scripts: [
-      {
-        src: "https://umami.cardona.digital/nx.js",
-        defer: true,
-        "data-website-id": "fd583ba3-6e0f-47f6-9bb9-ae3e0d7f5d3c",
-        "data-domains": "cardona.digital",
-      },
-    ],
-  }),
+  // Every match down to the leaf page is available here, so the canonical URL
+  // and the structured data are worked out once, from the page the reader is
+  // actually on, instead of being repeated — and possibly forgotten — in each
+  // route file.
+  head: (ctx) => {
+    const pathname = stripTrailingSlash(ctx.matches.at(-1)?.pathname ?? "/")
+    const canonical = canonicalUrl(pathname)
+    const ogImage = defaultOgImageUrl()
+    const page = findPage(pathname)
+    const section = findSection(pathname)
+
+    // The page-specific <title>/description are set by each route's own
+    // `head()`, which wins over these — but Open Graph and Twitter Card have
+    // no such per-route entry today, so they are worked out here from the
+    // same navigation data the sidebar and the pager already read.
+    const ogTitle = page && section ? `${page.title} — ${section.pkg}` : TITLE
+    const ogDescription = page ? page.summary : DESCRIPTION
+
+    const jsonLd =
+      pathname === "/"
+        ? SECTIONS.map(softwareSourceCodeJsonLd)
+        : page && section
+          ? [techArticleJsonLd(page, section, canonical)]
+          : []
+
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: TITLE },
+        { name: "description", content: DESCRIPTION },
+        { property: "og:title", content: ogTitle },
+        { property: "og:description", content: ogDescription },
+        { property: "og:type", content: "website" },
+        { property: "og:image", content: ogImage },
+        { property: "og:url", content: canonical },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: ogImage },
+        { name: "theme-color", content: "#7c5cff" },
+      ],
+      links: [
+        { rel: "canonical", href: canonical },
+        { rel: "stylesheet", href: appCss },
+        // BASE_URL already ends in a slash, and carries the /<repository>/ prefix
+        // GitHub Pages serves a project site under.
+        {
+          rel: "icon",
+          href: `${import.meta.env.BASE_URL}favicon.svg`,
+          type: "image/svg+xml",
+        },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossOrigin: "anonymous",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+        },
+      ],
+      scripts: [
+        {
+          src: "https://umami.cardona.digital/nx.js",
+          defer: true,
+          "data-website-id": "fd583ba3-6e0f-47f6-9bb9-ae3e0d7f5d3c",
+          "data-domains": "cardona.digital",
+        },
+        ...jsonLd.map((entry) => ({
+          type: "application/ld+json",
+          children: JSON.stringify(entry),
+        })),
+      ],
+    }
+  },
   component: RootComponent,
 })
 

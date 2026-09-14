@@ -1,7 +1,7 @@
 
 
 <p align="center">
-  <a href="https://salvadorcardona.github.io/react-resource-view/playground">
+  <a href="https://cardona.digital/react-resource-view/playground">
     <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi or Supabase and to the URL" width="100%">
   </a>
 </p>
@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/react-resource-view"><img alt="npm" src="https://img.shields.io/npm/v/react-resource-view?color=3b7dd8&label=npm"></a>
   <a href="https://github.com/SalvadorCardona/react-resource-view/blob/main/LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-f0a35a"></a>
-  <a href="https://salvadorcardona.github.io/react-resource-view/playground"><img alt="Playground" src="https://img.shields.io/badge/playground-live-3ecf8e"></a>
+  <a href="https://cardona.digital/react-resource-view/playground"><img alt="Playground" src="https://img.shields.io/badge/playground-live-3ecf8e"></a>
 </p>
 
 # react-resource-view
@@ -40,17 +40,17 @@ for the forms. Which API answers, and how it spells a page or a filter, is a
 ## Documentation
 
 Everything below, at length and with the examples running rather than quoted:
-[the documentation site](https://salvadorcardona.github.io/react-resource-view/docs/resource-view)
+[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view)
 — a page per layout, per filter, per dialect — and a
-[playground](https://salvadorcardona.github.io/react-resource-view/playground):
+[playground](https://cardona.digital/react-resource-view/playground):
 a whole back office built from seven resource declarations, every edit real,
 every screen a URL, and the source of each screen one click away.
 
-[![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://salvadorcardona.github.io/react-resource-view/playground)
+[![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://cardona.digital/react-resource-view/playground)
 
 ## Architecture
 
-[![The pieces of react-resource-view and how they fit together](diagrams/react-resource-view.png)](https://salvadorcardona.github.io/react-resource-view/architecture.html)
+[![The pieces of react-resource-view and how they fit together](diagrams/react-resource-view.png)](https://cardona.digital/react-resource-view/architecture.html)
 
 A resource is declared once and registered. The URL says which resource, which
 action and which filters; the context resolves that into a view, fetches through
@@ -59,7 +59,7 @@ itself, nor to one API in particular: the router arrives through
 `configurePorts`, the API through `configureApi`.
 
 The picture above is a still of an interactive diagram:
-[open it](https://salvadorcardona.github.io/react-resource-view/architecture.html)
+[open it](https://cardona.digital/react-resource-view/architecture.html)
 to trace a relationship, focus a component, or follow the four guided views.
 
 ## Connecting an API
@@ -307,7 +307,7 @@ view: {
 `--icon <LucideIcon>` picks the switcher's icon, `--jsx` writes JavaScript,
 `--dry-run` prints the file instead of writing it, and `--yes` never asks — see
 `npx react-resource-view --help`. [Create your own view
-variant](https://salvadorcardona.github.io/react-resource-view/docs/resource-view/custom-variant)
+variant](https://cardona.digital/react-resource-view/docs/resource-view/custom-variant)
 takes the generated file apart, and runs one.
 
 ## Filters

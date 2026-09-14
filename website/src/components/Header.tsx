@@ -26,9 +26,9 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
             </button>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="Resource & Form — home">
             <Logo />
-            <span className="hidden text-sm font-semibold tracking-tight sm:block">
+            <span className="hidden text-sm font-semibold tracking-tight sm:block" aria-hidden>
               Resource&nbsp;&amp;&nbsp;Form
             </span>
           </Link>
