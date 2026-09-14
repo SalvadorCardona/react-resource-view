@@ -30,12 +30,14 @@ function LandingPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <Hero />
-      <Packages />
-      <OneDescription />
-      <Layouts />
-      <Features />
-      <Closing />
+      <main>
+        <Hero />
+        <Packages />
+        <OneDescription />
+        <Layouts />
+        <Features />
+        <Closing />
+      </main>
     </div>
   )
 }
