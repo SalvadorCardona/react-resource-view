@@ -63,6 +63,12 @@ const DIALOG = `import { ChildViewResourceDialog } from "react-resource-view"
   resourceAction={ActionList.create}
 />`
 
+const ORIENTATION = `subViewResource: {
+  // "horizontal" by default: a bar above the sub-view.
+  orientation: "vertical",
+  list: [...],
+}`
+
 const NESTED_URL = `/admin/authors/read/7/articles
 //                            └ subResource: which tab is open
 
@@ -75,6 +81,7 @@ function SubViews() {
       toc={[
         { id: "why", title: "The shape of the problem" },
         { id: "declaring", title: "Declaring sub-views" },
+        { id: "navigation", title: "Where the tabs are drawn" },
         { id: "context", title: "Deriving from the parent" },
         { id: "url", title: "Nesting in the URL" },
         { id: "dialog", title: "A child view in a dialog" },
@@ -159,6 +166,33 @@ function SubViews() {
         <C>MultiViewTab</C> renders the tab bar. It is exported, so a detail page
         laid out by hand can place it wherever it belongs.
       </P>
+
+      <H2 id="navigation">Where the tabs are drawn</H2>
+
+      <P>
+        By default the tabs are a bar above the sub-view. It stays on a single line
+        and scrolls sideways when they run past the screen, which is what a phone
+        needs: eight sub-views used to wrap onto three rows of buttons and push the
+        sub-view itself below the fold, and the labels were cut short to limit the
+        damage.
+      </P>
+
+      <CodeBlock>{ORIENTATION}</CodeBlock>
+
+      <P>
+        <C>{'orientation: "vertical"'}</C> puts them in a column beside the sub-view
+        instead — the shape a record with a dozen of them wants, since a menu read
+        from top to bottom shows them all at once and the sub-view keeps the rest of
+        the width. The column follows the reader down the page.
+      </P>
+
+      <Callout kind="note" title="The column is a desktop shape">
+        <P>
+          Below <C>768px</C> a menu beside the sub-view would leave it a third of the
+          screen, so <C>vertical</C> falls back to the scrolling bar there. Nothing
+          to declare for it: the same declaration reads both ways.
+        </P>
+      </Callout>
 
       <H2 id="context">Deriving from the parent</H2>
 
