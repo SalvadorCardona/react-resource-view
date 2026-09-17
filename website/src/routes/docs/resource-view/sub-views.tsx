@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { ActionList } from "react-data-form"
+import { generateLink, Link } from "react-resource-view"
 import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
@@ -75,6 +77,34 @@ const NESTED_URL = `/admin/authors/read/7/articles
 /admin/authors/read/7/articles/categories/create
 //                            └ the child view's own three segments`
 
+/**
+ * The page this one describes, running in the playground.
+ *
+ * The link is built rather than written out so it reads like the call an
+ * application would make — and because the open tab is a segment of the
+ * context, it lands on the team of that company rather than on the company.
+ */
+function LiveExample() {
+  const href = generateLink({
+    scope: "admin",
+    resourceId: "admin_companies",
+    resourceAction: ActionList.update,
+    id: "1",
+    subResource: "team",
+  })
+
+  return (
+    <Callout kind="tip" title="The example, live">
+      <P>
+        The playground's back office has a company page built exactly this way:
+        the form first, then its team and the batches roasted for it, each
+        filtered by the company on screen and each creating records that already
+        belong to it. <Link to={href}>Open a company with its tabs</Link>.
+      </P>
+    </Callout>
+  )
+}
+
 function SubViews() {
   return (
     <DocArticle
@@ -100,6 +130,8 @@ function SubViews() {
         A sub-view is a full view context nested inside another: it fetches, it
         filters, it paginates, it writes. It is not a read-only panel.
       </P>
+
+      <LiveExample />
 
       <H2 id="declaring">Declaring sub-views</H2>
 

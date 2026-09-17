@@ -3,15 +3,29 @@ import { getInStorage, setInStorage } from "ssr-safe-storage"
 /**
  * The fixtures the playground's back office runs on.
  *
- * A small coffee roastery: the people who can sign in, the blog it publishes,
- * the catalogue it sells and the roasters it runs. Four areas rather than one
- * collection, because that is what a scope is for — an administration is a
- * menu of resources, and a single list would never show it.
+ * A small coffee roastery: the people who can sign in, the accounts it
+ * supplies, the blog it publishes, the catalogue it sells and the roasters it
+ * runs. Five areas rather than one collection, because that is what a scope is
+ * for — an administration is a menu of resources, and a single list would never
+ * show it.
  *
  * None of these resources declares a `path`, so `createViewResource` falls back
  * to the localStorage repository: the whole back office is genuinely writable,
  * and the changes survive a reload — see `seedAdminData`.
  */
+
+export interface Company {
+  "@id": string
+  "@type": string
+  id: string
+  name: string
+  city: string
+  /** Fourteen digits, the way a French company is registered. */
+  siret: string
+  status: "prospect" | "customer" | "former"
+  /** The day the account was opened. */
+  signedAt: string
+}
 
 export interface User {
   "@id": string
@@ -19,6 +33,12 @@ export interface User {
   id: string
   name: string
   email: string
+  /**
+   * The account the person signs in for, by name — empty for the roastery's
+   * own staff. A name rather than an IRI because that is what the company page
+   * filters its team on, and what its create form writes back.
+   */
+  company: string
   role: "admin" | "editor" | "reader"
   status: "active" | "invited" | "suspended"
   signedUpAt: string
@@ -81,6 +101,8 @@ export interface Roast {
   origin: string
   /** The machine it goes on — the lane of the timeline. */
   roaster: string
+  /** Who the batch is roasted for, by name — empty when it goes to stock. */
+  company: string
   profile: "light" | "medium" | "dark"
   /** Green coffee going in, in kilograms. */
   weight: number
@@ -89,6 +111,7 @@ export interface Roast {
   endAt: string
 }
 
+export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
@@ -101,6 +124,12 @@ export const ROASTS_ID = "admin_roasts"
  * but it holds no rows: its screen is drawn from the collections above.
  */
 export const OVERVIEW_ID = "admin_overview"
+
+export const COMPANY_STATUSES = [
+  { label: "Prospect", value: "prospect" },
+  { label: "Customer", value: "customer" },
+  { label: "Former customer", value: "former" },
+]
 
 export const USER_ROLES = [
   { label: "Administrator", value: "admin" },
@@ -175,11 +204,71 @@ export const ROAST_STATUSES = [
   { label: "Failed cupping", value: "rejected" },
 ]
 
+/**
+ * The accounts the roastery supplies: the cafés, hotels and offices its
+ * wholesale side lives on.
+ *
+ * Their names are the key the two collections hanging off a company are
+ * filtered on, so no two of them share a run of words — the local repository
+ * matches a string filter as a substring.
+ */
+const COMPANIES: Array<Omit<Company, "@id" | "@type">> = [
+  {
+    id: "1",
+    name: "Café des Arceaux",
+    city: "Montpellier",
+    siret: "84219753100024",
+    status: "customer",
+    signedAt: "2025-09-12",
+  },
+  {
+    id: "2",
+    name: "Hôtel Malabar",
+    city: "Lyon",
+    siret: "51230984700017",
+    status: "customer",
+    signedAt: "2025-11-28",
+  },
+  {
+    id: "3",
+    name: "Le Comptoir Vert",
+    city: "Nantes",
+    siret: "90412876500038",
+    status: "customer",
+    signedAt: "2026-01-16",
+  },
+  {
+    id: "4",
+    name: "Brasserie Nord",
+    city: "Lille",
+    siret: "78345612900042",
+    status: "prospect",
+    signedAt: "2026-02-20",
+  },
+  {
+    id: "5",
+    name: "Studio Kaffa",
+    city: "Bordeaux",
+    siret: "63298741000011",
+    status: "prospect",
+    signedAt: "2026-03-02",
+  },
+  {
+    id: "6",
+    name: "Maison Perrin",
+    city: "Toulouse",
+    siret: "42087619300029",
+    status: "former",
+    signedAt: "2024-05-07",
+  },
+]
+
 const USERS: Array<Omit<User, "@id" | "@type">> = [
   {
     id: "1",
     name: "Ada Lovelace",
     email: "ada@roastery.example",
+    company: "",
     role: "admin",
     status: "active",
     signedUpAt: "2025-11-03",
@@ -188,6 +277,7 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
     id: "2",
     name: "Grace Hopper",
     email: "grace@roastery.example",
+    company: "",
     role: "editor",
     status: "active",
     signedUpAt: "2025-12-14",
@@ -195,7 +285,8 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
   {
     id: "3",
     name: "Alan Turing",
-    email: "alan@roastery.example",
+    email: "alan@arceaux.example",
+    company: "Café des Arceaux",
     role: "editor",
     status: "invited",
     signedUpAt: "2026-01-07",
@@ -204,6 +295,7 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
     id: "4",
     name: "Barbara Liskov",
     email: "barbara@roastery.example",
+    company: "",
     role: "admin",
     status: "active",
     signedUpAt: "2026-01-22",
@@ -211,7 +303,8 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
   {
     id: "5",
     name: "Katherine Johnson",
-    email: "katherine@roastery.example",
+    email: "katherine@malabar.example",
+    company: "Hôtel Malabar",
     role: "reader",
     status: "active",
     signedUpAt: "2026-02-02",
@@ -219,7 +312,8 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
   {
     id: "6",
     name: "Margaret Hamilton",
-    email: "margaret@roastery.example",
+    email: "margaret@arceaux.example",
+    company: "Café des Arceaux",
     role: "editor",
     status: "suspended",
     signedUpAt: "2026-02-18",
@@ -227,7 +321,8 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
   {
     id: "7",
     name: "Radia Perlman",
-    email: "radia@roastery.example",
+    email: "radia@comptoir-vert.example",
+    company: "Le Comptoir Vert",
     role: "reader",
     status: "invited",
     signedUpAt: "2026-03-05",
@@ -509,6 +604,7 @@ const ROAST_SEEDS: Array<
     batch: "Ethiopia Yirgacheffe, lot 12",
     origin: "Ethiopia",
     roaster: "Probat P12",
+    company: "Café des Arceaux",
     profile: "light",
     weight: 12,
     status: "done",
@@ -521,6 +617,7 @@ const ROAST_SEEDS: Array<
     batch: "Colombia Huila, lot 4",
     origin: "Colombia",
     roaster: "Loring S35",
+    company: "Hôtel Malabar",
     profile: "medium",
     weight: 35,
     status: "done",
@@ -533,6 +630,7 @@ const ROAST_SEEDS: Array<
     batch: "Brazil Cerrado, espresso",
     origin: "Brazil",
     roaster: "Loring S35",
+    company: "Le Comptoir Vert",
     profile: "dark",
     weight: 30,
     status: "rejected",
@@ -545,6 +643,7 @@ const ROAST_SEEDS: Array<
     batch: "Kenya AA, sample",
     origin: "Kenya",
     roaster: "Sample roaster",
+    company: "Brasserie Nord",
     profile: "light",
     weight: 1,
     status: "done",
@@ -557,6 +656,7 @@ const ROAST_SEEDS: Array<
     batch: "Ethiopia Yirgacheffe, lot 13",
     origin: "Ethiopia",
     roaster: "Probat P12",
+    company: "Café des Arceaux",
     profile: "light",
     weight: 12,
     status: "roasting",
@@ -569,6 +669,7 @@ const ROAST_SEEDS: Array<
     batch: "Decaf Colombia, Swiss water",
     origin: "Colombia",
     roaster: "Probat P12",
+    company: "",
     profile: "medium",
     weight: 10,
     status: "planned",
@@ -581,6 +682,7 @@ const ROAST_SEEDS: Array<
     batch: "Guatemala Antigua, lot 2",
     origin: "Guatemala",
     roaster: "Loring S35",
+    company: "Hôtel Malabar",
     profile: "medium",
     weight: 35,
     status: "planned",
@@ -593,6 +695,7 @@ const ROAST_SEEDS: Array<
     batch: "Rwanda Nyamasheke, sample",
     origin: "Rwanda",
     roaster: "Sample roaster",
+    company: "Studio Kaffa",
     profile: "light",
     weight: 1,
     status: "planned",
@@ -605,6 +708,7 @@ const ROAST_SEEDS: Array<
     batch: "Subscription blend, March",
     origin: "Brazil, Colombia",
     roaster: "Loring S35",
+    company: "",
     profile: "medium",
     weight: 35,
     status: "planned",
@@ -617,6 +721,7 @@ const ROAST_SEEDS: Array<
     batch: "Cold brew blend",
     origin: "Brazil",
     roaster: "Probat P12",
+    company: "Le Comptoir Vert",
     profile: "dark",
     weight: 12,
     status: "planned",
@@ -659,6 +764,7 @@ function write(id: string, rows: Array<{ id: string }>): void {
 /** Every collection of the back office, with the fixtures it starts from. */
 function fixtures(): Array<[string, Array<{ id: string }>]> {
   return [
+    [COMPANIES_ID, COMPANIES],
     [USERS_ID, USERS],
     [POSTS_ID, POSTS],
     [COMMENTS_ID, COMMENTS],
@@ -667,6 +773,19 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
     [ROASTS_ID, buildRoasts()],
   ]
 }
+
+const SEED_VERSION_ID = "admin_seed_version"
+
+/**
+ * Bumped whenever the fixtures gain a field a screen relies on — the companies
+ * and the `company` each user and each batch belongs to, this time.
+ *
+ * Seeding only where nothing is stored is right for a new collection and wrong
+ * for an existing one gaining a field: a reader who opened the playground last
+ * month would keep users written before the field existed, and a company page
+ * would show empty tabs for them. The number is how that is noticed.
+ */
+const SEED_VERSION = "2"
 
 /**
  * Writes the back office fixtures — only where nothing is stored yet.
@@ -677,6 +796,11 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
  * rather than a demo. `resetAdminData` is the way back to the fixtures.
  */
 export function seedAdminData(): void {
+  if (getInStorage(SEED_VERSION_ID) !== SEED_VERSION) {
+    resetAdminData()
+    return
+  }
+
   for (const [id, rows] of fixtures()) {
     if (getInStorage(id) == null) write(id, rows)
   }
@@ -685,6 +809,7 @@ export function seedAdminData(): void {
 /** Throws away every edit and writes the fixtures again. */
 export function resetAdminData(): void {
   for (const [id, rows] of fixtures()) write(id, rows)
+  setInStorage(SEED_VERSION_ID, SEED_VERSION)
 }
 
 /**

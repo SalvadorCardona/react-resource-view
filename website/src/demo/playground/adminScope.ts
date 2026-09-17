@@ -9,6 +9,7 @@ import { AdminShell } from "@/demo/playground/AdminShell"
 import { seedAdminData } from "@/demo/playground/adminData"
 import {
   commentsResource,
+  companiesResource,
   ordersResource,
   overviewResource,
   postsResource,
@@ -22,7 +23,7 @@ import {
 seedAdminData()
 
 /**
- * The back office of the playground: one area, seven resources, one menu.
+ * The back office of the playground: one area, eight resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
@@ -41,6 +42,7 @@ export const adminScope: ScopeInterface = {
   resources: [
     overviewResource,
     usersResource,
+    companiesResource,
     postsResource,
     commentsResource,
     productsResource,
@@ -60,6 +62,7 @@ export const adminScope: ScopeInterface = {
   menu: [
     createItemMenuWithResource({ resource: overviewResource }),
     createItemMenuWithResource({ resource: usersResource }),
+    createItemMenuWithResource({ resource: companiesResource }),
     {
       name: "Blog",
       icon: Newspaper,

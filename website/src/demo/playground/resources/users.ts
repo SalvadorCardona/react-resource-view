@@ -54,6 +54,11 @@ export const usersResource = createViewResource<User>(USERS_ID, {
           required: true,
           controller: EmailInputController,
         },
+        // The account the person signs in for, left empty for the roastery's
+        // own staff. It is a field of the form rather than a hidden column
+        // because a sub-view's `defaultData` fills in the form: creating a
+        // user from a company's page shows the company it will belong to.
+        company: { label: "Company" },
         role: {
           label: "Role",
           controller: SelectInputController,
@@ -70,6 +75,7 @@ export const usersResource = createViewResource<User>(USERS_ID, {
     formFilter: {
       inputs: {
         name: { label: "Search a name" },
+        company: { label: "Company" },
         role: {
           label: "Role",
           controller: SelectInputController,
@@ -89,10 +95,10 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   },
   views: {
     [ActionList.create]: { name: "New user", ...POPUP },
-    // The one form of the administration opening on a page rather than over
-    // the list: an account is more than its five fields — it is what the
-    // person wrote — and the collections belonging to them are laid out
-    // underneath, as tabs. A dialog has no room for that.
+    // One of the forms of the administration opening on a page rather than
+    // over the list — a company is the other: an account is more than its five
+    // fields — it is what the person wrote — and the collections belonging to
+    // them are laid out underneath, as tabs. A dialog has no room for that.
     [ActionList.update]: {
       name: "Edit a user",
       subViewResource: {

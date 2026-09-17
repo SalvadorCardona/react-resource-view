@@ -41,6 +41,9 @@ export const roastsResource = createViewResource<Roast>(ROASTS_ID, {
       inputs: {
         batch: { label: "Batch", required: true },
         origin: { label: "Origin" },
+        // Who the batch is for, left empty when it goes to stock. A company's
+        // page fills it in for a batch created from its own tab.
+        company: { label: "Roasted for" },
         roaster: {
           label: "Roaster",
           controller: SelectInputController,

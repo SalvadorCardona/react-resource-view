@@ -1,4 +1,5 @@
 import commentsSource from "@/demo/playground/resources/comments.ts?raw"
+import companiesSource from "@/demo/playground/resources/companies.ts?raw"
 import ordersSource from "@/demo/playground/resources/orders.ts?raw"
 import overviewSource from "@/demo/playground/resources/overview.ts?raw"
 import postsSource from "@/demo/playground/resources/posts.ts?raw"
@@ -7,6 +8,7 @@ import roastsSource from "@/demo/playground/resources/roasts.ts?raw"
 import usersSource from "@/demo/playground/resources/users.ts?raw"
 import {
   COMMENTS_ID,
+  COMPANIES_ID,
   ORDERS_ID,
   OVERVIEW_ID,
   POSTS_ID,
@@ -37,6 +39,7 @@ export interface Declaration {
 const SOURCES: Record<string, { file: string; raw: string }> = {
   [OVERVIEW_ID]: { file: "resources/overview.ts", raw: overviewSource },
   [USERS_ID]: { file: "resources/users.ts", raw: usersSource },
+  [COMPANIES_ID]: { file: "resources/companies.ts", raw: companiesSource },
   [POSTS_ID]: { file: "resources/posts.ts", raw: postsSource },
   [COMMENTS_ID]: { file: "resources/comments.ts", raw: commentsSource },
   [PRODUCTS_ID]: { file: "resources/products.ts", raw: productsSource },

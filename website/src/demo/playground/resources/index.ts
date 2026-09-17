@@ -11,6 +11,7 @@
  * source: `declarations.ts` imports the very same files as text.
  */
 export { commentsResource } from "@/demo/playground/resources/comments"
+export { companiesResource } from "@/demo/playground/resources/companies"
 export { ordersResource } from "@/demo/playground/resources/orders"
 export { overviewResource } from "@/demo/playground/resources/overview"
 export { postsResource } from "@/demo/playground/resources/posts"
