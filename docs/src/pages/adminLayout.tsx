@@ -1,6 +1,7 @@
-import { createViewResource } from "react-resource-view"
+import { createViewResource, generateLink } from "react-resource-view"
 import { LayoutPanelLeft } from "lucide-react"
 import { CodeBlock, PageHeader, Section } from "../DocLayout"
+import adminLayoutDemoResource from "./adminLayoutDemo"
 
 const blocks: [string, string][] = [
   ["AdminSidebarNav", "The desktop sidebar, built from the scope's menu"],
@@ -24,6 +25,16 @@ const adminLayoutResource = createViewResource("admin-layout", {
           title="Admin layout"
           intro="A scope's decoratorComponent wraps every view of that scope — the navigation and the page heading around them. AdminLayout is a ready-made one, so a project reaches for it instead of writing the same sidebar and top bar again."
         />
+
+        <p className="mb-10 -mt-6 text-sm text-muted-foreground">
+          <a
+            href={generateLink({ resource: adminLayoutDemoResource, scope: "docs" })}
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            See it running
+          </a>{" "}
+          on two resources, rather than reading about it.
+        </p>
 
         <Section
           title="Point it at a scope"

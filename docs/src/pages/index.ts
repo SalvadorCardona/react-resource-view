@@ -4,6 +4,7 @@ import overviewResource from "./overview"
 import routingResource from "./routing"
 import layoutsResource from "./layouts"
 import adminLayoutResource from "./adminLayout"
+import adminLayoutDemoResource from "./adminLayoutDemo"
 import demoResource, { articlesResource } from "./demo"
 
 /** Every documentation page, in reading order. */
@@ -12,6 +13,7 @@ export const pages = [
   routingResource,
   layoutsResource,
   adminLayoutResource,
+  adminLayoutDemoResource,
   demoResource,
 ]
 
