@@ -78,6 +78,8 @@ const pageForm = {
       // The palette: every form carrying that tag, and nothing else.
       forms: ["page-block"],
       draggable: true,
+      // A twenty-block page opens on its outline, not on its first paragraph.
+      closedByDefault: true,
     }),
   },
 }`
@@ -233,8 +235,9 @@ function Asymmetric() {
 
       <P>
         One field, of the whole document. <C>createFormArrayInputController</C>{" "}
-        builds it: <C>forms</C> turns it into a palette, and <C>draggable</C> lets
-        the reader reorder what they have added.
+        builds it: <C>forms</C> turns it into a palette, <C>draggable</C> lets the
+        reader reorder what they have added, and <C>closedByDefault</C> decides
+        whether the blocks come up folded.
       </P>
 
       <CodeBlock filename="pageForm.ts">{FIELD}</CodeBlock>
@@ -258,6 +261,18 @@ function Asymmetric() {
             description: "Adds the grip to each block header, and reorders on drop.",
           },
           {
+            name: "closedByDefault",
+            type: "boolean",
+            default: "false",
+            description: (
+              <>
+                Mounts the list folded, headers only. It holds for the blocks added
+                later too — except the one just inserted, which opens, so that
+                clicking <em>Add</em> shows something.
+              </>
+            ),
+          },
+          {
             name: "identifierKey",
             type: "string",
             default: `"order"`,
@@ -277,6 +292,13 @@ function Asymmetric() {
           },
         ]}
       />
+
+      <P>
+        Whatever that initial state is, every block header carries a chevron that
+        folds its sub-form away on its own. The grip, the position and the block's
+        name stay in place, so a page of twenty blocks is read as an outline and
+        reordered without scrolling through the prose of each one.
+      </P>
 
       <H2 id="demo">The builder, running</H2>
 
@@ -362,6 +384,12 @@ function Asymmetric() {
           </strong>{" "}
           The list is sorted on it, the header shows it, and dragging rewrites it
           across every block. Store it, or the page comes back shuffled.
+        </Li>
+        <Li>
+          <strong>Folding is not data.</strong> Which blocks are open is display
+          state, held by the field and forgotten when the form remounts. It never
+          reaches <C>onChange</C>, so nothing about it is stored — a block folded
+          and a block open save exactly the same payload.
         </Li>
         <Li>
           <strong>A block can nest.</strong> Nothing stops a block type from carrying
