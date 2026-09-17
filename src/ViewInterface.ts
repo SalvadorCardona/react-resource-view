@@ -53,6 +53,17 @@ export interface ViewInterface<_Read = IdAbleInterface> {
   viewComponent?: FC
   subViewResource?: {
     viewComponent?: FC
+    /**
+     * Where the sub-view navigation is drawn.
+     *
+     * `horizontal`, the default, is a bar above the sub-view: it stays on one
+     * line and scrolls sideways when the tabs run past the screen. `vertical`
+     * puts the tabs in a column beside it — the shape a record with a dozen
+     * sub-views wants, since a list read from top to bottom shows them all at
+     * once. Below the `md` breakpoint the column would take the width the
+     * sub-view needs, so it falls back to the scrolling bar.
+     */
+    orientation?: "horizontal" | "vertical"
     list: SubViewResourceInterface[]
   }
   viewVariants?: ViewInterface[]

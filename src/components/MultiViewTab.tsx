@@ -7,17 +7,12 @@ import { useNavigate } from "@/ports"
 import { encodeIri, generateLink } from "@/routes/routes"
 import { findResource } from "@/utils/findResource"
 import { ActionList } from "react-data-form"
-import {
-  IconType,
-  SubViewResourceInterface,
-} from "@/ViewInterface"
+import { IconType, SubViewResourceInterface } from "@/ViewInterface"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/ui/card"
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card"
+import { ScrollArea } from "@/ui/scroll-area"
+import { cn } from "@/ui/cn"
+import { useMediaQuery } from "@/internal/browser/useMediaQuery"
 
 interface ResolvedSubView {
   slug: string
@@ -45,7 +40,10 @@ function resolveSubView(
   const currentSlug = slug ?? (resource ? encodeIri(resource["@id"]) : undefined)
 
   if (!currentSlug) {
-    console.warn("SubViewResource skipped: neither a slug nor a resolvable resource", subView)
+    console.warn(
+      "SubViewResource skipped: neither a slug nor a resolvable resource",
+      subView
+    )
     return undefined
   }
 
@@ -68,7 +66,13 @@ function resolveSubView(
 export function MultiViewTab() {
   const currentResource = useCurrentViewResourceContext()
   const navigate = useNavigate()
+  // A menu down the side is a desktop shape: on a phone the column would eat
+  // the width the sub-view itself needs, so the bar comes back there — and it
+  // scrolls sideways rather than wrapping onto three lines.
+  const isWideScreen = useMediaQuery("(min-width: 768px)")
   const subViews = currentResource.view?.subViewResource
+  const orientation =
+    subViews?.orientation === "vertical" && isWideScreen ? "vertical" : "horizontal"
   const subViewList = (subViews?.list ?? [])
     .map(resolveSubView)
     .filter((subView): subView is ResolvedSubView => subView !== undefined)
@@ -111,6 +115,35 @@ export function MultiViewTab() {
     })
   }
 
+  const triggers = subViewList.map((subView) => (
+    <TabsTrigger
+      key={subView.slug + "-tabs"}
+      value={subView.slug}
+      className={cn(
+        `shrink-0
+         min-w-max
+         h-9 md:h-10
+         px-3 md:px-4
+         rounded-md
+         bg-muted
+         data-[state=active]:shadow data-[state=active]:text-accent-foreground
+         hover:bg-accent/60
+         transition-colors
+         flex items-center gap-2`,
+        // Down a column a tab is a menu entry: the whole width, and the
+        // labels lined up under one another rather than each centred.
+        orientation === "vertical" && "w-full justify-start"
+      )}
+      aria-label={subView.name}
+      title={subView.name}
+    >
+      {subView.icon && <subView.icon className="h-4 w-4 shrink-0" />}
+      <span>
+        <Trans className="fc">{subView.name}</Trans>
+      </span>
+    </TabsTrigger>
+  ))
+
   return (
     // Layout responsive: mobile = pile (leftCol puis tabs), desktop = 2 colonnes si leftCol existe
     <div
@@ -133,50 +166,60 @@ export function MultiViewTab() {
       <Tabs
         value={page}
         onValueChange={(newPage) => goToNextPage(newPage)}
-        className="w-full flex flex-col"
+        orientation={orientation}
+        className={
+          orientation === "vertical"
+            ? "w-full flex flex-row items-start gap-6"
+            : "w-full flex flex-col"
+        }
       >
-        <TabsList
-          aria-label="Sous-vues"
-          className="
-            sticky top-16 z-30 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60
-            w-full
-            border-none md:border
-            no-scrollbar
-            gap-1 md:gap-2
-            flex-wrap flex
-            h-auto
-          "
-        >
-          {subViewList.map((subView) => (
-            <TabsTrigger
-              key={subView.slug + "-tabs"}
-              value={subView.slug}
+        {orientation === "vertical" ? (
+          // The menu keeps its own column and follows the reader down a long
+          // sub-view, exactly as the left column of the page does.
+          <TabsList
+            aria-label="Sous-vues"
+            className="
+              sticky top-20 self-start
+              w-56 shrink-0
+              border-none rounded-xl
+              flex flex-col items-stretch justify-start
+              gap-1
+              h-auto
+            "
+          >
+            {triggers}
+          </TabsList>
+        ) : (
+          // The bar stays one line and scrolls sideways rather than wrapping:
+          // a record with eight sub-views used to push its content down by
+          // three rows of buttons on a phone, and the labels were cut to
+          // twelve characters to limit the damage.
+          <ScrollArea
+            orientation="horizontal"
+            className="
+              sticky top-16 z-30
+              bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60
+            "
+          >
+            <TabsList
+              aria-label="Sous-vues"
               className="
-                  min-w-max
-                  h-9 md:h-10
-                  px-3 md:px-4
-                  rounded-md
-                  bg-muted
-                  data-[state=active]:shadow data-[state=active]:text-accent-foreground
-                  hover:bg-accent/60
-                  transition-colors
-                  flex items-center gap-2
-                "
-              aria-label={subView.name}
-              title={subView.name}
+                w-max min-w-full
+                border-none md:border
+                gap-1 md:gap-2
+                flex-nowrap flex
+                h-auto
+              "
             >
-              {subView.icon && <subView.icon className="h-4 w-4 shrink-0" />}
-              <span className="sm:inline truncate max-w-[12ch] md:max-w-none">
-                <Trans className="fc">{subView.name}</Trans>
-              </span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+              {triggers}
+            </TabsList>
+          </ScrollArea>
+        )}
         {subViewList.map((subView) => (
           <TabsContent
             value={subView.slug}
             key={subView.slug + "-content"}
-            className="mt-4 "
+            className={orientation === "vertical" ? "min-w-0" : "mt-4"}
           >
             <CardHeader className="rounded-md p-4 bg-muted/50">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">

@@ -1,4 +1,4 @@
-import { Users } from "lucide-react"
+import { Activity, ScrollText, Users } from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -11,6 +11,7 @@ import {
   tableViewOptionFactory,
 } from "react-resource-view"
 import {
+  POSTS_ID,
   USER_ROLES,
   USER_STATUSES,
   USERS_ID,
@@ -18,11 +19,13 @@ import {
 } from "@/demo/playground/adminData"
 import { UserRow } from "@/demo/playground/adminRows"
 import { POPUP } from "@/demo/playground/resources/shared"
+import { UserActivity } from "@/demo/playground/UserActivity"
 
 /**
  * The people who can sign in. This file is the whole screen: the table and
- * its columns, the card grid, the filter bar, the create and edit dialogs and
- * the delete confirmation all come out of the declaration below.
+ * its columns, the card grid, the filter bar, the create dialog, the account
+ * page with the posts belonging to it and the delete confirmation all come out
+ * of the declaration below.
  */
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
@@ -86,7 +89,48 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   },
   views: {
     [ActionList.create]: { name: "New user", ...POPUP },
-    [ActionList.update]: { name: "Edit a user", ...POPUP },
+    // The one form of the administration opening on a page rather than over
+    // the list: an account is more than its five fields — it is what the
+    // person wrote — and the collections belonging to them are laid out
+    // underneath, as tabs. A dialog has no room for that.
+    [ActionList.update]: {
+      name: "Edit a user",
+      subViewResource: {
+        // The tabs sit above the sub-view and scroll sideways when they run
+        // past the screen — `orientation: "vertical"` puts them in a column
+        // beside it instead.
+        list: [
+          {
+            slug: "posts",
+            name: "Posts",
+            icon: ScrollText,
+            description: "Everything published under this name.",
+            resourceId: POSTS_ID,
+            resourceAction: ActionList.list,
+            // The nested list is filtered by the account on screen, and its
+            // create button writes the same author — a post started from
+            // here belongs to this person rather than to nobody.
+            onInitViewResource: (view, parent) => {
+              const author = (parent?.data as User | undefined)?.name
+
+              return {
+                ...view,
+                filter: { author },
+                defaultData: { author },
+              }
+            },
+          },
+          {
+            // A tab with no resource behind it: a component of one's own.
+            slug: "activity",
+            name: "Activity",
+            icon: Activity,
+            description: "What this account adds up to.",
+            viewComponent: UserActivity,
+          },
+        ],
+      },
+    },
     [ActionList.delete]: { name: "Delete a user", ...POPUP },
   },
 })
