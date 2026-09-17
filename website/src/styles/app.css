@@ -167,6 +167,23 @@
 }
 
 /* --------------------------------------------------------------------------
+   Forms
+   An array field draws the values it already holds as badges on a row that
+   never wraps, so three contact lines are wider than the column the builder
+   gives the form. The block is a flex column, and a column is as wide as what
+   it cannot fold: every input inside it is stretched to that width and runs
+   past the border. Letting the badges wrap is enough — the row is then only
+   as wide as its longest value.
+   -------------------------------------------------------------------------- */
+
+@layer components {
+  [data-field] div:has(> [data-slot="badge"]) {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
    Prose
    A deliberately small set of rules rather than a typography plugin: every
    documentation page is built from the same handful of elements.
