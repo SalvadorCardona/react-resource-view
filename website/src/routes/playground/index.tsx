@@ -9,7 +9,7 @@ export const Route = createFileRoute("/playground/")({
       {
         name: "description",
         content:
-          "A complete back office built from seven resource declarations: users, a blog, a catalogue and a roasting schedule — tables, boards, split views, calendars and timelines, every edit real, every screen a URL, and the source of each one a click away.",
+          "A complete back office built from eight resource declarations: users, the accounts they belong to, a blog, a catalogue and a roasting schedule — tables, boards, split views, calendars and timelines, a record with its own collections as tabs, every edit real, every screen a URL, and the source of each one a click away.",
       },
       // The context lives in the query string and every state is a different
       // URL; none of them is a page worth indexing on its own.
@@ -22,11 +22,12 @@ export const Route = createFileRoute("/playground/")({
 /**
  * The whole of both libraries, running as one application.
  *
- * An administration with four areas — the people who can sign in, the blog it
- * publishes, the catalogue it sells, the roasters it runs — and not one screen
- * written by hand: the lists and their layouts, the filter bars, the create
- * and edit forms, the delete confirmations all come from the resource
- * declarations in `src/demo/playground/resources`. The navigation and the
+ * An administration with five areas — the people who can sign in, the accounts
+ * they belong to, the blog it publishes, the catalogue it sells, the roasters
+ * it runs — and not one screen written by hand: the lists and their layouts,
+ * the filter bars, the create and edit forms, the delete confirmations and the
+ * tabs under a company all come from the resource declarations in
+ * `src/demo/playground/resources`. The navigation and the
  * page heading around them are the scope's `decoratorComponent`, which is
  * what the package calls an admin template — and that heading can show the
  * declaration a screen came out of, next to the screen.

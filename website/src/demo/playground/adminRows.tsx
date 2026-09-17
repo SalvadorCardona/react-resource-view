@@ -1,6 +1,12 @@
 import type { ReactNode } from "react"
 import type { RowComponentPropsInterface } from "react-resource-view"
-import type { Comment, Post, Product, User } from "@/demo/playground/adminData"
+import type {
+  Comment,
+  Company,
+  Post,
+  Product,
+  User,
+} from "@/demo/playground/adminData"
 import { cn } from "@/lib/cn"
 
 /**
@@ -46,6 +52,45 @@ const PRICE = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR
 
 export function formatPrice(cents: number): string {
   return PRICE.format((cents ?? 0) / 100)
+}
+
+const COMPANY_TONES: Record<Company["status"], Tone> = {
+  prospect: "warn",
+  customer: "info",
+  former: "neutral",
+}
+
+const COMPANY_LABELS: Record<Company["status"], string> = {
+  prospect: "Prospect",
+  customer: "Customer",
+  former: "Former customer",
+}
+
+export function CompanyRow({ row }: RowComponentPropsInterface) {
+  const company = row?.data as Company | undefined
+  if (!company) return null
+
+  const status = company.status ?? "prospect"
+
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 font-medium leading-snug">{company.name}</p>
+        <Badge tone={COMPANY_TONES[status] ?? "neutral"}>
+          {COMPANY_LABELS[status] ?? status}
+        </Badge>
+      </div>
+
+      <p className="text-sm text-muted-foreground">{company.city}</p>
+
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <span className="rounded border border-border px-1.5 py-0.5 font-mono">
+          {company.siret}
+        </span>
+        <span>since {company.signedAt}</span>
+      </p>
+    </div>
+  )
 }
 
 const USER_TONES: Record<User["status"], Tone> = {

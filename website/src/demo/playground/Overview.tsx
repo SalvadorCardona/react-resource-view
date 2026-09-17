@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link as DocsLink } from "@tanstack/react-router"
 import {
   ArrowRight,
+  Building2,
   Database,
   Link2,
   PencilOff,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
+  generateLink,
   generateLinkByResource,
   Link,
   type FilterInterface,
@@ -16,6 +18,7 @@ import {
 } from "react-resource-view"
 import {
   COMMENTS_ID,
+  COMPANIES_ID,
   ORDERS_ID,
   POSTS_ID,
   PRODUCTS_ID,
@@ -23,6 +26,7 @@ import {
   ROASTS_ID,
   USERS_ID,
   type Comment,
+  type Company,
   type Order,
   type Post,
   type Product,
@@ -32,6 +36,7 @@ import {
 import { formatPrice } from "@/demo/playground/adminRows"
 import { getDeclaration } from "@/demo/playground/declarations"
 import { commentsResource } from "@/demo/playground/resources/comments"
+import { companiesResource } from "@/demo/playground/resources/companies"
 import { ordersResource } from "@/demo/playground/resources/orders"
 import { postsResource } from "@/demo/playground/resources/posts"
 import { productsResource } from "@/demo/playground/resources/products"
@@ -56,6 +61,7 @@ export function Overview() {
   return (
     <div className="space-y-10">
       <Figures />
+      <CompanyTabs />
       <Resources />
       <UnderTheHood />
     </div>
@@ -213,8 +219,69 @@ function Figures() {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The way into the one screen of the back office that is neither a list nor a
+ * form on its own: a company, and the collections hanging off it.
+ *
+ * A link rather than a paragraph, because the shape only reads as an answer
+ * once it is on screen. The tab is a segment of the URL like the rest of the
+ * context, so this lands on a company's team rather than on a company — which
+ * is the same link the reader can copy out of the address bar afterwards.
+ */
+function CompanyTabs() {
+  const company = readAdminRows<Company>(COMPANIES_ID).find(
+    (row) => row.status === "customer"
+  )
+
+  if (!company) return null
+
+  const href = generateLink({
+    resourceId: companiesResource["@id"],
+    resourceAction: ActionList.update,
+    scope: companiesResource.scope,
+    id: company["@id"],
+    subResource: "team",
+  })
+
+  return (
+    <section aria-labelledby="overview-subviews">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/30 p-5 sm:flex-row sm:items-center">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-view-soft text-view">
+          <Building2 className="size-4" />
+        </span>
+
+        <div className="min-w-0">
+          <h2
+            id="overview-subviews"
+            className="font-semibold tracking-tight"
+          >
+            A record is more than its form
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A company is five fields, the people who sign in for it and the
+            batches roasted for it. Open one: the form comes first, its
+            collections are tabs underneath, each filtered by the company — and
+            a batch created from a tab already belongs to it.
+          </p>
+        </div>
+
+        <Link
+          to={href}
+          className="flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-view/50 bg-view-soft px-3 py-1.5 text-sm font-medium text-view transition hover:-translate-y-0.5 sm:self-auto"
+        >
+          Open {company.name}
+          <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
 const RESOURCES: ViewResourceInterface[] = [
   usersResource,
+  companiesResource,
   postsResource,
   commentsResource,
   productsResource,
@@ -236,11 +303,11 @@ function Resources() {
             id="overview-resources"
             className="text-lg font-semibold tracking-tight"
           >
-            Six areas, six files
+            Seven areas, seven files
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             No screen here is written by hand. Each area is one resource
-            declaration — {totalLines} lines for the six of them — and the
+            declaration — {totalLines} lines for the seven of them — and the
             table, the filters, the forms, the dialogs and the menu entry come
             out of it. Open one and press <em>Declaration</em> to read the file
             next to what it renders.
@@ -351,7 +418,7 @@ const EXPLANATIONS: Explanation[] = [
         The menu on the left is read from the scope, the headings from the
         views, the forms and dialogs from the declarations. The only component
         this back office wrote itself is the shell around them — and it does
-        not change when a seventh resource is added.
+        not change when a ninth resource is added.
       </>
     ),
     href: "/docs/resource-view/scopes",

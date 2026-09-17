@@ -34,7 +34,7 @@ const DeclarationPanel = lazy(() => import("@/demo/playground/DeclarationPanel")
  *
  * Nothing here is written per resource. The menu is the scope's own `menu`,
  * read through `useScopeContext`, and the heading comes from whichever view is
- * on screen: adding an eighth resource to the administration changes this
+ * on screen: adding a ninth resource to the administration changes this
  * file not at all.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
