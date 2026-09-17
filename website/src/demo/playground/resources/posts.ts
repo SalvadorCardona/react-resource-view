@@ -1,4 +1,4 @@
-import { ScrollText } from "lucide-react"
+import { MessageSquare, ScrollText } from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -13,6 +13,7 @@ import {
   tableViewOptionFactory,
 } from "react-resource-view"
 import {
+  COMMENTS_ID,
   POST_CATEGORIES,
   POST_STATUSES,
   POSTS_ID,
@@ -91,7 +92,34 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
   },
   views: {
     [ActionList.create]: { name: "New post", ...POPUP },
-    [ActionList.update]: { name: "Edit a post", ...POPUP },
+    // The other shape `subViewResource` can take: a column beside the sub-view
+    // rather than a bar above it, set with `orientation: "vertical"` — the users
+    // resource keeps the default, scrolling bar for comparison.
+    [ActionList.update]: {
+      name: "Edit a post",
+      subViewResource: {
+        orientation: "vertical",
+        list: [
+          {
+            slug: "comments",
+            name: "Comments",
+            icon: MessageSquare,
+            description: "What readers left under this post.",
+            resourceId: COMMENTS_ID,
+            resourceAction: ActionList.list,
+            onInitViewResource: (view, parent) => {
+              const post = (parent?.data as Post | undefined)?.title
+
+              return {
+                ...view,
+                filter: { post },
+                defaultData: { post },
+              }
+            },
+          },
+        ],
+      },
+    },
     [ActionList.delete]: { name: "Delete a post", ...POPUP },
   },
 })
