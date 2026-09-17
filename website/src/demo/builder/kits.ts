@@ -48,6 +48,9 @@ const pageForm: FormInterface = {
       // Every form tagged `page-block`, and only those: this is the palette.
       forms: [PAGE_BLOCK],
       draggable: true,
+      // A page opens on its outline: the blocks are folded, and the one just
+      // added is the only one that unfolds itself.
+      closedByDefault: true,
     }),
   },
 }
@@ -59,6 +62,7 @@ const resumeForm: FormInterface = {
       label: "Sections",
       forms: [RESUME_BLOCK],
       draggable: true,
+      closedByDefault: true,
     }),
   },
 }
