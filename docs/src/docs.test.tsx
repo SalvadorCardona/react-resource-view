@@ -53,6 +53,13 @@ describe("the documentation site", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders the admin layout page", async () => {
+    renderAt("/?view=docs/admin-layout/read")
+    expect(
+      await screen.findByRole("heading", { name: "Admin layout" }, WAIT)
+    ).toBeInTheDocument()
+  })
+
   it("renders the demo page", async () => {
     renderAt("/?view=docs/demo/read")
     expect(
