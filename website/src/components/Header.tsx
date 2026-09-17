@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
-import { Github, Menu, X } from "lucide-react"
+import { Compass, Github, Menu, X } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { Search } from "@/components/Search"
 import { Sidebar } from "@/components/Sidebar"
@@ -52,6 +52,22 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
                 </span>
               </Link>
             ))}
+
+            {/*
+              The playground belongs to neither library — it is the two of them
+              running together — so it carries an icon rather than one of the
+              two accent dots, and comes last: a reader reads before they play.
+            */}
+            <Link
+              to="/playground"
+              className="group rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              activeProps={{ className: "bg-muted text-foreground" }}
+            >
+              <span className="flex items-center gap-2">
+                <Compass className="size-3.5 opacity-70" />
+                Playground
+              </span>
+            </Link>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
