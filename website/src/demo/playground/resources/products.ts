@@ -16,13 +16,13 @@ import {
   PRODUCT_STATUSES,
   PRODUCTS_ID,
   type Product,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
+} from "@/demo/playground/adminData"
+import { POPUP } from "@/demo/playground/shared"
 
 /** The catalogue. Edit a price straight in the table: every cell is a field. */
 export const productsResource = createViewResource<Product>(PRODUCTS_ID, {
   name: "Products",
-  scope: "playground2",
+  scope: "admin",
   icon: Package,
   canRead: true,
   canCreate: true,

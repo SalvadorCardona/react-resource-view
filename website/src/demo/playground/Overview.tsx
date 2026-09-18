@@ -10,14 +10,13 @@ import {
 } from "react-resource-view"
 import { formatPrice } from "@/demo/playground/adminRows"
 import {
-  CMS_ID,
   COMMENTS_ID,
   COMPANIES_ID,
   ORDERS_ID,
   POSTS_ID,
   PRODUCTS_ID,
   PROFILES_ID,
-  readStudioRows,
+  readAdminRows,
   ROASTS_ID,
   USERS_ID,
   type Comment,
@@ -27,20 +26,19 @@ import {
   type Product,
   type Roast,
   type User,
-} from "@/demo/playground2/data"
-import { cmsResource } from "@/demo/playground2/resources/cms"
-import { commentsResource } from "@/demo/playground2/resources/comments"
-import { companiesResource } from "@/demo/playground2/resources/companies"
-import { ordersResource } from "@/demo/playground2/resources/orders"
-import { postsResource } from "@/demo/playground2/resources/posts"
-import { productsResource } from "@/demo/playground2/resources/products"
-import { profilesResource } from "@/demo/playground2/resources/profiles"
-import { roastsResource } from "@/demo/playground2/resources/roasts"
-import { usersResource } from "@/demo/playground2/resources/users"
+} from "@/demo/playground/adminData"
+import { commentsResource } from "@/demo/playground/resources/comments"
+import { companiesResource } from "@/demo/playground/resources/companies"
+import { ordersResource } from "@/demo/playground/resources/orders"
+import { postsResource } from "@/demo/playground/resources/posts"
+import { productsResource } from "@/demo/playground/resources/products"
+import { profilesResource } from "@/demo/playground/resources/profiles"
+import { roastsResource } from "@/demo/playground/resources/roasts"
+import { usersResource } from "@/demo/playground/resources/users"
 import { cn } from "@/lib/cn"
 
 /**
- * The screen playground2 opens on: what needs doing, and what is behind it.
+ * The screen the back office opens on: what needs doing, and what is behind it.
  *
  * The one screen of the back office that is not a list, and it exists to make
  * the lists worth opening. Every figure is read from the same storage the lists
@@ -52,7 +50,7 @@ export function Overview() {
   return (
     <div className="space-y-10">
       <Figures />
-      <Studio />
+      <BlockRecords />
       <CompanyTabs />
       <Resources />
     </div>
@@ -79,12 +77,12 @@ interface Figure {
  * read away, and the screen is remounted on every navigation back to it.
  */
 function readFigures(): Figure[] {
-  const users = readStudioRows<User>(USERS_ID)
-  const posts = readStudioRows<Post>(POSTS_ID)
-  const comments = readStudioRows<Comment>(COMMENTS_ID)
-  const products = readStudioRows<Product>(PRODUCTS_ID)
-  const orders = readStudioRows<Order>(ORDERS_ID)
-  const roasts = readStudioRows<Roast>(ROASTS_ID)
+  const users = readAdminRows<User>(USERS_ID)
+  const posts = readAdminRows<Post>(POSTS_ID)
+  const comments = readAdminRows<Comment>(COMMENTS_ID)
+  const products = readAdminRows<Product>(PRODUCTS_ID)
+  const orders = readAdminRows<Order>(ORDERS_ID)
+  const roasts = readAdminRows<Roast>(ROASTS_ID)
 
   const pendingComments = comments.filter((row) => row.status === "pending")
   const toShip = orders.filter((row) => row.status === "paid")
@@ -211,40 +209,43 @@ function Figures() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The half of this back office `/playground` has no equivalent of: the two
- * collections whose records are not fields but blocks, and the builder that
- * assembles them.
+ * The half of this back office that is not a form of six fields: the records
+ * assembled block by block, and the builder that assembles them.
  *
  * The builder is a route of its own rather than a view of the scope — it is one
  * form, not a CRUD screen — so this is a plain router link, like the one in the
  * top bar.
  */
-function Studio() {
-  const pages = readStudioRows<{ id: string }>(CMS_ID)
-  const profiles = readStudioRows<{ id: string }>(PROFILES_ID)
+function BlockRecords() {
+  const posts = readAdminRows<Post>(POSTS_ID)
+  const pages = posts.filter((row) => row.category === "Pages")
+  const profiles = readAdminRows<{ id: string }>(PROFILES_ID)
 
   return (
-    <section aria-labelledby="overview-studio">
+    <section aria-labelledby="overview-blocks">
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/30 p-5 sm:flex-row sm:items-center">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-form-soft text-form">
           <Blocks className="size-4" />
         </span>
 
         <div className="min-w-0">
-          <h2 id="overview-studio" className="font-semibold tracking-tight">
-            {pages.length} {plural(pages.length, "page", "pages")} and{" "}
+          <h2 id="overview-blocks" className="font-semibold tracking-tight">
+            {posts.length} {plural(posts.length, "post", "posts")} and{" "}
             {profiles.length} {plural(profiles.length, "CV", "CVs")}, assembled
             block by block
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            CMS and My profiles hold documents rather than fields: an array of
-            blocks, each one a form of its own. Edit one here, or open the
-            builder — publishing from it writes to these very collections.
+            A post is not six fields but an array of blocks, each one a form of
+            its own — {pages.length} of them are the pages of the site rather
+            than articles, in the same collection because they are the same
+            record. The CVs work the same way, under the account they belong to.
+            Edit one here, or open the builder — publishing from it writes to
+            these very collections.
           </p>
         </div>
 
         <RouterLink
-          to="/playground2/builder"
+          to="/playground/builder"
           className="flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5 sm:self-auto"
         >
           Open the builder
@@ -266,7 +267,7 @@ function Studio() {
  * context, so this lands on a company's team rather than on a company.
  */
 function CompanyTabs() {
-  const company = readStudioRows<Company>(COMPANIES_ID).find(
+  const company = readAdminRows<Company>(COMPANIES_ID).find(
     (row) => row.status === "customer"
   )
 
@@ -314,9 +315,8 @@ function CompanyTabs() {
 /* -------------------------------------------------------------------------- */
 
 const RESOURCES: ViewResourceInterface[] = [
-  cmsResource,
-  profilesResource,
   usersResource,
+  profilesResource,
   companiesResource,
   postsResource,
   commentsResource,
@@ -333,7 +333,7 @@ function Resources() {
           id="overview-resources"
           className="text-lg font-semibold tracking-tight"
         >
-          Nine areas, nine files
+          Eight areas, eight files
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           No screen here is written by hand. Each area is one resource

@@ -5,50 +5,75 @@ import { toast } from "sonner"
 import { BuilderStudio } from "@/demo/builder/BuilderStudio"
 import type { BuilderBlock } from "@/demo/builder/blocks"
 import { BUILDER_KITS, type BuilderKit } from "@/demo/builder/kits"
-import { deriveDocumentTitle } from "@/demo/playground2/deriveTitle"
+import {
+  deriveDocumentTitle,
+  deriveResumeOwner,
+} from "@/demo/playground/deriveTitle"
 // Through the barrel rather than the two files: importing it is also what
 // seeds the collections this screen writes into.
-import { cmsResource, profilesResource } from "@/demo/playground2/resources"
+import { postsResource, profilesResource } from "@/demo/playground/resources"
 import { cn } from "@/lib/cn"
 
-export const Route = createFileRoute("/playground2/builder")({
+export const Route = createFileRoute("/playground/builder")({
   head: () => ({
     meta: [
-      { title: "Page builder — Playground2" },
+      { title: "Page builder — Playground" },
       {
         name: "description",
         content:
-          "The same page builder as /playground/builder, wired to save: publish a page or export a CV and it lands in playground2's CMS or My profiles.",
+          "One form whose fields the reader decides: assemble a page out of blocks, or a CV, and publish it — it is saved to the back office, as a post or as a CV under an account.",
       },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: Playground2BuilderRoute,
+  component: PlaygroundBuilderRoute,
 })
 
-function resourceFor(kit: BuilderKit["id"]) {
-  return kit === "resume" ? profilesResource : cmsResource
-}
-
 /**
- * `/playground/builder`, with its submit button wired to something: publishing
- * a page or exporting a CV saves it to the matching resource — `cmsResource`
- * or `profilesResource` — via the same `createItem` a form in that resource
- * would call. That resource's own storage is what CMS and My profiles read,
- * so the record shows up there the moment this screen writes it.
+ * The builder, with its submit button wired to something: publishing a page
+ * saves it as a post, exporting a CV saves it under the account whose name is
+ * on it — through the same `createItem` a form of that resource would call.
+ * Those resources' own storage is what the back office reads, so the record
+ * shows up there the moment this screen writes it.
  */
-function Playground2BuilderRoute() {
+function PlaygroundBuilderRoute() {
   const [kit, setKit] = useState<BuilderKit>(BUILDER_KITS[0])
 
   const handleSave = async (blocks: BuilderBlock[]) => {
-    const resource = resourceFor(kit.id)
     const title = deriveDocumentTitle(kit.id, blocks)
 
-    await resource.createItem({ title, blocks, updatedAt: new Date().toISOString() })
+    if (kit.id === "resume") {
+      const owner = deriveResumeOwner(blocks)
+
+      await profilesResource.createItem({
+        title,
+        owner,
+        blocks,
+        updatedAt: new Date().toISOString(),
+      })
+
+      toast.success(`"${title}" saved`, {
+        description: owner
+          ? `Open it from ${owner}'s Curriculum vitæ tab.`
+          : "Open it from any account's Curriculum vitæ tab — this one names nobody.",
+      })
+      return
+    }
+
+    // A page is a post like any other: it lands in the blog as a draft, under
+    // the category the back office lists the pages of the site under.
+    await postsResource.createItem({
+      title,
+      blocks,
+      category: "Pages",
+      status: "draft",
+      author: "",
+      publishedAt: "",
+      views: 0,
+    })
 
     toast.success(`"${title}" saved`, {
-      description:
-        kit.id === "resume" ? "Open it from My profiles." : "Open it from CMS.",
+      description: "Open it from Posts — it is a draft until you publish it.",
     })
   }
 
@@ -56,7 +81,7 @@ function Playground2BuilderRoute() {
     <div className="mx-auto max-w-[100rem] space-y-6 px-4 py-8 lg:px-8">
       <div>
         <Link
-          to="/playground2"
+          to="/playground"
           className="mb-3 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
@@ -64,8 +89,8 @@ function Playground2BuilderRoute() {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">Page builder</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Assemble a page or a CV, then publish it — it is saved to CMS or My
-          profiles, whichever kit built it.
+          Assemble a page or a CV, then publish it — a page is saved as a post,
+          a CV under the account it names.
         </p>
       </div>
 

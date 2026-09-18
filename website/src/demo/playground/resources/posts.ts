@@ -1,6 +1,7 @@
 import { MessageSquare, ScrollText } from "lucide-react"
 import {
   ActionList,
+  createFormArrayInputController,
   DatePickerInputController,
   NumberInputController,
   SelectInputController,
@@ -12,6 +13,7 @@ import {
   splitViewFactory,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { PAGE_BLOCK } from "@/demo/builder/blocks"
 import { PostRow } from "@/demo/playground/adminRows"
 import {
   COMMENTS_ID,
@@ -19,17 +21,43 @@ import {
   POST_STATUSES,
   POSTS_ID,
   type Post,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
+} from "@/demo/playground/adminData"
+import { DRAWER, POPUP } from "@/demo/playground/shared"
+
+/** The fields of a post, next to the blocks it is assembled from. */
+const FIELDS = {
+  title: { label: "Title", required: true },
+  author: { label: "Author" },
+  category: {
+    label: "Category",
+    controller: SelectInputController,
+    valueOptions: POST_CATEGORIES,
+  },
+  status: {
+    label: "Status",
+    controller: SelectInputController,
+    valueOptions: POST_STATUSES,
+  },
+  publishedAt: {
+    label: "Published on",
+    controller: DatePickerInputController,
+  },
+  views: { label: "Views", controller: NumberInputController },
+}
 
 /**
- * The blog. Four layouts over the same seven fields — and the board is the one
- * to try: drag a post from "Draft" to "Published" and the record is updated, no
- * code written for it here.
+ * The blog, and the pages of the site with it: one collection, because both are
+ * a handful of fields and a stack of blocks. This is the page builder of the
+ * back office — `blocks` is an array of forms rather than a field, and what a
+ * post is made of is decided record by record, in the editor.
+ *
+ * Four layouts over the same fields — and the board is the one to try: drag a
+ * post from "Draft" to "Published" and the record is updated, no code written
+ * for it here.
  */
 export const postsResource = createViewResource<Post>(POSTS_ID, {
   name: "Posts",
-  scope: "playground2",
+  scope: "admin",
   icon: ScrollText,
   canRead: true,
   canCreate: true,
@@ -38,26 +66,21 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
   view: {
     name: "Posts",
     description:
-      "The blog, from the first draft to the day it goes out. Try the board: dragging a card moves the post to that status.",
+      "The blog and the pages of the site, from the first draft to the day one goes out. Open one: it is assembled block by block. Try the board too — dragging a card moves the post to that status.",
     form: {
       inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        category: {
-          label: "Category",
-          controller: SelectInputController,
-          valueOptions: POST_CATEGORIES,
-        },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: POST_STATUSES,
-        },
-        publishedAt: {
-          label: "Published on",
-          controller: DatePickerInputController,
-        },
-        views: { label: "Views", controller: NumberInputController },
+        ...FIELDS,
+        // What the post is: the palette of the landing-page kit, every form
+        // tagged `page-block` and nothing else — the same field, and the same
+        // blocks, as `/playground/builder`.
+        blocks: createFormArrayInputController({
+          label: "Content",
+          forms: [PAGE_BLOCK],
+          draggable: true,
+          // A post opens on its outline: the blocks are folded, and the one
+          // just added is the only one that unfolds itself.
+          closedByDefault: true,
+        }),
       },
     },
     formFilter: {
@@ -71,7 +94,11 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
       },
     },
     viewVariants: [
-      tableViewOptionFactory({ name: "Table" }),
+      // A layout may carry a form of its own, and the table is where that
+      // earns its keep: one column per field is right for the six fields and
+      // wrong for the blocks, which are a stack of forms and belong in the
+      // editor. Every other layout keeps the whole declaration.
+      tableViewOptionFactory({ name: "Table", form: { inputs: FIELDS } }),
       // One column per status: the editorial pipeline, and a drop target that
       // writes the new status back through the same repository the table uses.
       columnViewOptionFactory({
@@ -91,7 +118,10 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
     ],
   },
   views: {
-    [ActionList.create]: { name: "New post", ...POPUP },
+    // A block array is a long form — the palette, one card per block, dragged
+    // into order — so creation gets the sliding panel rather than a centred
+    // dialog. Editing keeps the page: a post has its comments underneath.
+    [ActionList.create]: { name: "New post", ...DRAWER },
     // The other shape `subViewResource` can take: a column beside the sub-view
     // rather than a bar above it, set with `orientation: "vertical"` — the
     // users resource keeps the default, scrolling bar for comparison.

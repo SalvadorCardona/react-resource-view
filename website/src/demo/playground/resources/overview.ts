@@ -1,7 +1,7 @@
 import { LayoutDashboard } from "lucide-react"
 import { createViewResource } from "react-resource-view"
-import { OVERVIEW_ID } from "@/demo/playground2/data"
-import { Overview } from "@/demo/playground2/Overview"
+import { OVERVIEW_ID } from "@/demo/playground/adminData"
+import { Overview } from "@/demo/playground/Overview"
 
 /**
  * The screen the back office opens on.
@@ -13,13 +13,13 @@ import { Overview } from "@/demo/playground2/Overview"
  */
 export const overviewResource = createViewResource(OVERVIEW_ID, {
   name: "Overview",
-  scope: "playground2",
+  scope: "admin",
   icon: LayoutDashboard,
   canRead: true,
   view: {
     name: "Overview",
     description:
-      "The studio at a glance. Every number is a link into the screen behind it, filters included.",
+      "The roastery at a glance. Every number is a link into the screen behind it, filters included.",
     viewComponent: Overview,
   },
 })

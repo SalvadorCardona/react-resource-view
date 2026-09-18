@@ -16,8 +16,8 @@ import {
   COMMENT_STATUSES,
   COMMENTS_ID,
   type Comment,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
+} from "@/demo/playground/adminData"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
  * Moderation. A comment is written by a visitor, never by the back office:
@@ -26,7 +26,7 @@ import { POPUP } from "@/demo/playground2/shared"
  */
 export const commentsResource = createViewResource<Comment>(COMMENTS_ID, {
   name: "Comments",
-  scope: "playground2",
+  scope: "admin",
   icon: MessageSquare,
   canRead: true,
   canUpdate: true,

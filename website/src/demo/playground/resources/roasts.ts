@@ -17,8 +17,8 @@ import {
   ROASTERS,
   ROASTS_ID,
   type Roast,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
+} from "@/demo/playground/adminData"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
  * The week on the roasters. A record with a start and an end is what a calendar
@@ -27,7 +27,7 @@ import { POPUP } from "@/demo/playground2/shared"
  */
 export const roastsResource = createViewResource<Roast>(ROASTS_ID, {
   name: "Roasts",
-  scope: "playground2",
+  scope: "admin",
   icon: Flame,
   canRead: true,
   canCreate: true,

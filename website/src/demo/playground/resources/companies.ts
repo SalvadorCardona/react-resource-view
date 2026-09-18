@@ -16,8 +16,8 @@ import {
   ROASTS_ID,
   USERS_ID,
   type Company,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
+} from "@/demo/playground/adminData"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
  * The accounts the roastery supplies: the cafés, hotels and offices its
@@ -31,7 +31,7 @@ import { POPUP } from "@/demo/playground2/shared"
  */
 export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
   name: "Companies",
-  scope: "playground2",
+  scope: "admin",
   icon: Building2,
   canRead: true,
   canCreate: true,

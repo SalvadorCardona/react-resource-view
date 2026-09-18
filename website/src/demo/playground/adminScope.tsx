@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router"
-import { Blocks, Factory, Newspaper, ShoppingBag } from "lucide-react"
+import { BookOpen, Blocks, Factory, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   createAdminLayout,
   createItemMenuWithResource,
+  generateLink,
   type ScopeInterface,
 } from "react-resource-view"
 import {
-  cmsResource,
   commentsResource,
   companiesResource,
   ordersResource,
@@ -17,11 +17,11 @@ import {
   profilesResource,
   roastsResource,
   usersResource,
-} from "@/demo/playground2/resources"
+} from "@/demo/playground/resources"
 
 /**
- * The one thing `AdminLayout` alone cannot offer: a way back to the builder
- * that feeds CMS and My profiles. Rendered in the top bar via
+ * The one thing `AdminLayout` alone cannot offer: a way to the builder that
+ * writes the posts and the CVs. Rendered in the top bar via
  * `createAdminLayout`'s `topBarEnd`, so it survives every screen of the scope.
  *
  * A plain router `Link` rather than the package's own: it leaves the resource
@@ -30,7 +30,7 @@ import {
 function BuilderLink() {
   return (
     <Link
-      to="/playground2/builder"
+      to="/playground/builder"
       className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
     >
       <Blocks className="size-4" />
@@ -40,25 +40,31 @@ function BuilderLink() {
 }
 
 /**
- * playground2's back office: the whole of `/playground`'s administration, plus
- * the two collections the builder writes, on `AdminLayout` rather than on the
- * hand-written shell.
+ * The back office of the playground: one area, nine resources, one menu.
  *
- * The resources are the same declarations as `/playground`'s — same fields,
- * same layouts, same sub-views — under storage ids of their own, so the two
- * playgrounds stay separate sandboxes. What changes is everything around them:
- * where `/playground` needed `AdminShell` for its sidebar, its headings and its
- * "Declaration" panel, this scope declares a menu and hands the rest to the
- * ready-made template.
+ * This is the whole administration. There is no screen written by hand
+ * anywhere: the lists and their layouts, the filter bars, the forms and the
+ * delete confirmations all come from the declarations in `resources/`, and
+ * everything around them is `AdminLayout` — the package's ready-made admin
+ * template, configured in a line and fed by the menu below. The overview is
+ * the one exception, and it is a resource too, with a `viewComponent` of its
+ * own instead of a list.
+ *
+ * Two resources are declared without an entry of their own: the CVs, which
+ * belong to the account they hang under rather than to the sidebar, and are
+ * reached through the "Curriculum vitæ" tab of a user.
+ *
+ * The scope is loaded lazily by the playground, which is the point of a scope
+ * being a module rather than a folder: a reader who only follows a link from a
+ * documentation page never downloads any of it.
  */
-export const playground2Scope: ScopeInterface = {
-  name: "playground2",
-  label: "Studio",
+export const adminScope: ScopeInterface = {
+  name: "admin",
+  label: "Roastery admin",
   resources: [
     overviewResource,
-    cmsResource,
-    profilesResource,
     usersResource,
+    profilesResource,
     companiesResource,
     postsResource,
     commentsResource,
@@ -77,14 +83,6 @@ export const playground2Scope: ScopeInterface = {
   // built from its resource, so a label, an icon and a link are declared once.
   menu: [
     createItemMenuWithResource({ resource: overviewResource }),
-    {
-      name: "Studio",
-      icon: Blocks,
-      items: [
-        createItemMenuWithResource({ resource: cmsResource }),
-        createItemMenuWithResource({ resource: profilesResource }),
-      ],
-    },
     createItemMenuWithResource({ resource: usersResource }),
     createItemMenuWithResource({ resource: companiesResource }),
     {
@@ -107,6 +105,13 @@ export const playground2Scope: ScopeInterface = {
       name: "Production",
       icon: Factory,
       items: [createItemMenuWithResource({ resource: roastsResource })],
+    },
+    // Naming only the scope lands on its `defaultViewResourceContextParams`,
+    // which is how one area links to another without knowing its resources.
+    {
+      name: "Documentation demos",
+      icon: BookOpen,
+      href: generateLink({ scope: "docs" }),
     },
   ],
 }

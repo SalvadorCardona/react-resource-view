@@ -1,4 +1,4 @@
-import { Activity, ScrollText, Users } from "lucide-react"
+import { Activity, FileUser, ScrollText, Users } from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -13,23 +13,24 @@ import {
 import { UserRow } from "@/demo/playground/adminRows"
 import {
   POSTS_ID,
+  PROFILES_ID,
   USER_ROLES,
   USER_STATUSES,
   USERS_ID,
   type User,
-} from "@/demo/playground2/data"
-import { POPUP } from "@/demo/playground2/shared"
-import { UserActivity } from "@/demo/playground2/UserActivity"
+} from "@/demo/playground/adminData"
+import { POPUP } from "@/demo/playground/shared"
+import { UserActivity } from "@/demo/playground/UserActivity"
 
 /**
  * The people who can sign in. This file is the whole screen: the table and its
  * columns, the card grid, the filter bar, the create dialog, the account page
- * with the posts belonging to it and the delete confirmation all come out of
- * the declaration below.
+ * with the posts and the CVs belonging to it, and the delete confirmation all
+ * come out of the declaration below.
  */
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
-  scope: "playground2",
+  scope: "admin",
   // Read by `createItemMenuWithResource`, so the sidebar `AdminLayout` draws is
   // built from the resources themselves rather than written a second time.
   icon: Users,
@@ -115,6 +116,27 @@ export const usersResource = createViewResource<User>(USERS_ID, {
                 ...view,
                 filter: { author },
                 defaultData: { author },
+              }
+            },
+          },
+          {
+            // The CVs of this person: a collection of its own, reached from
+            // the account it belongs to rather than from the sidebar — a
+            // profile without somebody to be the profile of is not a record
+            // anybody goes looking for.
+            slug: "cv",
+            name: "Curriculum vitæ",
+            icon: FileUser,
+            description: "The CVs assembled under this name.",
+            resourceId: PROFILES_ID,
+            resourceAction: ActionList.list,
+            onInitViewResource: (view, parent) => {
+              const owner = (parent?.data as User | undefined)?.name
+
+              return {
+                ...view,
+                filter: { owner },
+                defaultData: { owner },
               }
             },
           },
