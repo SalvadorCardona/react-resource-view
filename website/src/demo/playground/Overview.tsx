@@ -15,7 +15,6 @@ import {
   ORDERS_ID,
   POSTS_ID,
   PRODUCTS_ID,
-  PROFILES_ID,
   readAdminRows,
   ROASTS_ID,
   USERS_ID,
@@ -32,7 +31,6 @@ import { companiesResource } from "@/demo/playground/resources/companies"
 import { ordersResource } from "@/demo/playground/resources/orders"
 import { postsResource } from "@/demo/playground/resources/posts"
 import { productsResource } from "@/demo/playground/resources/products"
-import { profilesResource } from "@/demo/playground/resources/profiles"
 import { roastsResource } from "@/demo/playground/resources/roasts"
 import { usersResource } from "@/demo/playground/resources/users"
 import { cn } from "@/lib/cn"
@@ -219,7 +217,8 @@ function Figures() {
 function BlockRecords() {
   const posts = readAdminRows<Post>(POSTS_ID)
   const pages = posts.filter((row) => row.category === "Pages")
-  const profiles = readAdminRows<{ id: string }>(PROFILES_ID)
+  // One account, one CV: the count of the CVs is the count of the accounts.
+  const resumes = readAdminRows<User>(USERS_ID)
 
   return (
     <section aria-labelledby="overview-blocks">
@@ -231,16 +230,16 @@ function BlockRecords() {
         <div className="min-w-0">
           <h2 id="overview-blocks" className="font-semibold tracking-tight">
             {posts.length} {plural(posts.length, "post", "posts")} and{" "}
-            {profiles.length} {plural(profiles.length, "CV", "CVs")}, assembled
+            {resumes.length} {plural(resumes.length, "CV", "CVs")}, assembled
             block by block
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             A post is not six fields but an array of blocks, each one a form of
             its own — {pages.length} of them are the pages of the site rather
             than articles, in the same collection because they are the same
-            record. The CVs work the same way, under the account they belong to.
-            Edit one here, or open the builder — publishing from it writes to
-            these very collections.
+            record. A CV works the same way, and is a field of the account
+            itself: one account, one CV. Open a post and you are in the builder;
+            the demo beside it publishes into these very collections.
           </p>
         </div>
 
@@ -248,7 +247,7 @@ function BlockRecords() {
           to="/playground/builder"
           className="flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5 sm:self-auto"
         >
-          Open the builder
+          Open the builder demo
           <ArrowRight className="size-3.5" />
         </RouterLink>
       </div>
@@ -316,7 +315,6 @@ function CompanyTabs() {
 
 const RESOURCES: ViewResourceInterface[] = [
   usersResource,
-  profilesResource,
   companiesResource,
   postsResource,
   commentsResource,
@@ -333,7 +331,7 @@ function Resources() {
           id="overview-resources"
           className="text-lg font-semibold tracking-tight"
         >
-          Eight areas, eight files
+          Seven areas, seven files
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           No screen here is written by hand. Each area is one resource

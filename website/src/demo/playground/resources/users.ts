@@ -13,7 +13,6 @@ import {
 import { UserRow } from "@/demo/playground/adminRows"
 import {
   POSTS_ID,
-  PROFILES_ID,
   USER_ROLES,
   USER_STATUSES,
   USERS_ID,
@@ -21,12 +20,13 @@ import {
 } from "@/demo/playground/adminData"
 import { POPUP } from "@/demo/playground/shared"
 import { UserActivity } from "@/demo/playground/UserActivity"
+import { UserResume } from "@/demo/playground/UserResume"
 
 /**
  * The people who can sign in. This file is the whole screen: the table and its
  * columns, the card grid, the filter bar, the create dialog, the account page
- * with the posts and the CVs belonging to it, and the delete confirmation all
- * come out of the declaration below.
+ * with the posts written under it and the CV it amounts to, and the delete
+ * confirmation all come out of the declaration below.
  */
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
@@ -120,25 +120,16 @@ export const usersResource = createViewResource<User>(USERS_ID, {
             },
           },
           {
-            // The CVs of this person: a collection of its own, reached from
-            // the account it belongs to rather than from the sidebar — a
-            // profile without somebody to be the profile of is not a record
-            // anybody goes looking for.
+            // The CV of this person — one account, one CV, so it is a field of
+            // the user and not a collection beside it. A tab with a component
+            // of its own rather than a nested resource: `UserResume` mounts the
+            // page builder on the account being edited, and writes the blocks
+            // back through this very resource.
             slug: "cv",
             name: "Curriculum vitæ",
             icon: FileUser,
-            description: "The CVs assembled under this name.",
-            resourceId: PROFILES_ID,
-            resourceAction: ActionList.list,
-            onInitViewResource: (view, parent) => {
-              const owner = (parent?.data as User | undefined)?.name
-
-              return {
-                ...view,
-                filter: { owner },
-                defaultData: { owner },
-              }
-            },
+            description: "What this account amounts to on paper, block by block.",
+            viewComponent: UserResume,
           },
           {
             // A tab with no resource behind it: a component of one's own.

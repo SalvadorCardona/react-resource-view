@@ -20,7 +20,7 @@ import {
   UserRound,
   Wrench,
 } from "lucide-react"
-import { MEDIA_OPTIONS } from "@/demo/builder/media"
+import { MEDIA_OPTIONS, PORTRAIT_OPTIONS } from "@/demo/builder/media"
 
 /**
  * The block types the two builders are assembled from.
@@ -193,7 +193,7 @@ addForm(RESUME_HEADER, {
     portrait: {
       label: "Portrait",
       controller: SelectInputController,
-      valueOptions: MEDIA_OPTIONS,
+      valueOptions: PORTRAIT_OPTIONS,
     },
     summary: { label: "In a few words", controller: TextAreaInputController },
     contact: {

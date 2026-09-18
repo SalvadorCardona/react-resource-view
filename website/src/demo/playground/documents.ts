@@ -8,12 +8,13 @@ import {
   RESUME_EXPERIENCE,
   RESUME_HEADER,
   RESUME_SKILLS,
+  type BuilderBlock,
 } from "@/demo/builder/blocks"
-import type { Post, Profile } from "@/demo/playground/adminData"
+import type { Post } from "@/demo/playground/adminData"
 
 /**
  * The records of the back office that are documents rather than fields: the
- * pages of the site, and the CVs hanging off an account.
+ * pages of the site, and the CV an account amounts to.
  *
  * Written the way the builder writes its own samples — see `BUILDER_KITS` in
  * `@/demo/builder/kits`: a block is an object whose `type` is the `@for` tag of
@@ -28,19 +29,6 @@ import type { Post, Profile } from "@/demo/playground/adminData"
  * The types come from `adminData`, which reads these back in turn — only ever
  * as types, so nothing is imported in both directions at runtime.
  */
-
-/**
- * A day in the recent past, as an ISO string.
- *
- * Computed at seed time rather than written down, like the roasting schedule:
- * "edited 3 days ago" stays true whenever the playground is opened.
- */
-function daysAgo(days: number): string {
-  const date = new Date()
-  date.setDate(date.getDate() - days)
-  date.setHours(9, 30, 0, 0)
-  return date.toISOString()
-}
 
 /**
  * The pages of the site, stored as posts.
@@ -225,136 +213,150 @@ export const PAGES: Array<Omit<Post, "@id" | "@type">> = [
 ]
 
 /**
- * The CVs, all three of them the same person's: `owner` is the name of the
- * account they hang under, which is what the "Curriculum vitæ" tab of a user
- * filters its list on.
+ * The CVs, one per account.
+ *
+ * A user *is* a CV — that is the whole model — so these are keyed by the name
+ * of the account they belong to and written straight onto it at seed time.
+ * Three are written out here because a builder with nothing in it demonstrates
+ * nothing; every other account opens on the starter below, which is a CV
+ * begun rather than an empty screen.
  */
-export const SAMPLE_PROFILES: Array<Omit<Profile, "@id" | "@type">> = [
-  {
-    id: "1",
-    title: "Camille Roux — front-end engineer",
-    owner: "Camille Roux",
-    updatedAt: daysAgo(2),
-    blocks: [
-      {
-        id: "cv-1",
-        type: RESUME_HEADER,
-        order: 0,
-        name: "Camille Roux",
-        role: "Front-end engineer",
-        portrait: "dusk",
-        summary:
-          "Eight years building interfaces that stay maintainable once the team doubles. Partial to design systems and to deleting code.",
-        contact: ["camille@example.com", "Lyon, France", "+33 6 00 00 00 00"],
-      },
-      {
-        id: "cv-2",
-        type: RESUME_EXPERIENCE,
-        order: 1,
-        role: "Lead front-end",
-        company: "Néon",
-        period: "2021 — today",
-        description:
-          "Rebuilt the back office around declarative resources: seven screens, seven files, and a release every week instead of every quarter.",
-        stack: ["React", "TypeScript", "Tailwind"],
-      },
-      {
-        id: "cv-3",
-        type: RESUME_EXPERIENCE,
-        order: 2,
-        role: "Front-end developer",
-        company: "Atelier Vert",
-        period: "2018 — 2021",
-        description: "Design system, then the six products that came to depend on it.",
-        stack: ["React", "Storybook"],
-      },
-      {
-        id: "cv-4",
-        type: RESUME_EDUCATION,
-        order: 3,
-        degree: "MSc Computer Science",
-        school: "Université Lyon 1",
-        period: "2016",
-      },
-      {
-        id: "cv-5",
-        type: RESUME_SKILLS,
-        order: 4,
-        title: "Skills",
-        skills: ["React", "TypeScript", "Accessibility", "Design systems", "Testing"],
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Camille Roux — engineering manager",
-    owner: "Camille Roux",
-    updatedAt: daysAgo(6),
-    blocks: [
-      {
-        id: "mgr-1",
-        type: RESUME_HEADER,
-        order: 0,
-        name: "Camille Roux",
-        role: "Engineering manager",
-        portrait: "harbour",
-        summary:
-          "The same eight years, told from the side of the people: hiring, reviews, and shipping without a crunch.",
-        contact: ["camille@example.com", "Lyon, France"],
-      },
-      {
-        id: "mgr-2",
-        type: RESUME_EXPERIENCE,
-        order: 1,
-        role: "Engineering manager",
-        company: "Néon",
-        period: "2023 — today",
-        description:
-          "Six engineers across two products. Hired four of them, and kept the on-call rota to one night a month.",
-        stack: ["Hiring", "Mentoring", "Roadmapping"],
-      },
-      {
-        id: "mgr-3",
-        type: RESUME_EXPERIENCE,
-        order: 2,
-        role: "Lead front-end",
-        company: "Néon",
-        period: "2021 — 2023",
-        description: "The back office, and the design system the rest of the company built on.",
-        stack: ["React", "TypeScript"],
-      },
-      {
-        id: "mgr-4",
-        type: RESUME_SKILLS,
-        order: 3,
-        title: "What I am asked for",
-        skills: ["Hiring", "Code review", "Architecture", "Writing things down"],
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Camille Roux — one page",
-    owner: "Camille Roux",
-    updatedAt: daysAgo(21),
-    blocks: [
-      {
-        id: "short-1",
-        type: RESUME_HEADER,
-        order: 0,
-        name: "Camille Roux",
-        role: "Front-end engineer",
-        portrait: "orchard",
-        summary: "React, TypeScript, and interfaces that outlive the team that wrote them.",
-        contact: ["camille@example.com"],
-      },
-      {
-        id: "short-2",
-        type: RESUME_SKILLS,
-        order: 1,
-        title: "Skills",
-        skills: ["React", "TypeScript", "Accessibility"],
-      },
-    ],
-  },
-]
+export const RESUMES: Record<string, BuilderBlock[]> = {
+  "Camille Roux": [
+    {
+      id: "cv-1",
+      type: RESUME_HEADER,
+      order: 0,
+      name: "Camille Roux",
+      role: "Front-end engineer",
+      portrait: "ink",
+      summary:
+        "Eight years building interfaces that stay maintainable once the team doubles. Partial to design systems and to deleting code.",
+      contact: ["camille@example.com", "Lyon, France", "+33 6 00 00 00 00"],
+    },
+    {
+      id: "cv-2",
+      type: RESUME_EXPERIENCE,
+      order: 1,
+      role: "Lead front-end",
+      company: "Néon",
+      period: "2021 — today",
+      description:
+        "Rebuilt the back office around declarative resources: seven screens, seven files, and a release every week instead of every quarter.",
+      stack: ["React", "TypeScript", "Tailwind"],
+    },
+    {
+      id: "cv-3",
+      type: RESUME_EXPERIENCE,
+      order: 2,
+      role: "Front-end developer",
+      company: "Atelier Vert",
+      period: "2018 — 2021",
+      description: "Design system, then the six products that came to depend on it.",
+      stack: ["React", "Storybook"],
+    },
+    {
+      id: "cv-4",
+      type: RESUME_EDUCATION,
+      order: 3,
+      degree: "MSc Computer Science",
+      school: "Université Lyon 1",
+      period: "2016",
+    },
+    {
+      id: "cv-5",
+      type: RESUME_SKILLS,
+      order: 4,
+      title: "Skills",
+      skills: ["React", "TypeScript", "Accessibility", "Design systems", "Testing"],
+    },
+  ],
+  "Ada Lovelace": [
+    {
+      id: "ada-1",
+      type: RESUME_HEADER,
+      order: 0,
+      name: "Ada Lovelace",
+      role: "Head of the roastery",
+      portrait: "sand",
+      summary:
+        "Buys the green coffee, signs the accounts, and still roasts the Tuesday batch herself.",
+      contact: ["ada@roastery.example", "Montpellier, France"],
+    },
+    {
+      id: "ada-2",
+      type: RESUME_EXPERIENCE,
+      order: 1,
+      role: "Founder",
+      company: "The roastery",
+      period: "2019 — today",
+      description:
+        "Eleven farms, two roasters and a wholesale side that outgrew the shop in its third year.",
+      stack: ["Sourcing", "Cupping", "Wholesale"],
+    },
+    {
+      id: "ada-3",
+      type: RESUME_SKILLS,
+      order: 2,
+      title: "Skills",
+      skills: ["Sourcing", "Cupping", "Roast profiling", "Teaching"],
+    },
+  ],
+  "Grace Hopper": [
+    {
+      id: "grace-1",
+      type: RESUME_HEADER,
+      order: 0,
+      name: "Grace Hopper",
+      role: "Editor",
+      portrait: "sage",
+      summary:
+        "Writes the guides, and keeps the brewing pages honest about what actually changes the cup.",
+      contact: ["grace@roastery.example", "Lyon, France"],
+    },
+    {
+      id: "grace-2",
+      type: RESUME_EXPERIENCE,
+      order: 1,
+      role: "Editor",
+      company: "The roastery",
+      period: "2022 — today",
+      description: "The blog, the newsletter, and the eleven guides people actually read.",
+      stack: ["Writing", "Editing", "Photography"],
+    },
+  ],
+}
+
+/**
+ * The CV of an account nobody has written one for yet: the identity block,
+ * filled in from what the account already says about itself.
+ *
+ * Opening the tab on a blank builder is a small insult — the name, the role and
+ * the address are known — so the document starts where the record ends.
+ */
+export function starterResume(user: {
+  id: string
+  name: string
+  email: string
+  company: string
+  role: string
+}): BuilderBlock[] {
+  const ROLES: Record<string, string> = {
+    admin: "Administrator",
+    editor: "Editor",
+    reader: "Reader",
+  }
+
+  return [
+    {
+      id: `starter-${user.id}`,
+      type: RESUME_HEADER,
+      order: 0,
+      name: user.name,
+      role: ROLES[user.role] ?? "",
+      portrait: "plum",
+      summary: "",
+      contact: [user.email, user.company].filter(Boolean),
+    },
+  ]
+}

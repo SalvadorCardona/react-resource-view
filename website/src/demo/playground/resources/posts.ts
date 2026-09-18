@@ -1,7 +1,6 @@
 import { MessageSquare, ScrollText } from "lucide-react"
 import {
   ActionList,
-  createFormArrayInputController,
   DatePickerInputController,
   NumberInputController,
   SelectInputController,
@@ -14,6 +13,9 @@ import {
   tableViewOptionFactory,
 } from "react-resource-view"
 import { PAGE_BLOCK } from "@/demo/builder/blocks"
+import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
+import { BUILDER_FORM_COMPONENTS } from "@/demo/builder/BuilderForm"
+import { PostBuilder } from "@/demo/playground/PostBuilder"
 import { PostRow } from "@/demo/playground/adminRows"
 import {
   COMMENTS_ID,
@@ -68,18 +70,19 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
     description:
       "The blog and the pages of the site, from the first draft to the day one goes out. Open one: it is assembled block by block. Try the board too — dragging a card moves the post to that status.",
     form: {
+      // The fields of the record folded into a "Settings" panel, the blocks
+      // under them, and a save bar rather than a full-width button: the screen
+      // is about the document, so the document is what it shows.
+      components: BUILDER_FORM_COMPONENTS,
       inputs: {
         ...FIELDS,
         // What the post is: the palette of the landing-page kit, every form
         // tagged `page-block` and nothing else — the same field, and the same
         // blocks, as `/playground/builder`.
-        blocks: createFormArrayInputController({
+        blocks: createBlockBuilderInput({
           label: "Content",
           forms: [PAGE_BLOCK],
-          draggable: true,
-          // A post opens on its outline: the blocks are folded, and the one
-          // just added is the only one that unfolds itself.
-          closedByDefault: true,
+          addLabel: "Add a first block",
         }),
       },
     },
@@ -127,6 +130,11 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
     // users resource keeps the default, scrolling bar for comparison.
     [ActionList.update]: {
       name: "Edit a post",
+      // Editing a post *is* the page builder: the blocks on the left, the page
+      // they publish as on the right, on this record rather than on a sample.
+      // The comments underneath are unaffected — a `viewComponent` replaces the
+      // form, not the sub-views around it.
+      viewComponent: PostBuilder,
       subViewResource: {
         orientation: "vertical",
         list: [

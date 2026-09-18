@@ -19,16 +19,21 @@ import { cn } from "@/lib/cn"
  * and a component of the application decides what each type looks like. Change
  * the drawing here and the description above it does not move; add a block type
  * to the palette and the only thing to write is a branch in `Block`.
+ *
+ * It draws a published page rather than a panel of the back office: the frame,
+ * the paper and the theme come from `BuilderCanvas`, and the measure below —
+ * prose at around 68 characters, headings in a serif — is the one an article
+ * is read at, not the one a form is filled in at.
  */
 export function PagePreview({ blocks }: { blocks: BuilderBlock[] }) {
   if (blocks.length === 0) return <EmptyPage />
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <article className="pb-10">
       {blocks.map((block, index) => (
         <Block key={block.id ?? index} block={block} />
       ))}
-    </div>
+    </article>
   )
 }
 
@@ -51,12 +56,15 @@ function Block({ block }: { block: BuilderBlock }) {
   }
 }
 
+/** The measure prose is read at, and the gutters everything else lines up on. */
+const COLUMN = "mx-auto w-full max-w-[38rem] px-6 sm:px-8"
+
 function Hero({ block }: { block: BuilderBlock }) {
   const src = artworkSrc(block.image as string)
   const centred = block.align !== "left"
 
   return (
-    <section className="relative isolate overflow-hidden px-6 py-16 sm:px-10 sm:py-20">
+    <section className="relative isolate mb-10 overflow-hidden px-6 py-20 sm:px-10 sm:py-28">
       {src ? (
         <img
           src={src}
@@ -66,19 +74,35 @@ function Hero({ block }: { block: BuilderBlock }) {
       ) : (
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/25 to-view/25" />
       )}
-      <div className="absolute inset-0 -z-10 bg-slate-950/55" />
+      {/* Dark at the foot, clear at the head: the words sit on the deepest part
+          of the picture, which is what keeps them readable whatever is behind. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/85 via-slate-950/55 to-slate-950/30" />
 
-      <div className={cn("max-w-2xl text-white", centred && "mx-auto text-center")}>
+      <div
+        className={cn(
+          "mx-auto max-w-[38rem] text-white",
+          centred ? "text-center" : "text-left"
+        )}
+      >
         {typeof block.eyebrow === "string" && block.eyebrow && (
-          <p className="mb-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-medium tracking-wide backdrop-blur-sm">
+          <p
+            className={cn(
+              "mb-5 inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-medium tracking-[0.12em] uppercase backdrop-blur-sm"
+            )}
+          >
             {block.eyebrow}
           </p>
         )}
-        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h2 className="font-serif text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl">
           {(block.title as string) || "Your title"}
         </h2>
         {typeof block.subtitle === "string" && block.subtitle && (
-          <p className="mt-4 text-base leading-relaxed text-white/80">
+          <p
+            className={cn(
+              "mt-5 text-[17px] leading-relaxed text-white/85",
+              centred && "mx-auto"
+            )}
+          >
             {block.subtitle}
           </p>
         )}
@@ -89,9 +113,11 @@ function Hero({ block }: { block: BuilderBlock }) {
 
 function Text({ block }: { block: BuilderBlock }) {
   return (
-    <section className="px-6 py-10 sm:px-10">
+    <section className={cn(COLUMN, "py-6")}>
       {typeof block.title === "string" && block.title && (
-        <h3 className="mb-3 text-xl font-semibold tracking-tight">{block.title}</h3>
+        <h3 className="mb-4 font-serif text-2xl font-semibold tracking-tight">
+          {block.title}
+        </h3>
       )}
       <Body html={block.body as string} />
     </section>
@@ -113,7 +139,7 @@ function Body({ html }: { html?: string }) {
 
   return (
     <div
-      className="prose-docs max-w-none text-[15px] leading-relaxed"
+      className="prose-docs max-w-none text-[17px] leading-[1.7]"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
@@ -124,14 +150,14 @@ function Figure({ block }: { block: BuilderBlock }) {
   const full = block.width === "full"
 
   return (
-    <figure className={cn("py-6", full ? "px-0" : "px-6 sm:px-10")}>
+    <figure className={cn("py-6", full ? "px-0" : COLUMN)}>
       {src ? (
         <img
           src={src}
           alt={(block.caption as string) ?? ""}
           className={cn(
             "w-full object-cover",
-            full ? "max-h-80" : "max-h-72 rounded-xl"
+            full ? "max-h-96" : "max-h-80 rounded-lg"
           )}
         />
       ) : (
@@ -140,8 +166,8 @@ function Figure({ block }: { block: BuilderBlock }) {
       {typeof block.caption === "string" && block.caption && (
         <figcaption
           className={cn(
-            "mt-2 text-xs text-muted-foreground",
-            full && "px-6 sm:px-10"
+            "mt-3 text-[13px] text-muted-foreground",
+            full ? COLUMN : "px-0"
           )}
         >
           {block.caption}
@@ -155,9 +181,11 @@ function Gallery({ block }: { block: BuilderBlock }) {
   const images = Array.isArray(block.images) ? (block.images as string[]) : []
 
   return (
-    <section className="px-6 py-10 sm:px-10">
+    <section className="mx-auto w-full max-w-[52rem] px-6 py-8 sm:px-8">
       {typeof block.title === "string" && block.title && (
-        <h3 className="mb-4 text-xl font-semibold tracking-tight">{block.title}</h3>
+        <h3 className="mb-5 font-serif text-2xl font-semibold tracking-tight">
+          {block.title}
+        </h3>
       )}
       {images.length === 0 ? (
         <Placeholder label="Pick a few images" />
@@ -168,12 +196,12 @@ function Gallery({ block }: { block: BuilderBlock }) {
             block.columns === "2" ? "sm:grid-cols-2" : "sm:grid-cols-3"
           )}
         >
-          {images.map((image) => (
+          {images.map((image, index) => (
             <img
-              key={image}
+              key={`${image}-${index}`}
               src={artworkSrc(image)}
               alt=""
-              className="aspect-[4/3] w-full rounded-xl object-cover"
+              className="aspect-[4/3] w-full rounded-lg object-cover"
             />
           ))}
         </div>
@@ -187,13 +215,13 @@ function Pull({ block }: { block: BuilderBlock }) {
   const role = block.role as string | undefined
 
   return (
-    <section className="px-6 py-10 sm:px-10">
-      <blockquote className="border-l-2 border-primary pl-5">
-        <p className="text-lg leading-relaxed font-medium text-balance">
+    <section className={cn(COLUMN, "py-8")}>
+      <blockquote className="border-l-2 border-primary/60 pl-6">
+        <p className="font-serif text-2xl leading-snug font-medium text-balance">
           “{(block.quote as string) || "Say something worth quoting."}”
         </p>
         {(author || role) && (
-          <footer className="mt-3 text-sm text-muted-foreground">
+          <footer className="mt-4 text-[13px] tracking-wide text-muted-foreground">
             {author}
             {author && role ? " — " : ""}
             {role}
@@ -206,17 +234,17 @@ function Pull({ block }: { block: BuilderBlock }) {
 
 function Cta({ block }: { block: BuilderBlock }) {
   return (
-    <section className="px-6 py-10 sm:px-10">
-      <div className="rounded-2xl bg-gradient-to-br from-primary/12 to-view/12 p-8 text-center">
-        <h3 className="text-xl font-semibold tracking-tight">
+    <section className="mx-auto w-full max-w-[52rem] px-6 py-8 sm:px-8">
+      <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-transparent to-view/12 p-10 text-center">
+        <h3 className="font-serif text-2xl font-semibold tracking-tight">
           {(block.title as string) || "Ready?"}
         </h3>
         {typeof block.description === "string" && block.description && (
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">
             {block.description}
           </p>
         )}
-        <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">
+        <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm">
           {(block.action as string) || "Get started"}
           <ArrowRight className="size-4" />
         </span>
@@ -227,16 +255,28 @@ function Cta({ block }: { block: BuilderBlock }) {
 
 function Placeholder({ label }: { label: string }) {
   return (
-    <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+    <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
       {label}
     </div>
   )
 }
 
+/**
+ * Nothing written yet — and what a page is made of, drawn as the bones of one:
+ * a dashed rectangle says the preview is broken, this says it is waiting.
+ */
 function EmptyPage() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-border text-sm text-muted-foreground">
-      Add a block, and the page draws itself here.
+    <div className="flex h-72 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div aria-hidden className="w-full max-w-56 space-y-2">
+        <div className="h-16 rounded-md bg-muted" />
+        <div className="h-2.5 w-2/3 rounded-full bg-muted" />
+        <div className="h-2.5 rounded-full bg-muted/70" />
+        <div className="h-2.5 w-5/6 rounded-full bg-muted/70" />
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Add a block, and the page draws itself here.
+      </p>
     </div>
   )
 }

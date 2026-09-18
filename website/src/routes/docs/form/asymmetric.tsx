@@ -308,6 +308,19 @@ function Asymmetric() {
         the drawing itself.
       </P>
 
+      <Callout kind="tip" title="The card is the application’s, not the library’s">
+        <P>
+          The two demos below hand the field a <C>controller</C> of their own — the
+          property every input description carries — so the outline shows what each
+          block <em>says</em> rather than what it is: the title read off the
+          content, a thumbnail of the picture it holds, the palette opening between
+          two blocks instead of at the end. The value going in and out is the array
+          described here, unchanged, which is exactly what makes the swap
+          possible: <C>createFormArrayInputController</C> is a default, not a
+          requirement.
+        </P>
+      </Callout>
+
       <Demo label="Three blocks to start with — add, reorder, type" wide>
         <BuilderStudio
           kit={BUILDER_KITS[0]}
