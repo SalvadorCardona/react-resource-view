@@ -1,13 +1,5 @@
-import type { ReactNode } from "react"
-import { Link as DocsLink } from "@tanstack/react-router"
-import {
-  ArrowRight,
-  Building2,
-  Database,
-  Link2,
-  PencilOff,
-  type LucideIcon,
-} from "lucide-react"
+import { Link as RouterLink } from "@tanstack/react-router"
+import { ArrowRight, Blocks, Building2 } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   generateLink,
@@ -16,12 +8,14 @@ import {
   type FilterInterface,
   type ViewResourceInterface,
 } from "react-resource-view"
+import { formatPrice } from "@/demo/playground/adminRows"
 import {
   COMMENTS_ID,
   COMPANIES_ID,
   ORDERS_ID,
   POSTS_ID,
   PRODUCTS_ID,
+  PROFILES_ID,
   readAdminRows,
   ROASTS_ID,
   USERS_ID,
@@ -33,37 +27,32 @@ import {
   type Roast,
   type User,
 } from "@/demo/playground/adminData"
-import { formatPrice } from "@/demo/playground/adminRows"
-import { getDeclaration } from "@/demo/playground/declarations"
 import { commentsResource } from "@/demo/playground/resources/comments"
 import { companiesResource } from "@/demo/playground/resources/companies"
 import { ordersResource } from "@/demo/playground/resources/orders"
 import { postsResource } from "@/demo/playground/resources/posts"
 import { productsResource } from "@/demo/playground/resources/products"
+import { profilesResource } from "@/demo/playground/resources/profiles"
 import { roastsResource } from "@/demo/playground/resources/roasts"
 import { usersResource } from "@/demo/playground/resources/users"
 import { cn } from "@/lib/cn"
 
 /**
- * The screen the back office opens on: what needs doing, and what this is.
+ * The screen the back office opens on: what needs doing, and what is behind it.
  *
- * It is the one screen of the playground that is not a list, and it exists to
- * make the lists worth opening. Every figure is read from the same storage the
- * lists write to — moderate a comment and the count drops — and every figure
- * is a link that lands on the list already filtered: the URL carries the
- * filter, the filter bar reads it back, and nothing in between is written
- * here.
- *
- * The second half is the pitch, stated in numbers the reader can check: each
- * of the six areas is one file, and the button on each of them shows it.
+ * The one screen of the back office that is not a list, and it exists to make
+ * the lists worth opening. Every figure is read from the same storage the lists
+ * write to — moderate a comment and the count drops — and every figure is a
+ * link landing on the list already filtered: the URL carries the filter, the
+ * filter bar reads it back, and nothing in between is written here.
  */
 export function Overview() {
   return (
     <div className="space-y-10">
       <Figures />
+      <BlockRecords />
       <CompanyTabs />
       <Resources />
-      <UnderTheHood />
     </div>
   )
 }
@@ -83,9 +72,9 @@ interface Figure {
  * What the collections say right now.
  *
  * Read on render rather than through the list hook on purpose: this screen is
- * not a list of any resource, and six of them at once would be six fetches
- * for six numbers. The storage the repositories write to is a synchronous read
- * away, and the screen is remounted on every navigation back to it.
+ * not a list of any resource, and eight of them at once would be eight fetches
+ * for eight numbers. The storage the repositories write to is a synchronous
+ * read away, and the screen is remounted on every navigation back to it.
  */
 function readFigures(): Figure[] {
   const users = readAdminRows<User>(USERS_ID)
@@ -160,8 +149,8 @@ function plural(count: number, one: string, many: string): string {
 }
 
 /**
- * A link into a list, with its filter and its layout in the URL — the same
- * call the views make for themselves.
+ * A link into a list, with its filter and its layout in the URL — the same call
+ * the views make for themselves.
  */
 function listLink(
   resource: ViewResourceInterface,
@@ -220,13 +209,62 @@ function Figures() {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * The half of this back office that is not a form of six fields: the records
+ * assembled block by block, and the builder that assembles them.
+ *
+ * The builder is a route of its own rather than a view of the scope — it is one
+ * form, not a CRUD screen — so this is a plain router link, like the one in the
+ * top bar.
+ */
+function BlockRecords() {
+  const posts = readAdminRows<Post>(POSTS_ID)
+  const pages = posts.filter((row) => row.category === "Pages")
+  const profiles = readAdminRows<{ id: string }>(PROFILES_ID)
+
+  return (
+    <section aria-labelledby="overview-blocks">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/30 p-5 sm:flex-row sm:items-center">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-form-soft text-form">
+          <Blocks className="size-4" />
+        </span>
+
+        <div className="min-w-0">
+          <h2 id="overview-blocks" className="font-semibold tracking-tight">
+            {posts.length} {plural(posts.length, "post", "posts")} and{" "}
+            {profiles.length} {plural(profiles.length, "CV", "CVs")}, assembled
+            block by block
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A post is not six fields but an array of blocks, each one a form of
+            its own — {pages.length} of them are the pages of the site rather
+            than articles, in the same collection because they are the same
+            record. The CVs work the same way, under the account they belong to.
+            Edit one here, or open the builder — publishing from it writes to
+            these very collections.
+          </p>
+        </div>
+
+        <RouterLink
+          to="/playground/builder"
+          className="flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5 sm:self-auto"
+        >
+          Open the builder
+          <ArrowRight className="size-3.5" />
+        </RouterLink>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * The way into the one screen of the back office that is neither a list nor a
  * form on its own: a company, and the collections hanging off it.
  *
  * A link rather than a paragraph, because the shape only reads as an answer
  * once it is on screen. The tab is a segment of the URL like the rest of the
- * context, so this lands on a company's team rather than on a company — which
- * is the same link the reader can copy out of the address bar afterwards.
+ * context, so this lands on a company's team rather than on a company.
  */
 function CompanyTabs() {
   const company = readAdminRows<Company>(COMPANIES_ID).find(
@@ -251,17 +289,14 @@ function CompanyTabs() {
         </span>
 
         <div className="min-w-0">
-          <h2
-            id="overview-subviews"
-            className="font-semibold tracking-tight"
-          >
+          <h2 id="overview-subviews" className="font-semibold tracking-tight">
             A record is more than its form
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             A company is five fields, the people who sign in for it and the
             batches roasted for it. Open one: the form comes first, its
-            collections are tabs underneath, each filtered by the company — and
-            a batch created from a tab already belongs to it.
+            collections are tabs underneath, each filtered by the company — and a
+            batch created from a tab already belongs to it.
           </p>
         </div>
 
@@ -281,6 +316,7 @@ function CompanyTabs() {
 
 const RESOURCES: ViewResourceInterface[] = [
   usersResource,
+  profilesResource,
   companiesResource,
   postsResource,
   commentsResource,
@@ -290,37 +326,28 @@ const RESOURCES: ViewResourceInterface[] = [
 ]
 
 function Resources() {
-  const totalLines = RESOURCES.reduce(
-    (sum, resource) => sum + (getDeclaration(resource["@id"])?.lines ?? 0),
-    0
-  )
-
   return (
     <section aria-labelledby="overview-resources">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2
-            id="overview-resources"
-            className="text-lg font-semibold tracking-tight"
-          >
-            Seven areas, seven files
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            No screen here is written by hand. Each area is one resource
-            declaration — {totalLines} lines for the seven of them — and the
-            table, the filters, the forms, the dialogs and the menu entry come
-            out of it. Open one and press <em>Declaration</em> to read the file
-            next to what it renders.
-          </p>
-        </div>
+      <div className="mb-4">
+        <h2
+          id="overview-resources"
+          className="text-lg font-semibold tracking-tight"
+        >
+          Eight areas, eight files
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          No screen here is written by hand. Each area is one resource
+          declaration, and the table, the filters, the forms, the dialogs, the
+          sidebar entry and the page heading come out of it — and the shell
+          around them is the package's own admin layout, configured in a line.
+        </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {RESOURCES.map((resource) => {
           const Icon = resource.icon
-          const declaration = getDeclaration(resource["@id"])
-          // Each variant is named in the declaration, and that name is what
-          // the layout switcher shows — so it is what is listed here too.
+          // Each variant is named in the declaration, and that name is what the
+          // layout switcher shows — so it is what is listed here too.
           const layouts = (resource.view?.viewVariants ?? [])
             .map((variant) => variant.name)
             .filter((name): name is string => Boolean(name))
@@ -339,11 +366,6 @@ function Resources() {
                 )}
                 <span className="min-w-0">
                   <span className="block font-medium">{resource.view?.name}</span>
-                  {declaration && (
-                    <span className="block font-mono text-[11px] text-muted-foreground">
-                      {declaration.file} · {declaration.lines} lines
-                    </span>
-                  )}
                 </span>
               </span>
 
@@ -364,102 +386,6 @@ function Resources() {
             </Link>
           )
         })}
-      </div>
-    </section>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-
-interface Explanation {
-  icon: LucideIcon
-  title: string
-  body: ReactNode
-  code?: string
-  href: "/docs/resource-view/backends" | "/docs/resource-view/routing" | "/docs/resource-view/scopes"
-  cta: string
-}
-
-const EXPLANATIONS: Explanation[] = [
-  {
-    icon: Database,
-    title: "Running on your browser's storage",
-    body: (
-      <>
-        None of these resources declares a <code>path</code>, so each one falls
-        back to a localStorage repository: every edit you make here is real,
-        and survives a reload. Give a resource a path and the application a
-        dialect, and the same screens talk to your API.
-      </>
-    ),
-    code: `configureApi({ baseUrl, dialect: strapiDialect() })`,
-    href: "/docs/resource-view/backends",
-    cta: "API Platform, Strapi, Supabase",
-  },
-  {
-    icon: Link2,
-    title: "The URL is the state",
-    body: (
-      <>
-        The layout, the filters, the page and the open record all live in the
-        address bar. Change any of them and look at it; copy it and send it;
-        reload and land on the same screen. <em>Copy link</em>, above every
-        list, is a shortcut to that.
-      </>
-    ),
-    href: "/docs/resource-view/routing",
-    cta: "How routing works",
-  },
-  {
-    icon: PencilOff,
-    title: "No screen written by hand",
-    body: (
-      <>
-        The menu on the left is read from the scope, the headings from the
-        views, the forms and dialogs from the declarations. The only component
-        this back office wrote itself is the shell around them — and it does
-        not change when a ninth resource is added.
-      </>
-    ),
-    href: "/docs/resource-view/scopes",
-    cta: "Scopes and templates",
-  },
-]
-
-function UnderTheHood() {
-  return (
-    <section aria-labelledby="overview-hood">
-      <h2 id="overview-hood" className="mb-4 text-lg font-semibold tracking-tight">
-        Under the hood
-      </h2>
-
-      <div className="grid gap-3 lg:grid-cols-3">
-        {EXPLANATIONS.map(({ icon: Icon, title, body, code, href, cta }) => (
-          <div
-            key={title}
-            className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/30 p-5"
-          >
-            <span className="flex items-center gap-2 font-medium">
-              <Icon className="size-4 text-view" />
-              {title}
-            </span>
-            <p className="text-sm leading-relaxed text-muted-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_code]:text-[12px] [&_code]:text-foreground">
-              {body}
-            </p>
-            {code && (
-              <pre className="overflow-x-auto rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[12px] text-foreground">
-                {code}
-              </pre>
-            )}
-            <DocsLink
-              to={href}
-              className="mt-auto flex items-center gap-1 text-sm font-medium text-view hover:underline"
-            >
-              {cta}
-              <ArrowRight className="size-3.5" />
-            </DocsLink>
-          </div>
-        ))}
       </div>
     </section>
   )

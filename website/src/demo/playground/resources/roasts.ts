@@ -18,12 +18,12 @@ import {
   ROASTS_ID,
   type Roast,
 } from "@/demo/playground/adminData"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
- * The week on the roasters. A record with a start and an end is what a
- * calendar and a timeline draw — so this resource opens on the calendar, and
- * the same ten batches read as lanes per machine one click away.
+ * The week on the roasters. A record with a start and an end is what a calendar
+ * and a timeline draw — so this resource opens on the calendar, and the same
+ * ten batches read as lanes per machine one click away.
  */
 export const roastsResource = createViewResource<Roast>(ROASTS_ID, {
   name: "Roasts",

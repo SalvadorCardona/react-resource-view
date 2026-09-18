@@ -64,11 +64,11 @@ function AdminLayoutPage() {
 
       <Callout kind="tip" title="One reasonable default, not the only one">
         <P>
-          <C>decoratorComponent</C> is a plain <C>FC&lt;{"{ children }"}&gt;</C> — the{" "}
-          <A href="/playground">playground</A>&apos;s own back office is written by
-          hand instead, for the &quot;Declaration&quot; panel and the reset button it
-          needs beyond what a generic shell offers. Reach for <C>AdminLayout</C> to
-          skip that work when a project doesn&apos;t need anything past a menu.
+          <C>decoratorComponent</C> is a plain <C>FC&lt;{"{ children }"}&gt;</C>, so a
+          project that needs something else writes it. The{" "}
+          <A href="/playground">playground</A>&apos;s own back office is this
+          template, configured in a line: a scope whose needs stop at a menu has no
+          shell left to write.
         </P>
       </Callout>
 

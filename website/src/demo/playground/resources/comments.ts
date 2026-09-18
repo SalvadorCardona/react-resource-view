@@ -11,13 +11,13 @@ import {
   splitViewFactory,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { CommentRow } from "@/demo/playground/adminRows"
 import {
   COMMENT_STATUSES,
   COMMENTS_ID,
   type Comment,
 } from "@/demo/playground/adminData"
-import { CommentRow } from "@/demo/playground/adminRows"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
  * Moderation. A comment is written by a visitor, never by the back office:

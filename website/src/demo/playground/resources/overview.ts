@@ -8,8 +8,8 @@ import { Overview } from "@/demo/playground/Overview"
  *
  * It holds no rows of its own — `viewComponent` replaces the list with a
  * component that reads the other collections and links into them. It is still
- * declared as a resource, because that is what gives it a place in the menu,
- * an entry in the URL and the shell around it, at the cost of six lines.
+ * declared as a resource, because that is what gives it a place in the sidebar,
+ * an entry in the URL and the layout around it, at the cost of six lines.
  */
 export const overviewResource = createViewResource(OVERVIEW_ID, {
   name: "Overview",

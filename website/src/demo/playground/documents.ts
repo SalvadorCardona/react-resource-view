@@ -8,29 +8,26 @@ import {
   RESUME_EXPERIENCE,
   RESUME_HEADER,
   RESUME_SKILLS,
-  type BuilderBlock,
 } from "@/demo/builder/blocks"
+import type { Post, Profile } from "@/demo/playground/adminData"
 
 /**
- * What CMS and My profiles start from: pages and CVs already assembled.
+ * The records of the back office that are documents rather than fields: the
+ * pages of the site, and the CVs hanging off an account.
  *
  * Written the way the builder writes its own samples — see `BUILDER_KITS` in
  * `@/demo/builder/kits`: a block is an object whose `type` is the `@for` tag of
  * the form that draws it, and every picture is an id of the media library
  * rather than a URL, so the fixtures load with the page and survive offline.
  *
- * They exist because a CMS with nothing in it demonstrates nothing: a list has
- * no layouts to switch between, no filter to try and no record to open. These
- * are the same shape the builder saves, so a page published from
- * `/playground2/builder` lands next to them and reads exactly alike.
+ * They exist because a page builder with nothing in it demonstrates nothing: a
+ * list has no layouts to switch between, no filter to try and no record to
+ * open. These are the same shape the builder saves, so a page published from
+ * `/playground/builder` lands next to them and reads exactly alike.
+ *
+ * The types come from `adminData`, which reads these back in turn — only ever
+ * as types, so nothing is imported in both directions at runtime.
  */
-
-interface Document {
-  id: string
-  title: string
-  blocks: BuilderBlock[]
-  updatedAt: string
-}
 
 /**
  * A day in the recent past, as an ISO string.
@@ -45,11 +42,23 @@ function daysAgo(days: number): string {
   return date.toISOString()
 }
 
-export const SAMPLE_PAGES: Document[] = [
+/**
+ * The pages of the site, stored as posts.
+ *
+ * They are the same kind of record as an article — a title and a stack of
+ * blocks — so they live in the same collection, under the "Pages" category.
+ * Their ids continue the articles', which is what keeps two rows of one
+ * collection from sharing an IRI.
+ */
+export const PAGES: Array<Omit<Post, "@id" | "@type">> = [
   {
-    id: "1",
+    id: "8",
     title: "Coffee, from the farm to your kitchen",
-    updatedAt: daysAgo(1),
+    author: "Ada Lovelace",
+    category: "Pages",
+    status: "published",
+    publishedAt: "2026-01-05",
+    views: 5127,
     blocks: [
       {
         id: "home-1",
@@ -96,9 +105,13 @@ export const SAMPLE_PAGES: Document[] = [
     ],
   },
   {
-    id: "2",
+    id: "9",
     title: "The subscription",
-    updatedAt: daysAgo(4),
+    author: "Grace Hopper",
+    category: "Pages",
+    status: "published",
+    publishedAt: "2026-01-19",
+    views: 2044,
     blocks: [
       {
         id: "sub-1",
@@ -137,9 +150,13 @@ export const SAMPLE_PAGES: Document[] = [
     ],
   },
   {
-    id: "3",
+    id: "10",
     title: "Wholesale",
-    updatedAt: daysAgo(9),
+    author: "Barbara Liskov",
+    category: "Pages",
+    status: "published",
+    publishedAt: "2026-02-11",
+    views: 863,
     blocks: [
       {
         id: "pro-1",
@@ -178,9 +195,13 @@ export const SAMPLE_PAGES: Document[] = [
     ],
   },
   {
-    id: "4",
+    id: "11",
     title: "Christmas boxes",
-    updatedAt: daysAgo(16),
+    author: "Katherine Johnson",
+    category: "Pages",
+    status: "draft",
+    publishedAt: "",
+    views: 0,
     blocks: [
       {
         id: "xmas-1",
@@ -203,10 +224,16 @@ export const SAMPLE_PAGES: Document[] = [
   },
 ]
 
-export const SAMPLE_PROFILES: Document[] = [
+/**
+ * The CVs, all three of them the same person's: `owner` is the name of the
+ * account they hang under, which is what the "Curriculum vitæ" tab of a user
+ * filters its list on.
+ */
+export const SAMPLE_PROFILES: Array<Omit<Profile, "@id" | "@type">> = [
   {
     id: "1",
     title: "Camille Roux — front-end engineer",
+    owner: "Camille Roux",
     updatedAt: daysAgo(2),
     blocks: [
       {
@@ -261,6 +288,7 @@ export const SAMPLE_PROFILES: Document[] = [
   {
     id: "2",
     title: "Camille Roux — engineering manager",
+    owner: "Camille Roux",
     updatedAt: daysAgo(6),
     blocks: [
       {
@@ -307,6 +335,7 @@ export const SAMPLE_PROFILES: Document[] = [
   {
     id: "3",
     title: "Camille Roux — one page",
+    owner: "Camille Roux",
     updatedAt: daysAgo(21),
     blocks: [
       {

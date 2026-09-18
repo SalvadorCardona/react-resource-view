@@ -1,4 +1,4 @@
-import { Activity, ScrollText, Users } from "lucide-react"
+import { Activity, FileUser, ScrollText, Users } from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -10,33 +10,30 @@ import {
   createViewResource,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { UserRow } from "@/demo/playground/adminRows"
 import {
   POSTS_ID,
+  PROFILES_ID,
   USER_ROLES,
   USER_STATUSES,
   USERS_ID,
   type User,
 } from "@/demo/playground/adminData"
-import { UserRow } from "@/demo/playground/adminRows"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { POPUP } from "@/demo/playground/shared"
 import { UserActivity } from "@/demo/playground/UserActivity"
 
 /**
- * The people who can sign in. This file is the whole screen: the table and
- * its columns, the card grid, the filter bar, the create dialog, the account
- * page with the posts belonging to it and the delete confirmation all come out
- * of the declaration below.
+ * The people who can sign in. This file is the whole screen: the table and its
+ * columns, the card grid, the filter bar, the create dialog, the account page
+ * with the posts and the CVs belonging to it, and the delete confirmation all
+ * come out of the declaration below.
  */
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
   scope: "admin",
-  // Read by `createItemMenuWithResource`, so the menu of the scope is built
-  // from the resources themselves rather than written a second time.
+  // Read by `createItemMenuWithResource`, so the sidebar `AdminLayout` draws is
+  // built from the resources themselves rather than written a second time.
   icon: Users,
-  // What opens the list — `canRead` is the permission both the list and the
-  // detail are checked against. The detail is never linked to: the row actions
-  // of a list are edit and delete, and neither the menu nor the shell offers a
-  // way in.
   canRead: true,
   canCreate: true,
   canUpdate: true,
@@ -56,8 +53,8 @@ export const usersResource = createViewResource<User>(USERS_ID, {
         },
         // The account the person signs in for, left empty for the roastery's
         // own staff. It is a field of the form rather than a hidden column
-        // because a sub-view's `defaultData` fills in the form: creating a
-        // user from a company's page shows the company it will belong to.
+        // because a sub-view's `defaultData` fills in the form: creating a user
+        // from a company's page shows the company it will belong to.
         company: { label: "Company" },
         role: {
           label: "Role",
@@ -95,16 +92,12 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   },
   views: {
     [ActionList.create]: { name: "New user", ...POPUP },
-    // One of the forms of the administration opening on a page rather than
-    // over the list — a company is the other: an account is more than its five
-    // fields — it is what the person wrote — and the collections belonging to
-    // them are laid out underneath, as tabs. A dialog has no room for that.
+    // One of the forms opening on a page rather than over the list — a company
+    // is the other: an account is more than its five fields, and the
+    // collections belonging to it are laid out underneath, as tabs.
     [ActionList.update]: {
       name: "Edit a user",
       subViewResource: {
-        // The tabs sit above the sub-view and scroll sideways when they run
-        // past the screen — `orientation: "vertical"` puts them in a column
-        // beside it instead.
         list: [
           {
             slug: "posts",
@@ -114,8 +107,8 @@ export const usersResource = createViewResource<User>(USERS_ID, {
             resourceId: POSTS_ID,
             resourceAction: ActionList.list,
             // The nested list is filtered by the account on screen, and its
-            // create button writes the same author — a post started from
-            // here belongs to this person rather than to nobody.
+            // create button writes the same author — a post started from here
+            // belongs to this person rather than to nobody.
             onInitViewResource: (view, parent) => {
               const author = (parent?.data as User | undefined)?.name
 
@@ -123,6 +116,27 @@ export const usersResource = createViewResource<User>(USERS_ID, {
                 ...view,
                 filter: { author },
                 defaultData: { author },
+              }
+            },
+          },
+          {
+            // The CVs of this person: a collection of its own, reached from
+            // the account it belongs to rather than from the sidebar — a
+            // profile without somebody to be the profile of is not a record
+            // anybody goes looking for.
+            slug: "cv",
+            name: "Curriculum vitæ",
+            icon: FileUser,
+            description: "The CVs assembled under this name.",
+            resourceId: PROFILES_ID,
+            resourceAction: ActionList.list,
+            onInitViewResource: (view, parent) => {
+              const owner = (parent?.data as User | undefined)?.name
+
+              return {
+                ...view,
+                filter: { owner },
+                defaultData: { owner },
               }
             },
           },

@@ -1,75 +1,98 @@
-import { lazy, Suspense, useState } from "react"
+import { useState } from "react"
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router"
-import { Code2 } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { toast } from "sonner"
 import { BuilderStudio } from "@/demo/builder/BuilderStudio"
+import type { BuilderBlock } from "@/demo/builder/blocks"
 import { BUILDER_KITS, type BuilderKit } from "@/demo/builder/kits"
+import {
+  deriveDocumentTitle,
+  deriveResumeOwner,
+} from "@/demo/playground/deriveTitle"
+// Through the barrel rather than the two files: importing it is also what
+// seeds the collections this screen writes into.
+import { postsResource, profilesResource } from "@/demo/playground/resources"
 import { cn } from "@/lib/cn"
-
-// The panel carries the syntax highlighter, which nothing else on this page
-// needs; it arrives when the reader asks for it.
-const BuilderDeclaration = lazy(() => import("@/demo/builder/BuilderDeclaration"))
 
 export const Route = createFileRoute("/playground/builder")({
   head: () => ({
     meta: [
-      { title: "Page builder — Resource & Form" },
+      { title: "Page builder — Playground" },
       {
         name: "description",
         content:
-          "Assemble a landing page — hero, prose, gallery, quote, call to action — or a curriculum vitæ, block by block, out of one form field. The palette, the ordering and the payload all come from react-data-form.",
+          "One form whose fields the reader decides: assemble a page out of blocks, or a CV, and publish it — it is saved to the back office, as a post or as a CV under an account.",
       },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: BuilderRoute,
+  component: PlaygroundBuilderRoute,
 })
 
 /**
- * The asymmetric form, at full size.
- *
- * The documentation page explains the mechanism in two hundred words; this is
- * the same mechanism with room to be used — six block types, a palette, drag
- * to reorder, and a result that redraws as it is typed. The two documents on
- * offer are deliberately unrelated to each other: what they share is a single
- * field, and the fact that neither of their shapes is known when the
- * description is written.
+ * The builder, with its submit button wired to something: publishing a page
+ * saves it as a post, exporting a CV saves it under the account whose name is
+ * on it — through the same `createItem` a form of that resource would call.
+ * Those resources' own storage is what the back office reads, so the record
+ * shows up there the moment this screen writes it.
  */
-function BuilderRoute() {
+function PlaygroundBuilderRoute() {
   const [kit, setKit] = useState<BuilderKit>(BUILDER_KITS[0])
-  const [showDeclaration, setShowDeclaration] = useState(false)
+
+  const handleSave = async (blocks: BuilderBlock[]) => {
+    const title = deriveDocumentTitle(kit.id, blocks)
+
+    if (kit.id === "resume") {
+      const owner = deriveResumeOwner(blocks)
+
+      await profilesResource.createItem({
+        title,
+        owner,
+        blocks,
+        updatedAt: new Date().toISOString(),
+      })
+
+      toast.success(`"${title}" saved`, {
+        description: owner
+          ? `Open it from ${owner}'s Curriculum vitæ tab.`
+          : "Open it from any account's Curriculum vitæ tab — this one names nobody.",
+      })
+      return
+    }
+
+    // A page is a post like any other: it lands in the blog as a draft, under
+    // the category the back office lists the pages of the site under.
+    await postsResource.createItem({
+      title,
+      blocks,
+      category: "Pages",
+      status: "draft",
+      author: "",
+      publishedAt: "",
+      views: 0,
+    })
+
+    toast.success(`"${title}" saved`, {
+      description: "Open it from Posts — it is a draft until you publish it.",
+    })
+  }
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Page builder</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            One field, a palette of blocks, and a document that is a different shape
-            every time.{" "}
-            <Link
-              to="/docs/form/asymmetric"
-              className="text-foreground underline underline-offset-4"
-            >
-              How it is described
-            </Link>
-            .
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setShowDeclaration((value) => !value)}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition",
-            showDeclaration
-              ? "border-form/50 bg-form-soft/50 text-foreground"
-              : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
+    <div className="mx-auto max-w-[100rem] space-y-6 px-4 py-8 lg:px-8">
+      <div>
+        <Link
+          to="/playground"
+          className="mb-3 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
         >
-          <Code2 className="size-4" />
-          Declaration
-        </button>
-      </header>
+          <ArrowLeft className="size-3.5" />
+          Back to the back office
+        </Link>
+        <h1 className="text-2xl font-semibold tracking-tight">Page builder</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Assemble a page or a CV, then publish it — a page is saved as a post,
+          a CV under the account it names.
+        </p>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:max-w-3xl">
         {BUILDER_KITS.map((option) => (
@@ -100,21 +123,11 @@ function BuilderRoute() {
         ))}
       </div>
 
-      {showDeclaration && (
-        <Suspense fallback={<DeclarationSkeleton />}>
-          <BuilderDeclaration />
-        </Suspense>
-      )}
-
       <ClientOnly fallback={<BuilderSkeleton />}>
-        <BuilderStudio kit={kit} />
+        <BuilderStudio key={kit.id} kit={kit} onSave={handleSave} />
       </ClientOnly>
     </div>
   )
-}
-
-function DeclarationSkeleton() {
-  return <div className="h-40 animate-pulse rounded-2xl bg-muted" aria-hidden />
 }
 
 function BuilderSkeleton() {

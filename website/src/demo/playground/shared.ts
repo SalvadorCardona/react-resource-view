@@ -1,5 +1,6 @@
 /**
- * How the pages and profiles resources open their forms.
+ * How the two resources made of blocks — the posts and the CVs — open their
+ * forms.
  *
  * A block array is a long form — the palette, one card per block, dragged
  * into order — so it gets the sliding panel rather than a centred dialog: see

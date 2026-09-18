@@ -8,14 +8,11 @@ import {
 
 /**
  * The second shape a sub-view takes: a tab of one's own, with no resource
- * behind it.
+ * behind it — the posts and the CVs beside it are collections, this one is a
+ * component.
  *
- * The account page is made of the collections belonging to the person — their
- * posts, on the tab next to this one — and of what those collections add up
- * to, which is not a list of anything and so could never be a resource. It
- * reads the surrounding context to know whose page it is: a sub-view is
- * rendered inside the record's own view, so `useCurrentViewResourceContext`
- * hands back the user being edited.
+ * A sub-view is rendered inside the record's own view, so
+ * `useCurrentViewResourceContext` hands back the user being edited.
  */
 export function UserActivity() {
   const user = useCurrentViewResourceContext()?.data as User | undefined

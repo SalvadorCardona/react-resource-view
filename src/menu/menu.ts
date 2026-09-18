@@ -1,4 +1,4 @@
-import { generateLink } from "@/routes/routes"
+import { generateLink, parseLink } from "@/routes/routes"
 import { ActionList } from "react-data-form"
 import { getIdFromIri } from "jsonld-item"
 import { FC } from "react"
@@ -99,8 +99,45 @@ function matchesCurrent(
   pathname: string,
   searchStr: string
 ): boolean {
-  const current =
-    getPorts().routing.mode === "query" ? pathname + searchStr : pathname
+  const { mode, param } = getPorts().routing
+  const current = mode === "query" ? pathname + searchStr : pathname
 
-  return current.startsWith(href)
+  // An entry pointing anywhere else than at a view — a link out of the scope,
+  // a page of the host application — has no context to read: the string it
+  // stands for is all there is to compare.
+  if (mode === "query" && !readRoutingParam(href, param)) {
+    return current.startsWith(href)
+  }
+
+  return matchesContext(parseLink(href), parseLink(current))
+}
+
+function readRoutingParam(url: string, param: string): string | null {
+  return new URLSearchParams(url.split("?")[1] ?? "").get(param)
+}
+
+/**
+ * Whether the view on screen is the one a menu entry stands for.
+ *
+ * Compared context by context rather than as strings: the entry links to a
+ * list, and in query mode it carries the base path the application is mounted
+ * under, neither of which the current URL has to repeat to be that page. What
+ * the entry does not name — the record being read, the layout chosen — is not
+ * compared, so opening a record leaves its entry lit; what it names beyond a
+ * list — a creation form, one record — has to match, so two entries on the
+ * same resource stay distinguishable.
+ */
+function matchesContext(
+  target: ViewResourceContextParams,
+  current: ViewResourceContextParams
+): boolean {
+  if (target.scope && target.scope !== current.scope) return false
+  if (target.resourceId && target.resourceId !== current.resourceId) return false
+  if (target.id && target.id !== current.id) return false
+
+  if (target.resourceAction && target.resourceAction !== ActionList.list) {
+    return target.resourceAction === current.resourceAction
+  }
+
+  return true
 }

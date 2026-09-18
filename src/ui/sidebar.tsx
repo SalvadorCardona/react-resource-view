@@ -15,6 +15,8 @@ const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 
 type SidebarContextProps = {
+  /** Whether the column is unfolded, on a screen wide enough to hold one. */
+  open: boolean
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
@@ -33,10 +35,10 @@ function useSidebar() {
 }
 
 /**
- * Minimal version of the shadcn sidebar: one collapse mode (off-canvas on
- * mobile, always visible on desktop), no icon-only rail, no persisted cookie —
- * the admin layout that uses it is meant to work out of the box, not to be
- * configured before its first render.
+ * Minimal version of the shadcn sidebar: one collapse mode — a drawer on
+ * mobile, a column folding away on desktop — no icon-only rail, no persisted
+ * cookie; the admin layout that uses it is meant to work out of the box, not
+ * to be configured before its first render.
  */
 function SidebarProvider({
   className,
@@ -45,15 +47,23 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<"div">) {
   const isMobile = useIsMobile()
+  const [open, setOpen] = React.useState(true)
   const [openMobile, setOpenMobile] = React.useState(false)
 
+  // One trigger, two sidebars: the drawer on mobile, the column on desktop.
+  // Toggling the one that is not on screen is what made the button look dead.
   const toggleSidebar = React.useCallback(() => {
-    setOpenMobile((open) => !open)
-  }, [])
+    if (isMobile) {
+      setOpenMobile((current) => !current)
+      return
+    }
+
+    setOpen((current) => !current)
+  }, [isMobile])
 
   const contextValue = React.useMemo<SidebarContextProps>(
-    () => ({ isMobile, openMobile, setOpenMobile, toggleSidebar }),
-    [isMobile, openMobile, toggleSidebar]
+    () => ({ isMobile, open, openMobile, setOpenMobile, toggleSidebar }),
+    [isMobile, open, openMobile, toggleSidebar]
   )
 
   return (
@@ -71,7 +81,7 @@ function SidebarProvider({
 }
 
 function Sidebar({ className, children, ...props }: React.ComponentProps<"div">) {
-  const { isMobile, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, open, openMobile, setOpenMobile } = useSidebar()
 
   if (isMobile) {
     return (
@@ -94,13 +104,19 @@ function Sidebar({ className, children, ...props }: React.ComponentProps<"div">)
   return (
     <div
       data-slot="sidebar"
+      data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "sticky top-0 hidden h-svh w-(--sidebar-width) shrink-0 flex-col border-r border-border bg-card text-foreground md:flex",
+        "sticky top-0 hidden h-svh shrink-0 overflow-hidden border-r border-border bg-card text-foreground transition-[width] duration-200 md:flex",
+        open ? "w-(--sidebar-width)" : "w-0 border-r-0",
         className
       )}
       {...props}
     >
-      {children}
+      {/* The column keeps its width while the frame around it closes, so the
+          menu slides out of sight rather than being squeezed on the way. */}
+      <div className="flex h-full w-(--sidebar-width) flex-col" inert={!open}>
+        {children}
+      </div>
     </div>
   )
 }

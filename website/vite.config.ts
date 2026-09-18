@@ -45,8 +45,6 @@ export default defineConfig({
         { path: "/" },
         { path: "/playground" },
         { path: "/playground/builder" },
-        { path: "/playground2" },
-        { path: "/playground2/builder" },
       ],
     }),
     viteReact(),

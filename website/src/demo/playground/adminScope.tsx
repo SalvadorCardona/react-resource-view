@@ -1,12 +1,12 @@
-import { BookOpen, Factory, Newspaper, ShoppingBag } from "lucide-react"
+import { Link } from "@tanstack/react-router"
+import { BookOpen, Blocks, Factory, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
+  createAdminLayout,
   createItemMenuWithResource,
   generateLink,
   type ScopeInterface,
 } from "react-resource-view"
-import { AdminShell } from "@/demo/playground/AdminShell"
-import { seedAdminData } from "@/demo/playground/adminData"
 import {
   commentsResource,
   companiesResource,
@@ -14,23 +14,45 @@ import {
   overviewResource,
   postsResource,
   productsResource,
+  profilesResource,
   roastsResource,
   usersResource,
 } from "@/demo/playground/resources"
 
-// Importing this module is what entering the scope means, and a view fetches as
-// soon as it mounts — so this is the last moment the fixtures can be written.
-seedAdminData()
+/**
+ * The one thing `AdminLayout` alone cannot offer: a way to the builder that
+ * writes the posts and the CVs. Rendered in the top bar via
+ * `createAdminLayout`'s `topBarEnd`, so it survives every screen of the scope.
+ *
+ * A plain router `Link` rather than the package's own: it leaves the resource
+ * context entirely, for a route this scope does not own.
+ */
+function BuilderLink() {
+  return (
+    <Link
+      to="/playground/builder"
+      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+    >
+      <Blocks className="size-4" />
+      Page builder
+    </Link>
+  )
+}
 
 /**
- * The back office of the playground: one area, eight resources, one menu.
+ * The back office of the playground: one area, nine resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
  * delete confirmations all come from the declarations in `resources/`, and
- * everything the shell draws around them is read from the fields below. The
- * overview is the one exception, and it is a resource too — with a
- * `viewComponent` of its own instead of a list.
+ * everything around them is `AdminLayout` — the package's ready-made admin
+ * template, configured in a line and fed by the menu below. The overview is
+ * the one exception, and it is a resource too, with a `viewComponent` of its
+ * own instead of a list.
+ *
+ * Two resources are declared without an entry of their own: the CVs, which
+ * belong to the account they hang under rather than to the sidebar, and are
+ * reached through the "Curriculum vitæ" tab of a user.
  *
  * The scope is loaded lazily by the playground, which is the point of a scope
  * being a module rather than a folder: a reader who only follows a link from a
@@ -42,6 +64,7 @@ export const adminScope: ScopeInterface = {
   resources: [
     overviewResource,
     usersResource,
+    profilesResource,
     companiesResource,
     postsResource,
     commentsResource,
@@ -49,16 +72,15 @@ export const adminScope: ScopeInterface = {
     ordersResource,
     roastsResource,
   ],
-  // Wraps every view of the area — see `AdminShell`.
-  decoratorComponent: AdminShell,
-  // Where the area opens when the URL names the scope and nothing else, which
-  // is what the "Back office" entry of the other scope links to.
+  decoratorComponent: createAdminLayout({ topBarEnd: <BuilderLink /> }),
+  // Where the scope opens when the URL names it and nothing else.
   defaultViewResourceContextParams: {
     resourceId: overviewResource["@id"],
     resourceAction: ActionList.list,
   },
-  // Data, rendered by the shell. Each entry is built from its resource, so a
-  // label, an icon and a link are declared once and read here.
+  // Data, rendered by the template: `AdminLayout` reads this menu for its
+  // sidebar on desktop and for its bottom bar on narrow screens. Each entry is
+  // built from its resource, so a label, an icon and a link are declared once.
   menu: [
     createItemMenuWithResource({ resource: overviewResource }),
     createItemMenuWithResource({ resource: usersResource }),

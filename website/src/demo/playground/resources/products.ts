@@ -10,14 +10,14 @@ import {
   createViewResource,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { ProductRow } from "@/demo/playground/adminRows"
 import {
   PRODUCT_CATEGORIES,
   PRODUCT_STATUSES,
   PRODUCTS_ID,
   type Product,
 } from "@/demo/playground/adminData"
-import { ProductRow } from "@/demo/playground/adminRows"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { POPUP } from "@/demo/playground/shared"
 
 /** The catalogue. Edit a price straight in the table: every cell is a field. */
 export const productsResource = createViewResource<Product>(PRODUCTS_ID, {

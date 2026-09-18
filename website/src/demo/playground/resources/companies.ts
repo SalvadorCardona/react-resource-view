@@ -9,6 +9,7 @@ import {
   createViewResource,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { CompanyRow } from "@/demo/playground/adminRows"
 import {
   COMPANIES_ID,
   COMPANY_STATUSES,
@@ -16,18 +17,17 @@ import {
   USERS_ID,
   type Company,
 } from "@/demo/playground/adminData"
-import { CompanyRow } from "@/demo/playground/adminRows"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { POPUP } from "@/demo/playground/shared"
 
 /**
  * The accounts the roastery supplies: the cafés, hotels and offices its
  * wholesale side lives on.
  *
- * This is the resource to open to see what a sub-view is for. A company is
- * five fields and two collections — the people who sign in for it, and the
- * batches roasted for it — and neither collection makes sense anywhere but
- * under the company itself. So the edit view keeps the page rather than a
- * dialog: the form first, the tabs underneath.
+ * This is the resource to open to see what a sub-view is for. A company is five
+ * fields and two collections — the people who sign in for it, and the batches
+ * roasted for it — and neither collection makes sense anywhere but under the
+ * company itself. So the edit view keeps the page rather than a dialog: the
+ * form first, the tabs underneath.
  */
 export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
   name: "Companies",
@@ -88,8 +88,8 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
             resourceId: USERS_ID,
             resourceAction: ActionList.list,
             // Filtering alone would give a list of this company's people whose
-            // create button makes an account belonging to nobody:
-            // `defaultData` is what makes "new user" mean "new user *here*".
+            // create button makes an account belonging to nobody: `defaultData`
+            // is what makes "new user" mean "new user *here*".
             onInitViewResource: (view, parent) => {
               const company = (parent?.data as Company | undefined)?.name
 
@@ -115,8 +115,8 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
                 filter: { company },
                 defaultData: { company },
                 // The roasts open on their calendar when they are the page.
-                // Under a form they are a handful of rows, so the tab starts
-                // on the table — the switcher still offers the other layouts.
+                // Under a form they are a handful of rows, so the tab starts on
+                // the table — the switcher still offers the other layouts.
                 viewVariant: "table",
               }
             },

@@ -2,11 +2,11 @@ import type { RowComponentPropsInterface } from "react-resource-view"
 import type { BuilderBlock } from "@/demo/builder/blocks"
 
 /**
- * A page or a profile, as a row of CMS / My profiles.
+ * A CV, as a row of the "Curriculum vitæ" tab of an account.
  *
- * Both resources share the same shape — a title, a block array, a last-edited
- * date — so one row draws either: the block count and the date are what a
- * reader wants to know without opening the record, whichever kit built it.
+ * A record made of blocks has nothing worth putting in a column: the count and
+ * the last edit are what a reader wants to know without opening it, and the
+ * blocks themselves only read as anything in the editor.
  */
 interface Document {
   title: string

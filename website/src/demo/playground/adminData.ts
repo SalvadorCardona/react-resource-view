@@ -1,4 +1,6 @@
 import { getInStorage, setInStorage } from "ssr-safe-storage"
+import { PAGE_HERO, PAGE_TEXT, type BuilderBlock } from "@/demo/builder/blocks"
+import { PAGES, SAMPLE_PROFILES } from "@/demo/playground/documents"
 
 /**
  * The fixtures the playground's back office runs on.
@@ -8,6 +10,11 @@ import { getInStorage, setInStorage } from "ssr-safe-storage"
  * runs. Five areas rather than one collection, because that is what a scope is
  * for — an administration is a menu of resources, and a single list would never
  * show it.
+ *
+ * Two of those collections hold documents rather than fields: a post is a page
+ * assembled out of blocks, and so is the CV hanging off an account. Their
+ * blocks are written in `@/demo/playground/documents`, in the very shape the
+ * page builder saves.
  *
  * None of these resources declares a `path`, so `createViewResource` falls back
  * to the localStorage repository: the whole back office is genuinely writable,
@@ -54,6 +61,29 @@ export interface Post {
   status: "draft" | "scheduled" | "published"
   publishedAt: string
   views: number
+  /**
+   * What the post is made of: a hero, paragraphs, a gallery, a call to
+   * action — the same blocks the page builder assembles, so a post written
+   * here and a page published from the builder are one kind of record.
+   */
+  blocks: BuilderBlock[]
+}
+
+/**
+ * A CV, assembled from the page builder's résumé kit.
+ *
+ * It belongs to an account — `owner` is the name a user signs in under, like
+ * the `company` of a user — which is what the "Curriculum vitæ" tab of a user
+ * filters on and what its create button writes back.
+ */
+export interface Profile {
+  "@id": string
+  "@type": string
+  id: string
+  title: string
+  owner: string
+  blocks: BuilderBlock[]
+  updatedAt: string
 }
 
 export interface Comment {
@@ -113,6 +143,7 @@ export interface Roast {
 
 export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
+export const PROFILES_ID = "admin_profiles"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
 export const PRODUCTS_ID = "admin_products"
@@ -154,6 +185,10 @@ export const POST_CATEGORIES = [
   { label: "Guides", value: "Guides" },
   { label: "Sourcing", value: "Sourcing" },
   { label: "Roastery", value: "Roastery" },
+  // The pages of the site, kept in the same collection as the articles: both
+  // are a title and a stack of blocks, and a second resource for them would
+  // only be the same declaration written twice.
+  { label: "Pages", value: "Pages" },
 ]
 
 export const COMMENT_STATUSES = [
@@ -327,9 +362,37 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
     status: "invited",
     signedUpAt: "2026-03-05",
   },
+  {
+    // The account the sample CVs belong to: open it and its "Curriculum vitæ"
+    // tab has three of them, which is what that tab is there to show.
+    id: "8",
+    name: "Camille Roux",
+    email: "camille@roastery.example",
+    company: "",
+    role: "editor",
+    status: "active",
+    signedUpAt: "2026-03-16",
+  },
 ]
 
-const POSTS: Array<Omit<Post, "@id" | "@type">> = [
+/**
+ * The articles of the blog, in the shorthand the fixtures are written in.
+ *
+ * A post is stored as blocks — that is what makes the resource a page builder
+ * rather than a form of seven fields — but writing two blocks out for each of
+ * these would bury the fixture in markup. The opening line and the picture are
+ * what a hero and a paragraph are built from, just below.
+ */
+const ARTICLES: Array<
+  Omit<Post, "@id" | "@type" | "blocks"> & {
+    /** The hero's subtitle: what the article says in one line. */
+    excerpt: string
+    /** The paragraph under it, as the WYSIWYG block stores it. */
+    body: string
+    /** An entry of the media library — see `@/demo/builder/media`. */
+    image: string
+  }
+> = [
   {
     id: "1",
     title: "Choosing a grinder you will keep",
@@ -338,6 +401,10 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "published",
     publishedAt: "2026-01-09",
     views: 1284,
+    excerpt:
+      "Burrs, a motor that does not heat, and a lid you can open with one hand — the three things worth paying for.",
+    body: "<p>A grinder outlives three coffee machines. Buy the burrs, not the display: everything else on the spec sheet is a preference, and this one is not.</p>",
+    image: "studio",
   },
   {
     id: "2",
@@ -347,6 +414,10 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "published",
     publishedAt: "2026-01-24",
     views: 962,
+    excerpt:
+      "Ninety-eight per cent of the cup comes out of the tap, and it is the part nobody adjusts.",
+    body: "<p>Too soft and the coffee goes flat; too hard and it turns chalky. A filter jug and a week of notes settle it for good.</p>",
+    image: "harbour",
   },
   {
     id: "3",
@@ -356,6 +427,10 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "published",
     publishedAt: "2026-02-06",
     views: 2481,
+    excerpt:
+      "Eleven farms, one cooperative, and the eight weeks between the cherry and the roaster.",
+    body: "<p>We buy the lot before it is dried, which is the only way to have a say in how it is. The rest is logistics — and the logistics are the interesting part.</p>",
+    image: "orchard",
   },
   {
     id: "4",
@@ -365,6 +440,10 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "published",
     publishedAt: "2026-02-27",
     views: 741,
+    excerpt:
+      "One day a week, every week: the bag you open on Friday left the drum on Tuesday morning.",
+    body: "<p>Roasting to order sounds better than it tastes. Coffee needs three days to settle, and a fixed day is what lets us promise you the fourth.</p>",
+    image: "sunrise",
   },
   {
     id: "5",
@@ -374,6 +453,9 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "scheduled",
     publishedAt: "2026-03-12",
     views: 0,
+    excerpt: "Two minutes, fifteen grams, and no filter to rinse twice.",
+    body: "<p>Upside down, the water sits on the grounds instead of running past them. It is fussier to flip, and worth the one recipe we keep going back to.</p>",
+    image: "dusk",
   },
   {
     id: "6",
@@ -383,6 +465,9 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "draft",
     publishedAt: "",
     views: 0,
+    excerpt: "Sugarcane process, a light roast, and nothing to be sorry about.",
+    body: "<p>Still to write: the four lots we cupped blind, and the two nobody could pick out of the line-up.</p>",
+    image: "night",
   },
   {
     id: "7",
@@ -392,7 +477,49 @@ const POSTS: Array<Omit<Post, "@id" | "@type">> = [
     status: "draft",
     publishedAt: "",
     views: 0,
+    excerpt: "Six samples on the table, and two of them going into the shop.",
+    body: "<p>Notes taken on the morning, tidied up later — the scores are in the spreadsheet until this one is finished.</p>",
+    image: "orchard",
   },
+]
+
+/**
+ * An article, as the blocks it is stored as: the title becomes a hero, the
+ * opening line its subtitle, and the paragraph a text block. A reader opening
+ * one in the editor lands on exactly what the builder would have saved.
+ */
+function articlePost({
+  excerpt,
+  body,
+  image,
+  ...post
+}: (typeof ARTICLES)[number]): Omit<Post, "@id" | "@type"> {
+  return {
+    ...post,
+    blocks: [
+      {
+        id: `post-${post.id}-hero`,
+        type: PAGE_HERO,
+        order: 0,
+        eyebrow: post.category,
+        title: post.title,
+        subtitle: excerpt,
+        image,
+        align: "left",
+      },
+      {
+        id: `post-${post.id}-text`,
+        type: PAGE_TEXT,
+        order: 1,
+        body,
+      },
+    ],
+  }
+}
+
+const POSTS: Array<Omit<Post, "@id" | "@type">> = [
+  ...ARTICLES.map(articlePost),
+  ...PAGES,
 ]
 
 const COMMENTS: Array<Omit<Comment, "@id" | "@type">> = [
@@ -765,52 +892,32 @@ export function writeCollection(id: string, rows: Array<{ id: string }>): void {
   setInStorage(id, collection(id, identify(id, rows)))
 }
 
-/**
- * The roastery itself, keyed by collection rather than by storage id.
- *
- * playground2 runs the same administration on resources of its own — see
- * `@/demo/playground2/data` — and writes these very rows under its own ids: one
- * roastery, described once, in two back offices that never share a sandbox.
- */
-export function roasteryFixtures() {
-  return {
-    companies: COMPANIES,
-    users: USERS,
-    posts: POSTS,
-    comments: COMMENTS,
-    products: PRODUCTS,
-    orders: ORDERS,
-    roasts: buildRoasts(),
-  }
-}
-
 /** Every collection of the back office, with the fixtures it starts from. */
 function fixtures(): Array<[string, Array<{ id: string }>]> {
-  const roastery = roasteryFixtures()
-
   return [
-    [COMPANIES_ID, roastery.companies],
-    [USERS_ID, roastery.users],
-    [POSTS_ID, roastery.posts],
-    [COMMENTS_ID, roastery.comments],
-    [PRODUCTS_ID, roastery.products],
-    [ORDERS_ID, roastery.orders],
-    [ROASTS_ID, roastery.roasts],
+    [COMPANIES_ID, COMPANIES],
+    [USERS_ID, USERS],
+    [PROFILES_ID, SAMPLE_PROFILES],
+    [POSTS_ID, POSTS],
+    [COMMENTS_ID, COMMENTS],
+    [PRODUCTS_ID, PRODUCTS],
+    [ORDERS_ID, ORDERS],
+    [ROASTS_ID, buildRoasts()],
   ]
 }
 
 const SEED_VERSION_ID = "admin_seed_version"
 
 /**
- * Bumped whenever the fixtures gain a field a screen relies on — the companies
- * and the `company` each user and each batch belongs to, this time.
+ * Bumped whenever the fixtures gain a field a screen relies on — the blocks a
+ * post is now assembled from, and the CVs hanging off an account, this time.
  *
  * Seeding only where nothing is stored is right for a new collection and wrong
  * for an existing one gaining a field: a reader who opened the playground last
- * month would keep users written before the field existed, and a company page
- * would show empty tabs for them. The number is how that is noticed.
+ * month would keep posts written before they held blocks, and would edit them
+ * on a page builder with nothing in it. The number is how that is noticed.
  */
-const SEED_VERSION = "2"
+const SEED_VERSION = "3"
 
 /**
  * Writes the back office fixtures — only where nothing is stored yet.
