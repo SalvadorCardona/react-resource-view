@@ -89,6 +89,22 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("link", { name: "Users" })).toBeInTheDocument()
   })
 
+  it("folds the sidebar away when the top bar button is pressed", async () => {
+    // The regression this guards: the button only ever opened the mobile
+    // drawer, so on the screen where it is shown — the wide one — pressing it
+    // did nothing at all.
+    await renderAdmin()
+
+    const sidebar = document.querySelector('[data-slot="sidebar"]')
+    expect(sidebar).toHaveAttribute("data-state", "expanded")
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Toggle sidebar" }).click()
+    })
+
+    expect(sidebar).toHaveAttribute("data-state", "collapsed")
+  })
+
   it("swaps the sidebar for a bottom navigation bar on narrow screens", async () => {
     vi.spyOn(window, "matchMedia").mockImplementation(
       (query) =>

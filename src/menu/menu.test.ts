@@ -61,6 +61,75 @@ describe("useIsActiveItemMenu", () => {
     )
   })
 
+  it("keeps the entry lit while a record of its resource is open", () => {
+    // The regression this guards: an entry links to a list, and comparing the
+    // two URLs as strings turned it off as soon as the reader opened a record
+    // — the menu then said the page belonged nowhere.
+    configurePorts({
+      routing: { mode: "query", param: "view", basePath: "/playground" },
+      navigation: {
+        ...getPorts().navigation,
+        useLocation: () => ({
+          pathname: "/playground",
+          searchStr: "?view=admin/admin_users/update/3",
+        }),
+      },
+    })
+
+    const isActive = useIsActiveItemMenu()
+
+    expect(
+      isActive({ name: "Users", href: "/playground?view=admin/admin_users/list" })
+    ).toBe(true)
+    expect(
+      isActive({ name: "Posts", href: "/playground?view=admin/admin_posts/list" })
+    ).toBe(false)
+  })
+
+  it("lights the entry from the page the views are mounted under", () => {
+    // The base path is what the link generator writes, not where the reader
+    // is: a second screen embedding the same scope answers on its own path.
+    configurePorts({
+      routing: { mode: "query", param: "view", basePath: "/playground" },
+      navigation: {
+        ...getPorts().navigation,
+        useLocation: () => ({
+          pathname: "/back-office",
+          searchStr: "?view=admin/admin_users/list",
+        }),
+      },
+    })
+
+    expect(
+      useIsActiveItemMenu()({
+        name: "Users",
+        href: "/playground?view=admin/admin_users/list",
+      })
+    ).toBe(true)
+  })
+
+  it("tells two entries on the same resource apart", () => {
+    configurePorts({
+      routing: { mode: "query", param: "view", basePath: "" },
+      navigation: {
+        ...getPorts().navigation,
+        useLocation: () => ({
+          pathname: "/",
+          searchStr: "?view=admin/admin_users/list",
+        }),
+      },
+    })
+
+    const isActive = useIsActiveItemMenu()
+
+    expect(isActive({ name: "Users", href: "?view=admin/admin_users/list" })).toBe(
+      true
+    )
+    expect(
+      isActive({ name: "New user", href: "?view=admin/admin_users/create" })
+    ).toBe(false)
+  })
+
   it("reports nothing active off the browser, where isActiveItemMenu cannot look", () => {
     const originalWindow = globalThis.window
 

@@ -12,24 +12,24 @@ import {
   splitViewFactory,
   tableViewOptionFactory,
 } from "react-resource-view"
+import { PostRow } from "@/demo/playground/adminRows"
 import {
   COMMENTS_ID,
   POST_CATEGORIES,
   POST_STATUSES,
   POSTS_ID,
   type Post,
-} from "@/demo/playground/adminData"
-import { PostRow } from "@/demo/playground/adminRows"
-import { POPUP } from "@/demo/playground/resources/shared"
+} from "@/demo/playground2/data"
+import { POPUP } from "@/demo/playground2/shared"
 
 /**
  * The blog. Four layouts over the same seven fields — and the board is the one
- * to try: drag a post from "Draft" to "Published" and the record is updated,
- * no code written for it here.
+ * to try: drag a post from "Draft" to "Published" and the record is updated, no
+ * code written for it here.
  */
 export const postsResource = createViewResource<Post>(POSTS_ID, {
   name: "Posts",
-  scope: "admin",
+  scope: "playground2",
   icon: ScrollText,
   canRead: true,
   canCreate: true,
@@ -81,8 +81,8 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
         identifierKeyList: POST_STATUSES,
       }),
       cardViewOptionFactory({ name: "Cards", grid: 3, rowComponent: PostRow }),
-      // The list on the left, the edit form on the right; a link to
-      // `read/{id}` lands on the split with that post open.
+      // The list on the left, the edit form on the right; a link to `read/{id}`
+      // lands on the split with that post open.
       splitViewFactory({
         name: "Split",
         rowComponent: PostRow,
@@ -93,8 +93,8 @@ export const postsResource = createViewResource<Post>(POSTS_ID, {
   views: {
     [ActionList.create]: { name: "New post", ...POPUP },
     // The other shape `subViewResource` can take: a column beside the sub-view
-    // rather than a bar above it, set with `orientation: "vertical"` — the users
-    // resource keeps the default, scrolling bar for comparison.
+    // rather than a bar above it, set with `orientation: "vertical"` — the
+    // users resource keeps the default, scrolling bar for comparison.
     [ActionList.update]: {
       name: "Edit a post",
       subViewResource: {

@@ -1,25 +1,17 @@
 import { useCurrentViewResourceContext } from "react-resource-view"
-import {
-  POSTS_ID,
-  readAdminRows,
-  type Post,
-  type User,
-} from "@/demo/playground/adminData"
+import { POSTS_ID, readStudioRows, type Post, type User } from "@/demo/playground2/data"
 
 /**
  * The second shape a sub-view takes: a tab of one's own, with no resource
  * behind it.
  *
- * The account page is made of the collections belonging to the person — their
- * posts, on the tab next to this one — and of what those collections add up
- * to, which is not a list of anything and so could never be a resource. It
- * reads the surrounding context to know whose page it is: a sub-view is
- * rendered inside the record's own view, so `useCurrentViewResourceContext`
- * hands back the user being edited.
+ * Same screen as `/playground`'s, reading this playground's own posts — a
+ * sub-view is rendered inside the record's own view, so
+ * `useCurrentViewResourceContext` hands back the user being edited.
  */
 export function UserActivity() {
   const user = useCurrentViewResourceContext()?.data as User | undefined
-  const posts = readAdminRows<Post>(POSTS_ID).filter(
+  const posts = readStudioRows<Post>(POSTS_ID).filter(
     (post) => post.author === user?.name
   )
   const published = posts.filter((post) => post.status === "published")

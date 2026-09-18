@@ -6,12 +6,8 @@ import {
   SelectInputController,
 } from "react-data-form"
 import { createViewResource, tableViewOptionFactory } from "react-resource-view"
-import {
-  ORDER_STATUSES,
-  ORDERS_ID,
-  type Order,
-} from "@/demo/playground/adminData"
-import { POPUP } from "@/demo/playground/resources/shared"
+import { ORDER_STATUSES, ORDERS_ID, type Order } from "@/demo/playground2/data"
+import { POPUP } from "@/demo/playground2/shared"
 
 /**
  * An order is placed by a customer and never deleted from the back office: it
@@ -20,7 +16,7 @@ import { POPUP } from "@/demo/playground/resources/shared"
  */
 export const ordersResource = createViewResource<Order>(ORDERS_ID, {
   name: "Orders",
-  scope: "admin",
+  scope: "playground2",
   icon: Receipt,
   canRead: true,
   canUpdate: true,
