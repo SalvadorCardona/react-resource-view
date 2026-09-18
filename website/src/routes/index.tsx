@@ -4,10 +4,13 @@ import {
   Boxes,
   Braces,
   Compass,
+  GitBranch,
   Languages,
   LayoutGrid,
+  Lightbulb,
   Link2,
   MousePointerClick,
+  PenLine,
   PlugZap,
   ShieldCheck,
   Sparkles,
@@ -34,6 +37,7 @@ function LandingPage() {
         <Hero />
         <Packages />
         <OneDescription />
+        <Story />
         <Layouts />
         <Features />
         <Closing />
@@ -274,6 +278,97 @@ function OneDescription() {
         <div className="mt-10">
           <HomeBuilder />
         </div>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+const MILESTONES = [
+  {
+    icon: Lightbulb,
+    year: "2018",
+    title: "Evernote out, Notion in",
+    body: "One database, read as a table, a board or a calendar, switched in a click. The idea worth stealing.",
+  },
+  {
+    icon: PenLine,
+    year: "2022",
+    title: "The first resource declaration",
+    body: "Fields, filters and permissions written once — the way API Platform declares a CRUD — and the screens read from them.",
+  },
+  {
+    icon: GitBranch,
+    year: "Today",
+    title: "In production, and open source",
+    body: "Running on Animalink and other applications, released so the next one does not have to write its tables again.",
+  },
+]
+
+/**
+ * Where the library comes from — the Notion comparison, told once.
+ *
+ * It sits between the description the reader has just taken apart and the seven
+ * layouts below: the story ends on "let the reader switch views", and the next
+ * section is that sentence, running.
+ */
+function Story() {
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
+      <header className="max-w-2xl">
+        <p className="text-xs font-medium uppercase tracking-wider text-primary">
+          Where it comes from
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          Build your application the way you build a Notion project
+        </h2>
+      </header>
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-16">
+        <div className="space-y-4 text-muted-foreground">
+          <p>
+            In Notion, a database is not a screen. The same records are a table in
+            the morning, a board in the afternoon and a calendar when a deadline
+            gets close — and changing that costs a click, not a sprint. I moved
+            there from Evernote in 2018 for exactly that, and then spent years
+            missing it in the applications I was writing.
+          </p>
+          <p>
+            React has tables, and it has card grids, but they are frozen: the view
+            is picked while the code is written, and picking another one means
+            writing another screen. That is the gap{" "}
+            <strong className="font-medium text-foreground">
+              react-resource-view
+            </strong>{" "}
+            fills. Declare the resource once — its fields, its filters, its
+            permissions — and the list, the detail, the form and the delete
+            confirmation all come out of that one description.
+          </p>
+          <p>
+            What is left is the part Notion got right:{" "}
+            <strong className="font-medium text-foreground">
+              the reader chooses how to read
+            </strong>
+            . Several layouts are declared side by side, the choice lands in the
+            URL, and a link reopens the view the sender was looking at.
+          </p>
+        </div>
+
+        <ol className="relative space-y-8 border-l border-border pl-8">
+          {MILESTONES.map(({ icon: Icon, year, title, body }) => (
+            <li key={year} className="relative">
+              <span className="absolute -left-[3.05rem] flex size-9 items-center justify-center rounded-xl border border-border bg-card text-view">
+                <Icon className="size-4" />
+              </span>
+              <p className="font-mono text-xs text-muted-foreground">{year}</p>
+              <h3 className="mt-1 font-semibold tracking-tight">{title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {body}
+              </p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )
