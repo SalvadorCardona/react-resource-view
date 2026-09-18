@@ -29,6 +29,7 @@ import { Route as DocsFormRegistryRouteImport } from './routes/docs/form/registr
 import { Route as DocsFormStepsRouteImport } from './routes/docs/form/steps'
 import { Route as DocsFormValidationRouteImport } from './routes/docs/form/validation'
 import { Route as DocsResourceViewIndexRouteImport } from './routes/docs/resource-view/index'
+import { Route as DocsResourceViewAdminLayoutRouteImport } from './routes/docs/resource-view/admin-layout'
 import { Route as DocsResourceViewBackendsRouteImport } from './routes/docs/resource-view/backends'
 import { Route as DocsResourceViewCalendarRouteImport } from './routes/docs/resource-view/calendar'
 import { Route as DocsResourceViewCustomVariantRouteImport } from './routes/docs/resource-view/custom-variant'
@@ -145,6 +146,12 @@ const DocsResourceViewIndexRoute = DocsResourceViewIndexRouteImport.update({
   path: '/resource-view/',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsResourceViewAdminLayoutRoute =
+  DocsResourceViewAdminLayoutRouteImport.update({
+    id: '/resource-view/admin-layout',
+    path: '/resource-view/admin-layout',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewBackendsRoute =
   DocsResourceViewBackendsRouteImport.update({
     id: '/resource-view/backends',
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -276,6 +284,7 @@ export interface FileRoutesByTo {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/docs/form/registry': typeof DocsFormRegistryRoute
   '/docs/form/steps': typeof DocsFormStepsRoute
   '/docs/form/validation': typeof DocsFormValidationRoute
+  '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -421,6 +433,7 @@ export interface FileRouteTypes {
     | '/docs/form/registry'
     | '/docs/form/steps'
     | '/docs/form/validation'
+    | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/admin-layout': {
+      id: '/docs/resource-view/admin-layout'
+      path: '/resource-view/admin-layout'
+      fullPath: '/docs/resource-view/admin-layout'
+      preLoaderRoute: typeof DocsResourceViewAdminLayoutRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/backends': {
       id: '/docs/resource-view/backends'
       path: '/resource-view/backends'
@@ -702,6 +722,7 @@ interface DocsRouteChildren {
   DocsFormRegistryRoute: typeof DocsFormRegistryRoute
   DocsFormStepsRoute: typeof DocsFormStepsRoute
   DocsFormValidationRoute: typeof DocsFormValidationRoute
+  DocsResourceViewAdminLayoutRoute: typeof DocsResourceViewAdminLayoutRoute
   DocsResourceViewBackendsRoute: typeof DocsResourceViewBackendsRoute
   DocsResourceViewCalendarRoute: typeof DocsResourceViewCalendarRoute
   DocsResourceViewCustomVariantRoute: typeof DocsResourceViewCustomVariantRoute
@@ -734,6 +755,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsFormRegistryRoute: DocsFormRegistryRoute,
   DocsFormStepsRoute: DocsFormStepsRoute,
   DocsFormValidationRoute: DocsFormValidationRoute,
+  DocsResourceViewAdminLayoutRoute: DocsResourceViewAdminLayoutRoute,
   DocsResourceViewBackendsRoute: DocsResourceViewBackendsRoute,
   DocsResourceViewCalendarRoute: DocsResourceViewCalendarRoute,
   DocsResourceViewCustomVariantRoute: DocsResourceViewCustomVariantRoute,

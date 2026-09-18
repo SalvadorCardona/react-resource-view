@@ -17,6 +17,7 @@ import {
   LayoutTemplate,
   Network,
   ListChecks,
+  PanelLeft,
   PanelsTopLeft,
   PenLine,
   Plug,
@@ -286,6 +287,13 @@ export const VIEW_SECTION: DocSection = {
           summary:
             "Grouping resources per area of the application, and building its menu.",
           icon: Fingerprint,
+        },
+        {
+          href: "/docs/resource-view/admin-layout",
+          title: "Admin layout",
+          summary:
+            "AdminLayout: a ready-made decoratorComponent — sidebar, top bar, and a bottom nav on mobile.",
+          icon: PanelLeft,
         },
         {
           href: "/docs/resource-view/permissions",

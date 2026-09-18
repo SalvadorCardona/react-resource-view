@@ -172,7 +172,13 @@ function Scopes() {
           {
             name: "decoratorComponent",
             type: "FC<{ children }>",
-            description: "Wraps every view of the scope — the shell of the area.",
+            description: (
+              <>
+                Wraps every view of the scope — the shell of the area.{" "}
+                <A href="/docs/resource-view/admin-layout">AdminLayout</A> is a
+                ready-made one.
+              </>
+            ),
           },
           {
             name: "middleWare",
@@ -248,9 +254,11 @@ function Scopes() {
       <H2 id="menu">Building the menu</H2>
 
       <P>
-        The menu is data, and rendering it is yours — the package has no sidebar
-        component. <C>createItemMenuWithResource</C> builds an entry pointing at a
-        resource's list, in the configured routing mode.
+        The menu is data — rendering it is yours, or{" "}
+        <A href="/docs/resource-view/admin-layout">AdminLayout</A>&apos;s, if a
+        collapsible sidebar built from it is enough.{" "}
+        <C>createItemMenuWithResource</C> builds an entry pointing at a resource's
+        list, in the configured routing mode.
       </P>
 
       <CodeBlock>{MENU}</CodeBlock>
