@@ -6,10 +6,9 @@ import {
   itemViewOptionFactory,
 } from "react-resource-view"
 import { RESUME_BLOCK, type BuilderBlock } from "@/demo/builder/blocks"
+import { PROFILES_ID } from "@/demo/playground2/data"
 import { DocumentRow } from "@/demo/playground2/rows"
 import { DRAWER, POPUP } from "@/demo/playground2/shared"
-
-export const PROFILES_ID = "playground2_profiles"
 
 export interface BuilderProfile {
   "@id": string
@@ -23,8 +22,9 @@ export interface BuilderProfile {
 /**
  * The CVs assembled with the page builder's résumé kit.
  *
- * Same storage story as `cmsResource`: no `path`, no seed, empty until a CV
- * is created — from this resource's own form or from the builder.
+ * Same storage story as `cmsResource`: no `path`, a localStorage repository
+ * seeded with a few versions of the same CV, and a record written either from
+ * this resource's own form or from the builder.
  */
 export const profilesResource = createViewResource<BuilderProfile>(PROFILES_ID, {
   name: "My profiles",

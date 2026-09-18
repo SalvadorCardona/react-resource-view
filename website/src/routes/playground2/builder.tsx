@@ -6,8 +6,9 @@ import { BuilderStudio } from "@/demo/builder/BuilderStudio"
 import type { BuilderBlock } from "@/demo/builder/blocks"
 import { BUILDER_KITS, type BuilderKit } from "@/demo/builder/kits"
 import { deriveDocumentTitle } from "@/demo/playground2/deriveTitle"
-import { cmsResource } from "@/demo/playground2/resources/cms"
-import { profilesResource } from "@/demo/playground2/resources/profiles"
+// Through the barrel rather than the two files: importing it is also what
+// seeds the collections this screen writes into.
+import { cmsResource, profilesResource } from "@/demo/playground2/resources"
 import { cn } from "@/lib/cn"
 
 export const Route = createFileRoute("/playground2/builder")({

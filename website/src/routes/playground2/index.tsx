@@ -8,7 +8,7 @@ export const Route = createFileRoute("/playground2/")({
       {
         name: "description",
         content:
-          "A back office running on AdminLayout, react-resource-view's ready-made admin template: two resources, CMS and My profiles, filled by the page builder's page and résumé kits.",
+          "A back office running on AdminLayout, react-resource-view's ready-made admin template: the whole roastery administration — users, companies, blog, catalogue, roasting schedule — next to CMS and My profiles, the two collections the page builder writes.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -17,8 +17,8 @@ export const Route = createFileRoute("/playground2/")({
 })
 
 /**
- * playground2's back office: `AdminLayout` around two resources, rather than
- * `/playground`'s hand-written `AdminShell`.
+ * playground2's back office: `AdminLayout` around the ten resources of the
+ * scope, rather than `/playground`'s hand-written `AdminShell`.
  *
  * The same query-string routing as `/playground` — see that route for why the
  * search string alone, never the path, is handed to `parseLink`.
