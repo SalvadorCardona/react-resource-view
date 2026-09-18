@@ -757,20 +757,45 @@ function collection<T>(id: string, member: T[]) {
   }
 }
 
-function write(id: string, rows: Array<{ id: string }>): void {
+/**
+ * Writes one collection, in the shape a repository reads back: the rows, each
+ * with the IRI and the type its storage id gives it.
+ */
+export function writeCollection(id: string, rows: Array<{ id: string }>): void {
   setInStorage(id, collection(id, identify(id, rows)))
+}
+
+/**
+ * The roastery itself, keyed by collection rather than by storage id.
+ *
+ * playground2 runs the same administration on resources of its own — see
+ * `@/demo/playground2/data` — and writes these very rows under its own ids: one
+ * roastery, described once, in two back offices that never share a sandbox.
+ */
+export function roasteryFixtures() {
+  return {
+    companies: COMPANIES,
+    users: USERS,
+    posts: POSTS,
+    comments: COMMENTS,
+    products: PRODUCTS,
+    orders: ORDERS,
+    roasts: buildRoasts(),
+  }
 }
 
 /** Every collection of the back office, with the fixtures it starts from. */
 function fixtures(): Array<[string, Array<{ id: string }>]> {
+  const roastery = roasteryFixtures()
+
   return [
-    [COMPANIES_ID, COMPANIES],
-    [USERS_ID, USERS],
-    [POSTS_ID, POSTS],
-    [COMMENTS_ID, COMMENTS],
-    [PRODUCTS_ID, PRODUCTS],
-    [ORDERS_ID, ORDERS],
-    [ROASTS_ID, buildRoasts()],
+    [COMPANIES_ID, roastery.companies],
+    [USERS_ID, roastery.users],
+    [POSTS_ID, roastery.posts],
+    [COMMENTS_ID, roastery.comments],
+    [PRODUCTS_ID, roastery.products],
+    [ORDERS_ID, roastery.orders],
+    [ROASTS_ID, roastery.roasts],
   ]
 }
 
@@ -802,13 +827,13 @@ export function seedAdminData(): void {
   }
 
   for (const [id, rows] of fixtures()) {
-    if (getInStorage(id) == null) write(id, rows)
+    if (getInStorage(id) == null) writeCollection(id, rows)
   }
 }
 
 /** Throws away every edit and writes the fixtures again. */
 export function resetAdminData(): void {
-  for (const [id, rows] of fixtures()) write(id, rows)
+  for (const [id, rows] of fixtures()) writeCollection(id, rows)
   setInStorage(SEED_VERSION_ID, SEED_VERSION)
 }
 

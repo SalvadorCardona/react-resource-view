@@ -6,10 +6,9 @@ import {
   itemViewOptionFactory,
 } from "react-resource-view"
 import { PAGE_BLOCK, type BuilderBlock } from "@/demo/builder/blocks"
+import { CMS_ID } from "@/demo/playground2/data"
 import { DocumentRow } from "@/demo/playground2/rows"
 import { DRAWER, POPUP } from "@/demo/playground2/shared"
-
-export const CMS_ID = "playground2_pages"
 
 export interface BuilderPage {
   "@id": string
@@ -23,11 +22,11 @@ export interface BuilderPage {
 /**
  * The pages assembled with the page builder's landing-page kit.
  *
- * No `path` is declared, so — like the rest of the playground — this falls
- * back to a localStorage repository, and it starts genuinely empty: nothing
- * seeds it. A page lands here through `createItem`, whether that call comes
- * from this resource's own "New page" form or from `/playground2/builder`
- * publishing a page built with the same block palette.
+ * No `path` is declared, so — like the rest of the playground — this falls back
+ * to a localStorage repository, seeded with the sample pages of
+ * `@/demo/playground2/documents`. A page lands here through `createItem`,
+ * whether that call comes from this resource's own "New page" form or from
+ * `/playground2/builder` publishing a page built with the same block palette.
  */
 export const cmsResource = createViewResource<BuilderPage>(CMS_ID, {
   name: "CMS",
