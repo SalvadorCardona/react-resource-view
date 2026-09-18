@@ -1,6 +1,6 @@
 import { getInStorage, setInStorage } from "ssr-safe-storage"
 import { PAGE_HERO, PAGE_TEXT, type BuilderBlock } from "@/demo/builder/blocks"
-import { PAGES, SAMPLE_PROFILES } from "@/demo/playground/documents"
+import { PAGES, RESUMES, starterResume } from "@/demo/playground/documents"
 
 /**
  * The fixtures the playground's back office runs on.
@@ -11,10 +11,10 @@ import { PAGES, SAMPLE_PROFILES } from "@/demo/playground/documents"
  * for — an administration is a menu of resources, and a single list would never
  * show it.
  *
- * Two of those collections hold documents rather than fields: a post is a page
- * assembled out of blocks, and so is the CV hanging off an account. Their
- * blocks are written in `@/demo/playground/documents`, in the very shape the
- * page builder saves.
+ * Two kinds of record here are documents rather than fields: a post is a page
+ * assembled out of blocks, and so is the CV an account carries. Their blocks
+ * are written in `@/demo/playground/documents`, in the very shape the page
+ * builder saves.
  *
  * None of these resources declares a `path`, so `createViewResource` falls back
  * to the localStorage repository: the whole back office is genuinely writable,
@@ -49,6 +49,14 @@ export interface User {
   role: "admin" | "editor" | "reader"
   status: "active" | "invited" | "suspended"
   signedUpAt: string
+  /**
+   * The CV of this account, as the blocks it is assembled from — one account,
+   * one CV. A field rather than a collection of its own: a profile nobody is
+   * the profile of is not a record anybody goes looking for, and a name is a
+   * poor thing to hang a document off. Built in the "Curriculum vitæ" tab of
+   * the account, with the same blocks the page builder assembles.
+   */
+  blocks: BuilderBlock[]
 }
 
 export interface Post {
@@ -67,23 +75,6 @@ export interface Post {
    * here and a page published from the builder are one kind of record.
    */
   blocks: BuilderBlock[]
-}
-
-/**
- * A CV, assembled from the page builder's résumé kit.
- *
- * It belongs to an account — `owner` is the name a user signs in under, like
- * the `company` of a user — which is what the "Curriculum vitæ" tab of a user
- * filters on and what its create button writes back.
- */
-export interface Profile {
-  "@id": string
-  "@type": string
-  id: string
-  title: string
-  owner: string
-  blocks: BuilderBlock[]
-  updatedAt: string
 }
 
 export interface Comment {
@@ -143,7 +134,6 @@ export interface Roast {
 
 export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
-export const PROFILES_ID = "admin_profiles"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
 export const PRODUCTS_ID = "admin_products"
@@ -298,7 +288,7 @@ const COMPANIES: Array<Omit<Company, "@id" | "@type">> = [
   },
 ]
 
-const USERS: Array<Omit<User, "@id" | "@type">> = [
+const USERS: Array<Omit<User, "@id" | "@type" | "blocks">> = [
   {
     id: "1",
     name: "Ada Lovelace",
@@ -363,8 +353,8 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
     signedUpAt: "2026-03-05",
   },
   {
-    // The account the sample CVs belong to: open it and its "Curriculum vitæ"
-    // tab has three of them, which is what that tab is there to show.
+    // The account with the CV written out in full: open it, and its
+    // "Curriculum vitæ" tab is the builder on a document that already exists.
     id: "8",
     name: "Camille Roux",
     email: "camille@roastery.example",
@@ -374,6 +364,22 @@ const USERS: Array<Omit<User, "@id" | "@type">> = [
     signedUpAt: "2026-03-16",
   },
 ]
+
+/**
+ * Every account with the CV it opens on.
+ *
+ * Three of them are written out in `documents`; the rest start from their own
+ * record — a name, a role and an address are already known, and a builder that
+ * opens on nothing is a builder nobody starts.
+ */
+function withResumes(
+  users: typeof USERS
+): Array<Omit<User, "@id" | "@type">> {
+  return users.map((user) => ({
+    ...user,
+    blocks: RESUMES[user.name] ?? starterResume(user),
+  }))
+}
 
 /**
  * The articles of the blog, in the shorthand the fixtures are written in.
@@ -896,8 +902,7 @@ export function writeCollection(id: string, rows: Array<{ id: string }>): void {
 function fixtures(): Array<[string, Array<{ id: string }>]> {
   return [
     [COMPANIES_ID, COMPANIES],
-    [USERS_ID, USERS],
-    [PROFILES_ID, SAMPLE_PROFILES],
+    [USERS_ID, withResumes(USERS)],
     [POSTS_ID, POSTS],
     [COMMENTS_ID, COMMENTS],
     [PRODUCTS_ID, PRODUCTS],
@@ -909,15 +914,16 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
 const SEED_VERSION_ID = "admin_seed_version"
 
 /**
- * Bumped whenever the fixtures gain a field a screen relies on — the blocks a
- * post is now assembled from, and the CVs hanging off an account, this time.
+ * Bumped whenever the fixtures gain a field a screen relies on — the CV an
+ * account now carries as a field of its own, this time, where it used to be a
+ * collection of profiles beside it.
  *
  * Seeding only where nothing is stored is right for a new collection and wrong
  * for an existing one gaining a field: a reader who opened the playground last
  * month would keep posts written before they held blocks, and would edit them
  * on a page builder with nothing in it. The number is how that is noticed.
  */
-const SEED_VERSION = "3"
+const SEED_VERSION = "4"
 
 /**
  * Writes the back office fixtures — only where nothing is stored yet.

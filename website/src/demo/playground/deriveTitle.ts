@@ -29,9 +29,8 @@ export function deriveDocumentTitle(
 /**
  * Who a CV belongs to: the name on its identity block.
  *
- * It is the field the account's "Curriculum vitæ" tab filters on, so a CV
- * exported from the builder shows up under the user of the same name — and
- * under nobody, visibly, when the block was left empty.
+ * One account, one CV, so this is what a CV saved from the builder is written
+ * onto — the account of the same name, or a new one when nobody answers to it.
  */
 export function deriveResumeOwner(blocks: BuilderBlock[]): string {
   return resumeHeaderField(blocks, "name")

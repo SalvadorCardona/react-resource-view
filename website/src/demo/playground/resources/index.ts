@@ -11,8 +11,8 @@ import { seedAdminData } from "@/demo/playground/adminData"
  *
  * Importing this module is what opens the back office, and a view fetches as
  * soon as it mounts — so this is the last moment the fixtures can be written.
- * The builder screen goes through here too: it saves into two of these
- * resources, and a reader who lands on it first is just as much a first visit.
+ * The builder screen goes through here too: it saves into these resources, and
+ * a reader who lands on it first is just as much a first visit.
  */
 seedAdminData()
 
@@ -22,6 +22,5 @@ export { ordersResource } from "@/demo/playground/resources/orders"
 export { overviewResource } from "@/demo/playground/resources/overview"
 export { postsResource } from "@/demo/playground/resources/posts"
 export { productsResource } from "@/demo/playground/resources/products"
-export { profilesResource } from "@/demo/playground/resources/profiles"
 export { roastsResource } from "@/demo/playground/resources/roasts"
 export { usersResource } from "@/demo/playground/resources/users"

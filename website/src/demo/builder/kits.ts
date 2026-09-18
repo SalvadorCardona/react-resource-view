@@ -1,6 +1,9 @@
-import { createFormArrayInputController, type FormInterface } from "react-data-form"
+import { type FormInterface } from "react-data-form"
 import { FileUser, LayoutTemplate, type LucideIcon } from "lucide-react"
 import type { FC } from "react"
+import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
+import { BUILDER_FORM_COMPONENTS } from "@/demo/builder/BuilderForm"
+import type { CanvasMedium } from "@/demo/builder/BuilderCanvas"
 import {
   PAGE_BLOCK,
   PAGE_CTA,
@@ -38,31 +41,31 @@ export interface BuilderKit {
   /** What the studio opens on. */
   sample: BuilderBlock[]
   preview: FC<{ blocks: BuilderBlock[] }>
+  /** How the preview is framed: a web page stretches, a CV is a sheet of A4. */
+  medium: CanvasMedium
 }
 
-const pageForm: FormInterface = {
-  label: { title: "Landing page", submit: "Publish" },
+export const pageForm: FormInterface = {
+  label: { submit: "Publish" },
+  components: BUILDER_FORM_COMPONENTS,
   inputs: {
-    blocks: createFormArrayInputController({
+    blocks: createBlockBuilderInput({
       label: "Content",
       // Every form tagged `page-block`, and only those: this is the palette.
       forms: [PAGE_BLOCK],
-      draggable: true,
-      // A page opens on its outline: the blocks are folded, and the one just
-      // added is the only one that unfolds itself.
-      closedByDefault: true,
+      addLabel: "Add a first block",
     }),
   },
 }
 
-const resumeForm: FormInterface = {
-  label: { title: "Curriculum vitæ", submit: "Export" },
+export const resumeForm: FormInterface = {
+  label: { submit: "Save the CV" },
+  components: BUILDER_FORM_COMPONENTS,
   inputs: {
-    blocks: createFormArrayInputController({
+    blocks: createBlockBuilderInput({
       label: "Sections",
       forms: [RESUME_BLOCK],
-      draggable: true,
-      closedByDefault: true,
+      addLabel: "Add a first section",
     }),
   },
 }
@@ -119,7 +122,7 @@ const RESUME_SAMPLE: BuilderBlock[] = [
     order: 0,
     name: "Camille Roux",
     role: "Front-end engineer",
-    portrait: "dusk",
+    portrait: "ink",
     summary:
       "Eight years building interfaces that stay maintainable once the team doubles. Partial to design systems and to deleting code.",
     contact: ["camille@example.com", "Lyon, France", "+33 6 00 00 00 00"],
@@ -171,6 +174,7 @@ export const BUILDER_KITS: BuilderKit[] = [
     form: pageForm,
     sample: PAGE_SAMPLE,
     preview: PagePreview,
+    medium: "page",
   },
   {
     id: "resume",
@@ -180,5 +184,6 @@ export const BUILDER_KITS: BuilderKit[] = [
     form: resumeForm,
     sample: RESUME_SAMPLE,
     preview: ResumePreview,
+    medium: "sheet",
   },
 ]

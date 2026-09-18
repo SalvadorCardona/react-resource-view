@@ -11,7 +11,8 @@ import {
 } from "@/demo/playground/deriveTitle"
 // Through the barrel rather than the two files: importing it is also what
 // seeds the collections this screen writes into.
-import { postsResource, profilesResource } from "@/demo/playground/resources"
+import { postsResource, usersResource } from "@/demo/playground/resources"
+import { readAdminRows, USERS_ID, type User } from "@/demo/playground/adminData"
 import { cn } from "@/lib/cn"
 
 export const Route = createFileRoute("/playground/builder")({
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/playground/builder")({
       {
         name: "description",
         content:
-          "One form whose fields the reader decides: assemble a page out of blocks, or a CV, and publish it — it is saved to the back office, as a post or as a CV under an account.",
+          "One form whose fields the reader decides: assemble a page out of blocks, or a CV, and publish it — it is saved to the back office, as a post or as the CV of an account.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -31,10 +32,10 @@ export const Route = createFileRoute("/playground/builder")({
 
 /**
  * The builder, with its submit button wired to something: publishing a page
- * saves it as a post, exporting a CV saves it under the account whose name is
- * on it — through the same `createItem` a form of that resource would call.
- * Those resources' own storage is what the back office reads, so the record
- * shows up there the moment this screen writes it.
+ * saves it as a post, saving a CV writes it onto the account whose name is on
+ * it — through the same repository a form of that resource would call. Those
+ * resources' own storage is what the back office reads, so the record shows up
+ * there the moment this screen writes it.
  */
 function PlaygroundBuilderRoute() {
   const [kit, setKit] = useState<BuilderKit>(BUILDER_KITS[0])
@@ -42,20 +43,38 @@ function PlaygroundBuilderRoute() {
   const handleSave = async (blocks: BuilderBlock[]) => {
     const title = deriveDocumentTitle(kit.id, blocks)
 
+    // One account, one CV: a CV exported from here is the CV of the person it
+    // names — written onto that account if it exists, and opening one if it
+    // does not, which is the model taken literally.
     if (kit.id === "resume") {
       const owner = deriveResumeOwner(blocks)
+      const account = readAdminRows<User>(USERS_ID).find(
+        (user) => user.name === owner
+      )
 
-      await profilesResource.createItem({
-        title,
-        owner,
+      if (account) {
+        await usersResource.updateItem({ id: account["@id"], blocks })
+
+        toast.success(`"${title}" saved`, {
+          description: `Open it from ${account.name}'s Curriculum vitæ tab.`,
+        })
+        return
+      }
+
+      await usersResource.createItem({
+        name: owner || "Untitled account",
+        email: "",
+        company: "",
+        role: "reader",
+        status: "invited",
+        signedUpAt: new Date().toISOString().slice(0, 10),
         blocks,
-        updatedAt: new Date().toISOString(),
       })
 
       toast.success(`"${title}" saved`, {
         description: owner
-          ? `Open it from ${owner}'s Curriculum vitæ tab.`
-          : "Open it from any account's Curriculum vitæ tab — this one names nobody.",
+          ? `${owner} had no account yet — this opened one, and the CV is its own.`
+          : "This CV names nobody: it opened an untitled account to hang under.",
       })
       return
     }
@@ -89,8 +108,8 @@ function PlaygroundBuilderRoute() {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">Page builder</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Assemble a page or a CV, then publish it — a page is saved as a post,
-          a CV under the account it names.
+          Assemble a page or a CV, then save it — a page is saved as a post, a
+          CV onto the account it names.
         </p>
       </div>
 
@@ -133,7 +152,7 @@ function PlaygroundBuilderRoute() {
 function BuilderSkeleton() {
   return (
     <div className="@container" aria-hidden>
-      <div className="grid animate-pulse items-start gap-6 @5xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+      <div className="grid animate-pulse items-start gap-6 @4xl:grid-cols-[minmax(0,23rem)_minmax(0,1fr)]">
         <div className="space-y-3">
           <div className="h-28 w-full rounded-xl bg-muted" />
           <div className="h-28 w-full rounded-xl bg-muted" />

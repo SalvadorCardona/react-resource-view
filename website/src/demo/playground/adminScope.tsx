@@ -14,15 +14,15 @@ import {
   overviewResource,
   postsResource,
   productsResource,
-  profilesResource,
   roastsResource,
   usersResource,
 } from "@/demo/playground/resources"
 
 /**
- * The one thing `AdminLayout` alone cannot offer: a way to the builder that
- * writes the posts and the CVs. Rendered in the top bar via
- * `createAdminLayout`'s `topBarEnd`, so it survives every screen of the scope.
+ * The one thing `AdminLayout` alone cannot offer: a way to the standalone
+ * builder — the same two kits, on sample data, for whoever wants to try one
+ * without opening a record. Rendered in the top bar via `createAdminLayout`'s
+ * `topBarEnd`, so it survives every screen of the scope.
  *
  * A plain router `Link` rather than the package's own: it leaves the resource
  * context entirely, for a route this scope does not own.
@@ -34,13 +34,13 @@ function BuilderLink() {
       className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
     >
       <Blocks className="size-4" />
-      Page builder
+      Builder demo
     </Link>
   )
 }
 
 /**
- * The back office of the playground: one area, nine resources, one menu.
+ * The back office of the playground: one area, eight resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
@@ -49,10 +49,6 @@ function BuilderLink() {
  * template, configured in a line and fed by the menu below. The overview is
  * the one exception, and it is a resource too, with a `viewComponent` of its
  * own instead of a list.
- *
- * Two resources are declared without an entry of their own: the CVs, which
- * belong to the account they hang under rather than to the sidebar, and are
- * reached through the "Curriculum vitæ" tab of a user.
  *
  * The scope is loaded lazily by the playground, which is the point of a scope
  * being a module rather than a folder: a reader who only follows a link from a
@@ -64,8 +60,7 @@ export const adminScope: ScopeInterface = {
   resources: [
     overviewResource,
     usersResource,
-    profilesResource,
-    companiesResource,
+      companiesResource,
     postsResource,
     commentsResource,
     productsResource,
