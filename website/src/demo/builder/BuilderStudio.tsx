@@ -17,10 +17,18 @@ import { cn } from "@/lib/cn"
 export function BuilderStudio({
   kit,
   sample = kit.sample,
+  onSave,
 }: {
   kit: BuilderKit
   /** What it opens on — a documentation page starts from fewer blocks. */
   sample?: BuilderBlock[]
+  /**
+   * Called with the current blocks when the kit's submit button ("Publish",
+   * "Export"...) is pressed and the form validates. Without it — the
+   * documentation demos, `/playground/builder` — that button validates and
+   * goes nowhere, same as before this prop existed.
+   */
+  onSave?: (blocks: BuilderBlock[]) => void
 }) {
   // Remounting is how the sample is restored: the array field keeps its own
   // state, so putting the blocks back means building the form again.
@@ -32,6 +40,7 @@ export function BuilderStudio({
       kit={kit}
       sample={sample}
       onReset={() => setGeneration((value) => value + 1)}
+      onSave={onSave}
     />
   )
 }
@@ -40,10 +49,12 @@ function Studio({
   kit,
   sample,
   onReset,
+  onSave,
 }: {
   kit: BuilderKit
   sample: BuilderBlock[]
   onReset: () => void
+  onSave?: (blocks: BuilderBlock[]) => void
 }) {
   const [blocks, setBlocks] = useState<BuilderBlock[]>(sample)
   const [tab, setTab] = useState<"preview" | "payload">("preview")
@@ -54,6 +65,7 @@ function Studio({
     // The second argument is the updated form; its data is the payload as it
     // stands after the keystroke, which is what the preview draws.
     onChange: (_, form) => setBlocks((form.data?.blocks as BuilderBlock[]) ?? []),
+    onSubmit: onSave && ((data) => onSave((data.blocks as BuilderBlock[]) ?? [])),
   })
 
   const Preview = kit.preview
