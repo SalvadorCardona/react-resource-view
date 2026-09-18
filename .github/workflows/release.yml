@@ -30,6 +30,7 @@ jobs:
       # Opens (or updates) the "Version Packages" pull request. Merging that
       # PR makes this same step publish the new version to npm.
       - uses: changesets/action@v1
+        id: changesets
         with:
           version: pnpm changeset version
           publish: pnpm run release
@@ -39,3 +40,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # After a real npm publish, point website/ at the version that was
+      # just released so its next deploy (triggered by the push below)
+      # ships the new library instead of whatever was previously pinned.
+      - name: Bump website's react-resource-view to the published version
+        if: steps.changesets.outputs.published == 'true'
+        working-directory: website
+        run: |
+          pnpm update react-resource-view --latest
+          if git diff --quiet -- package.json pnpm-lock.yaml; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json pnpm-lock.yaml
+          git commit -m "chore(website): bump react-resource-view to latest"
+          git push
