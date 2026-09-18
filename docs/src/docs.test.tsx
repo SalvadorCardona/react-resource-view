@@ -53,6 +53,26 @@ describe("the documentation site", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders the admin layout page", async () => {
+    renderAt("/?view=docs/admin-layout/read")
+    expect(
+      await screen.findByRole("heading", { name: "Admin layout" }, WAIT)
+    ).toBeInTheDocument()
+  })
+
+  it("runs AdminLayout for real on its own live demo page", async () => {
+    renderAt("/?view=docs/admin-layout-demo-page/read")
+    expect(
+      await screen.findByRole("heading", { name: "Admin layout, running" }, WAIT)
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole("link", { name: "Articles" }, WAIT)
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole("link", { name: "Users" }, WAIT)
+    ).toBeInTheDocument()
+  })
+
   it("renders the demo page", async () => {
     renderAt("/?view=docs/demo/read")
     expect(
