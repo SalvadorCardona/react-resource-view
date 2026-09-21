@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { BookOpen, Blocks, Factory, Newspaper, ShoppingBag } from "lucide-react"
+import { BookOpen, Blocks, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   createAdminLayout,
@@ -14,7 +14,6 @@ import {
   overviewResource,
   postsResource,
   productsResource,
-  roastsResource,
   usersResource,
 } from "@/demo/playground/resources"
 
@@ -40,7 +39,7 @@ function BuilderLink() {
 }
 
 /**
- * The back office of the playground: one area, eight resources, one menu.
+ * The back office of the playground: one area, seven resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
@@ -65,7 +64,6 @@ export const adminScope: ScopeInterface = {
     commentsResource,
     productsResource,
     ordersResource,
-    roastsResource,
   ],
   decoratorComponent: createAdminLayout({ topBarEnd: <BuilderLink /> }),
   // Where the scope opens when the URL names it and nothing else.
@@ -95,11 +93,6 @@ export const adminScope: ScopeInterface = {
         createItemMenuWithResource({ resource: productsResource }),
         createItemMenuWithResource({ resource: ordersResource }),
       ],
-    },
-    {
-      name: "Production",
-      icon: Factory,
-      items: [createItemMenuWithResource({ resource: roastsResource })],
     },
     // Naming only the scope lands on its `defaultViewResourceContextParams`,
     // which is how one area links to another without knowing its resources.

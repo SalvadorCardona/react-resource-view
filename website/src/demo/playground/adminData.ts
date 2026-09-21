@@ -6,10 +6,9 @@ import { PAGES, RESUMES, starterResume } from "@/demo/playground/documents"
  * The fixtures the playground's back office runs on.
  *
  * A small coffee roastery: the people who can sign in, the accounts it
- * supplies, the blog it publishes, the catalogue it sells and the roasters it
- * runs. Five areas rather than one collection, because that is what a scope is
- * for — an administration is a menu of resources, and a single list would never
- * show it.
+ * supplies, the blog it publishes and the catalogue it sells. Four areas rather
+ * than one collection, because that is what a scope is for — an administration
+ * is a menu of resources, and a single list would never show it.
  *
  * Two kinds of record here are documents rather than fields: a post is a page
  * assembled out of blocks, and so is the CV an account carries. Their blocks
@@ -113,32 +112,12 @@ export interface Order {
   placedAt: string
 }
 
-export interface Roast {
-  "@id": string
-  "@type": string
-  id: string
-  /** The name of the batch, which is what the calendar and the timeline show. */
-  batch: string
-  origin: string
-  /** The machine it goes on — the lane of the timeline. */
-  roaster: string
-  /** Who the batch is roasted for, by name — empty when it goes to stock. */
-  company: string
-  profile: "light" | "medium" | "dark"
-  /** Green coffee going in, in kilograms. */
-  weight: number
-  status: "planned" | "roasting" | "done" | "rejected"
-  startAt: string
-  endAt: string
-}
-
 export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
 export const PRODUCTS_ID = "admin_products"
 export const ORDERS_ID = "admin_orders"
-export const ROASTS_ID = "admin_roasts"
 
 /**
  * The overview is a resource like the others — it is what the scope opens on —
@@ -207,35 +186,12 @@ export const ORDER_STATUSES = [
 ]
 
 /**
- * The value is the label: the timeline names its lanes after the raw value of
- * `groupKey`, and a machine is easier to find under its name than under a code.
- */
-export const ROASTERS = [
-  { label: "Probat P12", value: "Probat P12" },
-  { label: "Loring S35", value: "Loring S35" },
-  { label: "Sample roaster", value: "Sample roaster" },
-]
-
-export const ROAST_PROFILES = [
-  { label: "Light", value: "light" },
-  { label: "Medium", value: "medium" },
-  { label: "Dark", value: "dark" },
-]
-
-export const ROAST_STATUSES = [
-  { label: "Planned", value: "planned" },
-  { label: "Roasting", value: "roasting" },
-  { label: "Done", value: "done" },
-  { label: "Failed cupping", value: "rejected" },
-]
-
-/**
  * The accounts the roastery supplies: the cafés, hotels and offices its
  * wholesale side lives on.
  *
- * Their names are the key the two collections hanging off a company are
- * filtered on, so no two of them share a run of words — the local repository
- * matches a string filter as a substring.
+ * Their names are the key the collection hanging off a company is filtered on,
+ * so no two of them share a run of words — the local repository matches a
+ * string filter as a substring.
  */
 const COMPANIES: Array<Omit<Company, "@id" | "@type">> = [
   {
@@ -705,173 +661,6 @@ const ORDERS: Array<Omit<Order, "@id" | "@type">> = [
   },
 ]
 
-/** Anchors the roasting schedule to the Monday of the current week. */
-function mondayOfThisWeek(): Date {
-  const now = new Date()
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const weekday = (monday.getDay() + 6) % 7
-  monday.setDate(monday.getDate() - weekday)
-  return monday
-}
-
-function at(dayOffset: number, hour: number, minutes = 0): string {
-  const date = mondayOfThisWeek()
-  date.setDate(date.getDate() + dayOffset)
-  date.setHours(hour, minutes, 0, 0)
-  return date.toISOString()
-}
-
-/**
- * A week on the roasters. The dates are computed at seed time rather than
- * written down, so the calendar opens on a full week whatever day it is read.
- */
-const ROAST_SEEDS: Array<
-  Omit<Roast, "@id" | "@type" | "startAt" | "endAt"> & {
-    day: number
-    from: number
-    to: number
-  }
-> = [
-  {
-    id: "1",
-    batch: "Ethiopia Yirgacheffe, lot 12",
-    origin: "Ethiopia",
-    roaster: "Probat P12",
-    company: "Café des Arceaux",
-    profile: "light",
-    weight: 12,
-    status: "done",
-    day: 0,
-    from: 7,
-    to: 9,
-  },
-  {
-    id: "2",
-    batch: "Colombia Huila, lot 4",
-    origin: "Colombia",
-    roaster: "Loring S35",
-    company: "Hôtel Malabar",
-    profile: "medium",
-    weight: 35,
-    status: "done",
-    day: 0,
-    from: 9,
-    to: 12,
-  },
-  {
-    id: "3",
-    batch: "Brazil Cerrado, espresso",
-    origin: "Brazil",
-    roaster: "Loring S35",
-    company: "Le Comptoir Vert",
-    profile: "dark",
-    weight: 30,
-    status: "rejected",
-    day: 1,
-    from: 8,
-    to: 11,
-  },
-  {
-    id: "4",
-    batch: "Kenya AA, sample",
-    origin: "Kenya",
-    roaster: "Sample roaster",
-    company: "Brasserie Nord",
-    profile: "light",
-    weight: 1,
-    status: "done",
-    day: 1,
-    from: 14,
-    to: 15,
-  },
-  {
-    id: "5",
-    batch: "Ethiopia Yirgacheffe, lot 13",
-    origin: "Ethiopia",
-    roaster: "Probat P12",
-    company: "Café des Arceaux",
-    profile: "light",
-    weight: 12,
-    status: "roasting",
-    day: 2,
-    from: 7,
-    to: 10,
-  },
-  {
-    id: "6",
-    batch: "Decaf Colombia, Swiss water",
-    origin: "Colombia",
-    roaster: "Probat P12",
-    company: "",
-    profile: "medium",
-    weight: 10,
-    status: "planned",
-    day: 2,
-    from: 13,
-    to: 15,
-  },
-  {
-    id: "7",
-    batch: "Guatemala Antigua, lot 2",
-    origin: "Guatemala",
-    roaster: "Loring S35",
-    company: "Hôtel Malabar",
-    profile: "medium",
-    weight: 35,
-    status: "planned",
-    day: 3,
-    from: 8,
-    to: 12,
-  },
-  {
-    id: "8",
-    batch: "Rwanda Nyamasheke, sample",
-    origin: "Rwanda",
-    roaster: "Sample roaster",
-    company: "Studio Kaffa",
-    profile: "light",
-    weight: 1,
-    status: "planned",
-    day: 3,
-    from: 15,
-    to: 16,
-  },
-  {
-    id: "9",
-    batch: "Subscription blend, March",
-    origin: "Brazil, Colombia",
-    roaster: "Loring S35",
-    company: "",
-    profile: "medium",
-    weight: 35,
-    status: "planned",
-    day: 4,
-    from: 7,
-    to: 11,
-  },
-  {
-    id: "10",
-    batch: "Cold brew blend",
-    origin: "Brazil",
-    roaster: "Probat P12",
-    company: "Le Comptoir Vert",
-    profile: "dark",
-    weight: 12,
-    status: "planned",
-    day: 4,
-    from: 11,
-    to: 14,
-  },
-]
-
-function buildRoasts(): Array<Omit<Roast, "@id" | "@type">> {
-  return ROAST_SEEDS.map(({ day, from, to, ...roast }) => ({
-    ...roast,
-    startAt: at(day, from),
-    endAt: at(day, to),
-  }))
-}
-
 /** Gives a fixture its IRI and its type, which is what a row is addressed by. */
 function identify<T extends { id: string }>(type: string, rows: T[]) {
   return rows.map((row) => ({
@@ -907,7 +696,6 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
     [COMMENTS_ID, COMMENTS],
     [PRODUCTS_ID, PRODUCTS],
     [ORDERS_ID, ORDERS],
-    [ROASTS_ID, buildRoasts()],
   ]
 }
 

@@ -1,4 +1,4 @@
-import { Building2, Flame, Users } from "lucide-react"
+import { Building2, Users } from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -13,7 +13,6 @@ import { CompanyRow } from "@/demo/playground/adminRows"
 import {
   COMPANIES_ID,
   COMPANY_STATUSES,
-  ROASTS_ID,
   USERS_ID,
   type Company,
 } from "@/demo/playground/adminData"
@@ -24,10 +23,9 @@ import { POPUP } from "@/demo/playground/shared"
  * wholesale side lives on.
  *
  * This is the resource to open to see what a sub-view is for. A company is five
- * fields and two collections — the people who sign in for it, and the batches
- * roasted for it — and neither collection makes sense anywhere but under the
- * company itself. So the edit view keeps the page rather than a dialog: the
- * form first, the tabs underneath.
+ * fields and the people who sign in for it, and that collection makes no sense
+ * anywhere but under the company itself. So the edit view keeps the page rather
+ * than a dialog: the form first, the tab underneath.
  */
 export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
   name: "Companies",
@@ -40,7 +38,7 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
   view: {
     name: "Companies",
     description:
-      "The accounts the roastery supplies. Open one: its team and its batches are laid out under the form.",
+      "The accounts the roastery supplies. Open one: its team is laid out under the form.",
     form: {
       inputs: {
         name: { label: "Name", required: true },
@@ -97,27 +95,6 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
                 ...view,
                 filter: { company },
                 defaultData: { company },
-              }
-            },
-          },
-          {
-            slug: "roasts",
-            name: "Batches",
-            icon: Flame,
-            description: "Everything roasted for this account.",
-            resourceId: ROASTS_ID,
-            resourceAction: ActionList.list,
-            onInitViewResource: (view, parent) => {
-              const company = (parent?.data as Company | undefined)?.name
-
-              return {
-                ...view,
-                filter: { company },
-                defaultData: { company },
-                // The roasts open on their calendar when they are the page.
-                // Under a form they are a handful of rows, so the tab starts on
-                // the table — the switcher still offers the other layouts.
-                viewVariant: "table",
               }
             },
           },
