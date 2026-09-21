@@ -97,9 +97,9 @@ function LiveExample() {
     <Callout kind="tip" title="The example, live">
       <P>
         The playground's back office has a company page built exactly this way:
-        the form first, then its team and the batches roasted for it, each
-        filtered by the company on screen and each creating records that already
-        belong to it. <Link to={href}>Open a company with its tabs</Link>.
+        the form first, then its team, filtered by the company on screen and
+        creating records that already belong to it.{" "}
+        <Link to={href}>Open a company with its tabs</Link>.
       </P>
     </Callout>
   )

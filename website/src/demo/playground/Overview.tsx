@@ -16,14 +16,12 @@ import {
   POSTS_ID,
   PRODUCTS_ID,
   readAdminRows,
-  ROASTS_ID,
   USERS_ID,
   type Comment,
   type Company,
   type Order,
   type Post,
   type Product,
-  type Roast,
   type User,
 } from "@/demo/playground/adminData"
 import { commentsResource } from "@/demo/playground/resources/comments"
@@ -31,7 +29,6 @@ import { companiesResource } from "@/demo/playground/resources/companies"
 import { ordersResource } from "@/demo/playground/resources/orders"
 import { postsResource } from "@/demo/playground/resources/posts"
 import { productsResource } from "@/demo/playground/resources/products"
-import { roastsResource } from "@/demo/playground/resources/roasts"
 import { usersResource } from "@/demo/playground/resources/users"
 import { cn } from "@/lib/cn"
 
@@ -70,8 +67,8 @@ interface Figure {
  * What the collections say right now.
  *
  * Read on render rather than through the list hook on purpose: this screen is
- * not a list of any resource, and eight of them at once would be eight fetches
- * for eight numbers. The storage the repositories write to is a synchronous
+ * not a list of any resource, and seven of them at once would be seven fetches
+ * for seven numbers. The storage the repositories write to is a synchronous
  * read away, and the screen is remounted on every navigation back to it.
  */
 function readFigures(): Figure[] {
@@ -80,7 +77,6 @@ function readFigures(): Figure[] {
   const comments = readAdminRows<Comment>(COMMENTS_ID)
   const products = readAdminRows<Product>(PRODUCTS_ID)
   const orders = readAdminRows<Order>(ORDERS_ID)
-  const roasts = readAdminRows<Roast>(ROASTS_ID)
 
   const pendingComments = comments.filter((row) => row.status === "pending")
   const toShip = orders.filter((row) => row.status === "paid")
@@ -92,10 +88,6 @@ function readFigures(): Figure[] {
   )
   const drafts = posts.filter((row) => row.status === "draft")
   const published = posts.filter((row) => row.status === "published")
-  const toRoast = roasts.filter(
-    (row) => row.status === "planned" || row.status === "roasting"
-  )
-  const kilograms = toRoast.reduce((sum, row) => sum + (row.weight ?? 0), 0)
   const invited = users.filter((row) => row.status === "invited")
   const active = users.filter((row) => row.status === "active")
 
@@ -126,12 +118,6 @@ function readFigures(): Figure[] {
       label: plural(drafts.length, "post", "posts") + " in draft",
       hint: `${published.length} published — open the board to move one`,
       href: listLink(postsResource, undefined, "board"),
-    },
-    {
-      value: `${kilograms} kg`,
-      label: "to roast this week",
-      hint: `${toRoast.length} ${plural(toRoast.length, "batch", "batches")} on the calendar`,
-      href: listLink(roastsResource, undefined, "calendar"),
     },
     {
       value: String(invited.length),
@@ -259,7 +245,7 @@ function BlockRecords() {
 
 /**
  * The way into the one screen of the back office that is neither a list nor a
- * form on its own: a company, and the collections hanging off it.
+ * form on its own: a company, and the collection hanging off it.
  *
  * A link rather than a paragraph, because the shape only reads as an answer
  * once it is on screen. The tab is a segment of the URL like the rest of the
@@ -292,10 +278,10 @@ function CompanyTabs() {
             A record is more than its form
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            A company is five fields, the people who sign in for it and the
-            batches roasted for it. Open one: the form comes first, its
-            collections are tabs underneath, each filtered by the company — and a
-            batch created from a tab already belongs to it.
+            A company is five fields and the people who sign in for it. Open
+            one: the form comes first, its collection is a tab underneath,
+            filtered by the company — and an account created from that tab
+            already belongs to it.
           </p>
         </div>
 
@@ -320,7 +306,6 @@ const RESOURCES: ViewResourceInterface[] = [
   commentsResource,
   productsResource,
   ordersResource,
-  roastsResource,
 ]
 
 function Resources() {
@@ -331,7 +316,7 @@ function Resources() {
           id="overview-resources"
           className="text-lg font-semibold tracking-tight"
         >
-          Seven areas, seven files
+          Six areas, six files
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           No screen here is written by hand. Each area is one resource
