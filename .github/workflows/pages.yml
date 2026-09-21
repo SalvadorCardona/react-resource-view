@@ -42,7 +42,15 @@ jobs:
       # Pages serves the site from /<repository>/, not from the domain root, and
       # has no server to render on request — so the build prerenders every route
       # to static HTML behind that prefix.
-      - run: pnpm run build
+      #
+      # The prerender crawls the site over HTTP, through a preview server it
+      # starts in the same process. When one of those local requests does not go
+      # through, the build dies on an unhandled rejection — a raw `fetch failed`
+      # stack, no page at fault, and the same commit builds fine when it is run
+      # again. A second attempt keeps that hiccup from holding the deployment
+      # back; a page that really fails to render fails both attempts.
+      - name: Build (retried once)
+        run: pnpm run build || (echo "::warning::prerender failed, building again" && pnpm run build)
         env:
           DOCS_BASE: /react-resource-view/
 
