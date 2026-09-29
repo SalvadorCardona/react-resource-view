@@ -35,6 +35,7 @@ function LandingPage() {
       <Header />
       <main>
         <Hero />
+        <DemoVideo />
         <Packages />
         <OneDescription />
         <Story />
@@ -137,6 +138,57 @@ function Hero() {
           ))}
         </dl>
       </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The page builder, filmed: a minute of the playground doing what the rest of
+ * this page describes. The video sits in public/, so its URL carries the same
+ * /<repository>/ prefix as every other asset; it only loads its metadata until
+ * the reader presses play.
+ */
+function DemoVideo() {
+  const base = import.meta.env.BASE_URL
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 pt-20 lg:px-8">
+      <header className="mx-auto max-w-2xl text-center">
+        <p className="text-xs font-medium uppercase tracking-wider text-primary">
+          See it in action
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          A page builder, declared as data
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          Blocks on the left, the live page on the right, and the JSON behind it —
+          all of it from one form declaration.
+        </p>
+      </header>
+
+      <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-[#07070d] shadow-2xl">
+        <video
+          className="block aspect-video w-full"
+          controls
+          playsInline
+          preload="metadata"
+          poster={`${base}videos/page-builder-poster.jpg`}
+        >
+          <source src={`${base}videos/page-builder.mp4`} type="video/mp4" />
+        </video>
+      </div>
+
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        <Link
+          to="/playground/builder"
+          className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-primary"
+        >
+          Open the page builder yourself
+          <ArrowRight className="size-4" />
+        </Link>
+      </p>
     </section>
   )
 }

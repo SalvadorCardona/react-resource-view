@@ -37,6 +37,18 @@ Built on [`react-data-form`](https://github.com/SalvadorCardona/react-data-form)
 for the forms. Which API answers, and how it spells a page or a filter, is a
 [dialect](#connecting-an-api) — JSON-LD is the default, not a requirement.
 
+## See it in action
+
+A page builder declared as data: blocks on the left, the live page on the
+right, and the JSON behind it. [Watch the full video (with sound)](https://cardona.digital/react-resource-view/videos/page-builder.mp4)
+or [open the page builder](https://cardona.digital/react-resource-view/playground/builder).
+
+<p align="center">
+  <a href="https://cardona.digital/react-resource-view/videos/page-builder.mp4">
+    <img src="diagrams/page-builder-demo.gif" alt="The page builder: typing a new title on the left re-renders the hero of the page on the right, live" width="100%">
+  </a>
+</p>
+
 ## Documentation
 
 Everything below, at length and with the examples running rather than quoted:
