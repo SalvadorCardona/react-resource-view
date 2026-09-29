@@ -148,6 +148,21 @@ describe("the navigation between sub-views", () => {
     ).toHaveTextContent("Invoices and receipts")
   })
 
+  // The scroll area's root sets `position: relative` inline: a `sticky` class
+  // on it lost, and its `top` shifted the bar down instead of pinning it.
+  it("pins the bar from an element the scroll area does not position", async () => {
+    const { container } = renderView("tabs_posts")
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument()
+    })
+
+    const scrollArea = container.querySelector('[data-slot="scroll-area"]')!
+    const sticky = scrollArea.closest(".sticky") as HTMLElement
+    expect(sticky).not.toBeNull()
+    expect(sticky.style.position).not.toBe("relative")
+  })
+
   it("draws a menu down the side when the view asks for one", async () => {
     wideScreen()
     const { container } = renderView("tabs_companies")
@@ -160,6 +175,22 @@ describe("the navigation between sub-views", () => {
       container.querySelector('[data-slot="tabs"][data-orientation="vertical"]')
     ).not.toBeNull()
     expect(container.querySelector('[data-slot="scroll-area"]')).toBeNull()
+  })
+
+  // A `1fr` track is never narrower than its content, and the bar is as wide
+  // as all its tabs: beside a side column it pushed the page sideways instead
+  // of scrolling inside its own track.
+  it("keeps the bar inside its track when a column sits beside it", async () => {
+    wideScreen()
+    const { container } = renderView("tabs_accounts")
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument()
+    })
+
+    const aside = screen.getByText("Summary").closest("aside")!
+    expect(aside.parentElement).toHaveClass("md:grid-cols-[280px_minmax(0,1fr)]")
+    expect(container.querySelector('[data-slot="tabs"]')).toHaveClass("min-w-0")
   })
 
   // A column of tabs on a phone would leave the sub-view a third of the
