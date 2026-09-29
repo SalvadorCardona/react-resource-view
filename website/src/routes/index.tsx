@@ -11,6 +11,7 @@ import {
   Link2,
   MousePointerClick,
   PenLine,
+  PlayCircle,
   PlugZap,
   ShieldCheck,
   Sparkles,
@@ -30,6 +31,7 @@ import { HomeBuilder } from "@/components/HomeBuilder"
 import { InstallCommand } from "@/components/InstallCommand"
 import { LayoutGallery } from "@/components/LayoutGallery"
 import { Logo } from "@/components/Logo"
+import { SiteVideo } from "@/components/SiteVideo"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 import { cn } from "@/lib/cn"
 
@@ -43,6 +45,7 @@ function LandingPage() {
       <Header />
       <main>
         <Hero />
+        <TourVideo />
         <Packages />
         <OneDescription />
         <Story />
@@ -128,6 +131,13 @@ function Hero() {
             <Compass className="size-4" />
             Playground
           </Link>
+          <a
+            href="#tour"
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            <PlayCircle className="size-4" />
+            Watch the 1-minute tour
+          </a>
         </div>
 
         <div className="rise mt-10" style={{ animationDelay: "280ms" }}>
@@ -153,15 +163,51 @@ function Hero() {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * The way in: a one-minute tour that says there are two packages and what each
+ * one does, before the cards below go into the detail of each.
+ */
+function TourVideo() {
+  return (
+    <section id="tour" className="mx-auto max-w-5xl px-4 pt-20 lg:px-8">
+      <header className="mx-auto max-w-2xl text-center">
+        <p className="bg-gradient-to-r from-form to-view bg-clip-text text-xs font-medium uppercase tracking-wider text-transparent">
+          Two libraries, one idea
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          Describe your app. Don’t draw it.
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          <strong className="font-medium whitespace-nowrap text-foreground">
+            react-data-form
+          </strong>{" "}
+          builds complex forms from a plain object;{" "}
+          <strong className="font-medium whitespace-nowrap text-foreground">
+            react-resource-view
+          </strong>{" "}
+          builds a whole CRUD application from one resource declaration. One minute,
+          with sound.
+        </p>
+      </header>
+
+      <div className="mt-10">
+        <SiteVideo
+          src="two-libraries.mp4"
+          poster="two-libraries-poster.jpg"
+          title="Two libraries, one idea: react-data-form and react-resource-view in one minute"
+        />
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * What the two packages build together, filmed: the page builder is not a
  * third product but a form (the blocks) whose records a resource lists and
- * reopens. The video sits in public/, so its URL carries the same /<repository>/
- * prefix as every other asset; it only loads its metadata until the reader
- * presses play.
+ * reopens.
  */
 function DemoVideo() {
-  const base = import.meta.env.BASE_URL
-
   return (
     <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
       <header className="mx-auto max-w-2xl text-center">
@@ -183,16 +229,12 @@ function DemoVideo() {
         </p>
       </header>
 
-      <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-[#07070d] shadow-2xl">
-        <video
-          className="block aspect-video w-full"
-          controls
-          playsInline
-          preload="metadata"
-          poster={`${base}videos/page-builder-poster.jpg`}
-        >
-          <source src={`${base}videos/page-builder.mp4`} type="video/mp4" />
-        </video>
+      <div className="mt-10">
+        <SiteVideo
+          src="page-builder.mp4"
+          poster="page-builder-poster.jpg"
+          title="The page builder: blocks declared as data, edited live"
+        />
       </div>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">

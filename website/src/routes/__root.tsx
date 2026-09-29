@@ -14,6 +14,7 @@ import {
   defaultOgImageUrl,
   softwareSourceCodeJsonLd,
   techArticleJsonLd,
+  tourVideoJsonLd,
 } from "@/lib/seo"
 import appCss from "@/styles/app.css?url"
 
@@ -47,7 +48,7 @@ export const Route = createRootRoute({
 
     const jsonLd =
       pathname === "/"
-        ? SECTIONS.map(softwareSourceCodeJsonLd)
+        ? [...SECTIONS.map(softwareSourceCodeJsonLd), tourVideoJsonLd()]
         : page && section
           ? [techArticleJsonLd(page, section, canonical)]
           : []
