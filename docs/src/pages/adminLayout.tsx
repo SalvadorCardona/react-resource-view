@@ -76,6 +76,24 @@ const adminLayoutResource = createViewResource("admin-layout", {
         </Section>
 
         <Section
+          title="Full width, view by view"
+          intro="Views are drawn in a column of constrained width — the right measure for a form, too narrow for a board, a calendar or a wide table. A view declaring fullWidth takes the whole page instead, keeping the side margins."
+        >
+          <CodeBlock>{fullWidth}</CodeBlock>
+          <p>
+            The most specific declaration wins: the list variant on screen, then the
+            action&apos;s entry in <code>views</code>, then the resource&apos;s{" "}
+            <code>view</code>. Nothing declared means the column, so a resource that
+            never mentions it is drawn as before. A <code>decoratorComponent</code>{" "}
+            of your own reads the same option with <code>isFullWidthView</code>. The{" "}
+            <a href="https://cardona.digital/react-resource-view/playground?view=admin/admin_tasks/list">
+              playground&apos;s task board
+            </a>{" "}
+            runs on it.
+          </p>
+        </Section>
+
+        <Section
           title="Responsive by default"
           intro="Below the md breakpoint the sidebar is replaced with a bottom navigation bar; a menu entry with children opens a drawer instead of a nested menu."
         >
@@ -154,5 +172,21 @@ const headerOverrides = `views: {
     },
   },
 }`
+
+const fullWidth = `createViewResource("tasks", {
+  view: {
+    // Every action of the resource, across the whole page…
+    fullWidth: true,
+    viewVariants: [
+      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
+      // …or a single layout of the list, with fullWidth on the variant.
+      tableViewOptionFactory({ name: "Table" }),
+    ],
+  },
+  views: {
+    // The forms keep the column.
+    [ActionList.update]: { fullWidth: false },
+  },
+})`
 
 export default adminLayoutResource

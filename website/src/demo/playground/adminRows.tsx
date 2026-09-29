@@ -5,8 +5,10 @@ import type {
   Company,
   Post,
   Product,
+  Task,
   User,
 } from "@/demo/playground/adminData"
+import { TASK_TAGS } from "@/demo/playground/adminData"
 import { cn } from "@/lib/cn"
 
 /**
@@ -252,6 +254,96 @@ export function ProductRow({ row }: RowComponentPropsInterface) {
         <span className={cn(product.stock === 0 && "text-destructive")}>
           {product.stock === 0 ? "out of stock" : `${product.stock} in stock`}
         </span>
+      </p>
+    </div>
+  )
+}
+
+const PRIORITY_TONES: Record<Task["priority"], Tone> = {
+  low: "neutral",
+  medium: "info",
+  high: "warn",
+  urgent: "danger",
+}
+
+const PRIORITY_LABELS: Record<Task["priority"], string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  urgent: "Urgent",
+}
+
+const TAG_LABELS = Object.fromEntries(TASK_TAGS.map((tag) => [tag.value, tag.label]))
+
+/** "Ada Lovelace" as "AL": who a card is on, at the size of a badge. */
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+}
+
+export function TaskRow({ row }: RowComponentPropsInterface) {
+  const task = row?.data as Task | undefined
+  if (!task) return null
+
+  const priority = task.priority ?? "medium"
+  // A task still open past its due date is the one thing a board has to say
+  // out loud.
+  const overdue =
+    task.status !== "done" &&
+    !!task.dueDate &&
+    task.dueDate < new Date().toISOString().slice(0, 10)
+
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 font-medium leading-snug">{task.title}</p>
+        <Badge tone={PRIORITY_TONES[priority] ?? "neutral"}>
+          {PRIORITY_LABELS[priority] ?? priority}
+        </Badge>
+      </div>
+
+      {task.description && (
+        <p className="line-clamp-2 text-sm text-muted-foreground">
+          {task.description}
+        </p>
+      )}
+
+      {task.tags?.length > 0 && (
+        <p className="flex flex-wrap gap-1">
+          {task.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground"
+            >
+              {TAG_LABELS[tag] ?? tag}
+            </span>
+          ))}
+        </p>
+      )}
+
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        {task.assignee && (
+          <span className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="flex size-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-foreground"
+            >
+              {initials(task.assignee)}
+            </span>
+            {task.assignee}
+          </span>
+        )}
+        {task.dueDate && (
+          <>
+            <span aria-hidden>·</span>
+            <span className={cn(overdue && "font-medium text-destructive")}>
+              due {task.dueDate}
+            </span>
+          </>
+        )}
       </p>
     </div>
   )

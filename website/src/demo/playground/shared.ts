@@ -14,3 +14,16 @@ export const DRAWER = {
 export const POPUP = {
   behavior: { openIn: "popup", closeAfterUpdate: true },
 } as const
+
+/**
+ * How wide a view is drawn under `AdminLayout`: the tasks board, calendar and
+ * timeline take the whole page, and the forms of a task keep the column every
+ * other screen sits in — see `fullWidth` in the resource-view docs.
+ *
+ * Spread rather than written out, like the two above: `fullWidth` arrived in
+ * react-resource-view 0.11, and a spread keeps these declarations compiling
+ * against whichever release the site is installed on.
+ */
+export const FULL_WIDTH = { fullWidth: true } as const
+
+export const NARROW = { fullWidth: false } as const

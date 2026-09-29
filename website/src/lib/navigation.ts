@@ -292,7 +292,7 @@ export const VIEW_SECTION: DocSection = {
           href: "/docs/resource-view/admin-layout",
           title: "Admin layout",
           summary:
-            "AdminLayout: a ready-made decoratorComponent — sidebar, top bar, and a bottom nav on mobile.",
+            "AdminLayout: a ready-made decoratorComponent — sidebar, top bar, a bottom nav on mobile, and full-width views.",
           icon: PanelLeft,
         },
         {

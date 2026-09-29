@@ -13,6 +13,7 @@ import {
   overviewResource,
   postsResource,
   productsResource,
+  tasksResource,
   usersResource,
 } from "@/demo/playground/resources"
 
@@ -38,7 +39,7 @@ function BuilderLink() {
 }
 
 /**
- * The back office of the playground: one area, seven resources, one menu.
+ * The back office of the playground: one area, eight resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
@@ -63,6 +64,7 @@ export const adminScope: ScopeInterface = {
     commentsResource,
     productsResource,
     ordersResource,
+    tasksResource,
   ],
   decoratorComponent: createAdminLayout({ topBarEnd: <BuilderLink /> }),
   // Where the scope opens when the URL names it and nothing else.
@@ -77,6 +79,7 @@ export const adminScope: ScopeInterface = {
     createItemMenuWithResource({ resource: overviewResource }),
     createItemMenuWithResource({ resource: usersResource }),
     createItemMenuWithResource({ resource: companiesResource }),
+    createItemMenuWithResource({ resource: tasksResource }),
     {
       name: "Blog",
       icon: Newspaper,

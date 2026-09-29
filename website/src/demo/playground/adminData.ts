@@ -1,3 +1,4 @@
+import { addDays, format } from "date-fns"
 import { getInStorage, setInStorage } from "ssr-safe-storage"
 import { PAGE_HERO, PAGE_TEXT, type BuilderBlock } from "@/demo/builder/blocks"
 import { PAGES, RESUMES, starterResume } from "@/demo/playground/documents"
@@ -6,9 +7,9 @@ import { PAGES, RESUMES, starterResume } from "@/demo/playground/documents"
  * The fixtures the playground's back office runs on.
  *
  * A small coffee roastery: the people who can sign in, the accounts it
- * supplies, the blog it publishes and the catalogue it sells. Four areas rather
- * than one collection, because that is what a scope is for — an administration
- * is a menu of resources, and a single list would never show it.
+ * supplies, the blog it publishes, the catalogue it sells and the work its
+ * team has on. Several areas rather than one collection, because that is what
+ * a scope is for — an administration is a menu of resources, and a single list would never show it.
  *
  * Two kinds of record here are documents rather than fields: a post is a page
  * assembled out of blocks, and so is the CV an account carries. Their blocks
@@ -112,12 +113,29 @@ export interface Order {
   placedAt: string
 }
 
+export interface Task {
+  "@id": string
+  "@type": string
+  id: string
+  title: string
+  description: string
+  status: "todo" | "in_progress" | "in_review" | "done"
+  priority: "low" | "medium" | "high" | "urgent"
+  /** One of the roastery's own staff, by name — see `TASK_ASSIGNEES`. */
+  assignee: string
+  tags: string[]
+  /** When the work is planned to start: where its bar begins on the timeline. */
+  startDate: string
+  dueDate: string
+}
+
 export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
 export const PRODUCTS_ID = "admin_products"
 export const ORDERS_ID = "admin_orders"
+export const TASKS_ID = "admin_tasks"
 
 /**
  * The overview is a resource like the others — it is what the scope opens on —
@@ -184,6 +202,41 @@ export const ORDER_STATUSES = [
   { label: "Shipped", value: "shipped" },
   { label: "Refunded", value: "refunded" },
 ]
+
+export const TASK_STATUSES = [
+  { label: "To do", value: "todo" },
+  { label: "In progress", value: "in_progress" },
+  { label: "In review", value: "in_review" },
+  { label: "Done", value: "done" },
+]
+
+export const TASK_PRIORITIES = [
+  { label: "Low", value: "low" },
+  { label: "Medium", value: "medium" },
+  { label: "High", value: "high" },
+  { label: "Urgent", value: "urgent" },
+]
+
+export const TASK_TAGS = [
+  { label: "Roasting", value: "roasting" },
+  { label: "Sourcing", value: "sourcing" },
+  { label: "Wholesale", value: "wholesale" },
+  { label: "Shop", value: "shop" },
+  { label: "Blog", value: "blog" },
+  { label: "Logistics", value: "logistics" },
+  { label: "Bug", value: "bug" },
+]
+
+/**
+ * Who a task can go to: the accounts of the roastery's own staff — those with
+ * no company — rather than a second list of people beside the users.
+ */
+export const TASK_ASSIGNEES = [
+  "Ada Lovelace",
+  "Grace Hopper",
+  "Barbara Liskov",
+  "Camille Roux",
+].map((name) => ({ label: name, value: name }))
 
 /**
  * The accounts the roastery supplies: the cafés, hotels and offices its
@@ -661,6 +714,373 @@ const ORDERS: Array<Omit<Order, "@id" | "@type">> = [
   },
 ]
 
+/** A day, as many days from today as `offset` says, in the shape a date field holds. */
+function daysFromNow(offset: number): string {
+  return format(addDays(new Date(), offset), "yyyy-MM-dd")
+}
+
+type TaskFixture = Omit<Task, "@id" | "@type" | "startDate" | "dueDate"> & {
+  /** Days from today to the start of the work — negative once it has begun. */
+  startsIn: number
+  /** Days from today to the due date — negative once it is past. */
+  dueIn: number
+}
+
+/**
+ * The roastery team's work, from the roaster to the shop.
+ *
+ * Built when it is seeded rather than written out, because its dates are:
+ * a calendar and a timeline open on this week, and a task board whose every
+ * due date is months old would read as abandoned. Each date is counted from
+ * the day the fixtures are written.
+ */
+function tasks(): Array<Omit<Task, "@id" | "@type">> {
+  const fixtures: TaskFixture[] = [
+    {
+      id: "1",
+      title: "Cup the new Ethiopia Guji lot",
+      description:
+        "Score the three sample roasts before committing to the full container.",
+      status: "in_progress",
+      priority: "high",
+      assignee: "Barbara Liskov",
+      tags: ["roasting", "sourcing"],
+      startsIn: -3,
+      dueIn: 2,
+    },
+    {
+      id: "2",
+      title: "Reorder 250 g kraft bags",
+      description:
+        "Stock covers two weeks at the current pace; the supplier needs ten days.",
+      status: "todo",
+      priority: "urgent",
+      assignee: "Camille Roux",
+      tags: ["logistics", "shop"],
+      startsIn: 0,
+      dueIn: 3,
+    },
+    {
+      id: "3",
+      title: "Fix the checkout rounding on subscriptions",
+      description: "Two-bag subscriptions are charged €24.01 instead of €24.00.",
+      status: "in_review",
+      priority: "urgent",
+      assignee: "Ada Lovelace",
+      tags: ["shop", "bug"],
+      startsIn: -4,
+      dueIn: 1,
+    },
+    {
+      id: "4",
+      title: "Write the pour-over guide",
+      description:
+        "A step-by-step for the V60, with the grind size for each of our coffees.",
+      status: "in_progress",
+      priority: "medium",
+      assignee: "Grace Hopper",
+      tags: ["blog"],
+      startsIn: -6,
+      dueIn: 5,
+    },
+    {
+      id: "5",
+      title: "Recalibrate the roaster's probe",
+      description: "Bean temperature has read 4 °C low since the last maintenance.",
+      status: "todo",
+      priority: "high",
+      assignee: "Barbara Liskov",
+      tags: ["roasting"],
+      startsIn: 1,
+      dueIn: 4,
+    },
+    {
+      id: "6",
+      title: "Quote Hôtel Malabar for the spring menu",
+      description: "Two espresso blends and a decaf, delivered weekly.",
+      status: "in_review",
+      priority: "high",
+      assignee: "Camille Roux",
+      tags: ["wholesale"],
+      startsIn: -5,
+      dueIn: 2,
+    },
+    {
+      id: "7",
+      title: "Photograph the new grinder",
+      description:
+        "Three angles and one in use, for the product page and the newsletter.",
+      status: "todo",
+      priority: "low",
+      assignee: "Grace Hopper",
+      tags: ["shop", "blog"],
+      startsIn: 4,
+      dueIn: 11,
+    },
+    {
+      id: "8",
+      title: "Plan the Colombia Huila roast profile",
+      description: "Aim for a lighter first crack; last batch tasted flat.",
+      status: "todo",
+      priority: "medium",
+      assignee: "Barbara Liskov",
+      tags: ["roasting"],
+      startsIn: 6,
+      dueIn: 12,
+    },
+    {
+      id: "9",
+      title: "Migrate the order export to CSV",
+      description: "Accounting wants one line per product, not per order.",
+      status: "in_progress",
+      priority: "medium",
+      assignee: "Ada Lovelace",
+      tags: ["shop"],
+      startsIn: -2,
+      dueIn: 6,
+    },
+    {
+      id: "10",
+      title: "Train Le Comptoir Vert's baristas",
+      description: "Half a day on dialling in the house blend.",
+      status: "todo",
+      priority: "medium",
+      assignee: "Camille Roux",
+      tags: ["wholesale"],
+      startsIn: 8,
+      dueIn: 9,
+    },
+    {
+      id: "11",
+      title: "Draft the harvest report newsletter",
+      description:
+        "What changed at the farms this season, and what it means in the cup.",
+      status: "todo",
+      priority: "low",
+      assignee: "Grace Hopper",
+      tags: ["blog", "sourcing"],
+      startsIn: 10,
+      dueIn: 18,
+    },
+    {
+      id: "12",
+      title: "Renew the organic certification",
+      description:
+        "Send the audit form and the last twelve months of purchase records.",
+      status: "in_progress",
+      priority: "high",
+      assignee: "Ada Lovelace",
+      tags: ["sourcing"],
+      startsIn: -10,
+      dueIn: 7,
+    },
+    {
+      id: "13",
+      title: "Fix the stock count on archived products",
+      description: "Archived products still show up as out of stock on the shop.",
+      status: "done",
+      priority: "medium",
+      assignee: "Ada Lovelace",
+      tags: ["shop", "bug"],
+      startsIn: -14,
+      dueIn: -9,
+    },
+    {
+      id: "14",
+      title: "Deliver Café des Arceaux's monthly order",
+      description: "Twelve kilos of the house blend, two of decaf.",
+      status: "done",
+      priority: "high",
+      assignee: "Camille Roux",
+      tags: ["wholesale", "logistics"],
+      startsIn: -8,
+      dueIn: -6,
+    },
+    {
+      id: "15",
+      title: "Taste the decaf samples from the new supplier",
+      description: "Swiss Water process; compare against the current one blind.",
+      status: "in_review",
+      priority: "medium",
+      assignee: "Barbara Liskov",
+      tags: ["sourcing", "roasting"],
+      startsIn: -3,
+      dueIn: 0,
+    },
+    {
+      id: "16",
+      title: "Update the shipping rates for Belgium",
+      description: "The carrier raised its prices on the first of the month.",
+      status: "done",
+      priority: "medium",
+      assignee: "Camille Roux",
+      tags: ["logistics", "shop"],
+      startsIn: -12,
+      dueIn: -10,
+    },
+    {
+      id: "17",
+      title: "Publish the cold brew recipe",
+      description: "Already written; needs the photos and a final read.",
+      status: "in_review",
+      priority: "low",
+      assignee: "Grace Hopper",
+      tags: ["blog"],
+      startsIn: -4,
+      dueIn: 2,
+    },
+    {
+      id: "18",
+      title: "Service the espresso machine at the shop",
+      description: "Descale, change the group gaskets, check the pressure.",
+      status: "todo",
+      priority: "medium",
+      assignee: "Barbara Liskov",
+      tags: ["shop"],
+      startsIn: 12,
+      dueIn: 13,
+    },
+    {
+      id: "19",
+      title: "Negotiate the Brazil Cerrado contract",
+      description: "Fix the price for the next two containers before the harvest.",
+      status: "in_progress",
+      priority: "high",
+      assignee: "Ada Lovelace",
+      tags: ["sourcing"],
+      startsIn: -7,
+      dueIn: 9,
+    },
+    {
+      id: "20",
+      title: "Send samples to Studio Kaffa",
+      description: "They asked for the three single origins we roast this month.",
+      status: "done",
+      priority: "low",
+      assignee: "Camille Roux",
+      tags: ["wholesale"],
+      startsIn: -11,
+      dueIn: -9,
+    },
+    {
+      id: "21",
+      title: "Redesign the subscription landing page",
+      description: "Explain the two plans side by side; drop the carousel.",
+      status: "todo",
+      priority: "medium",
+      assignee: "Grace Hopper",
+      tags: ["shop", "blog"],
+      startsIn: 7,
+      dueIn: 20,
+    },
+    {
+      id: "22",
+      title: "Log the roast defects from last week",
+      description: "Two batches scorched; note the charge temperature of each.",
+      status: "done",
+      priority: "medium",
+      assignee: "Barbara Liskov",
+      tags: ["roasting"],
+      startsIn: -9,
+      dueIn: -7,
+    },
+    {
+      id: "23",
+      title: "Invoice Brasserie Nord for February",
+      description: "Three deliveries, one credit note for a damaged bag.",
+      status: "in_progress",
+      priority: "high",
+      assignee: "Camille Roux",
+      tags: ["wholesale"],
+      startsIn: -1,
+      dueIn: 1,
+    },
+    {
+      id: "24",
+      title: "Fix the newsletter sign-up on mobile",
+      description: "The button sits under the cookie banner on small screens.",
+      status: "todo",
+      priority: "urgent",
+      assignee: "Ada Lovelace",
+      tags: ["blog", "bug"],
+      startsIn: 0,
+      dueIn: 2,
+    },
+    {
+      id: "25",
+      title: "Order green coffee sample kit",
+      description: "Five origins from the importer's new list.",
+      status: "todo",
+      priority: "low",
+      assignee: "Barbara Liskov",
+      tags: ["sourcing"],
+      startsIn: 14,
+      dueIn: 21,
+    },
+    {
+      id: "26",
+      title: "Write the grinder comparison",
+      description: "Our hand grinder against the two most asked-about ones.",
+      status: "todo",
+      priority: "medium",
+      assignee: "Grace Hopper",
+      tags: ["blog", "shop"],
+      startsIn: 15,
+      dueIn: 25,
+    },
+    {
+      id: "27",
+      title: "Set up the pallet pick-up for Lyon",
+      description: "The carrier needs the dimensions and the weight by Thursday.",
+      status: "in_review",
+      priority: "medium",
+      assignee: "Camille Roux",
+      tags: ["logistics"],
+      startsIn: -2,
+      dueIn: 3,
+    },
+    {
+      id: "28",
+      title: "Add gift cards to the shop",
+      description: "One amount per bag price, delivered by email.",
+      status: "in_progress",
+      priority: "medium",
+      assignee: "Ada Lovelace",
+      tags: ["shop"],
+      startsIn: -5,
+      dueIn: 14,
+    },
+    {
+      id: "29",
+      title: "Clean the chaff collector",
+      description: "Monthly — overdue since the last big batch.",
+      status: "done",
+      priority: "low",
+      assignee: "Barbara Liskov",
+      tags: ["roasting"],
+      startsIn: -6,
+      dueIn: -5,
+    },
+    {
+      id: "30",
+      title: "Prepare the tasting at Maison Perrin",
+      description: "Three coffees, one brewed two ways; bring the scales.",
+      status: "todo",
+      priority: "high",
+      assignee: "Camille Roux",
+      tags: ["wholesale"],
+      startsIn: 3,
+      dueIn: 5,
+    },
+  ]
+
+  return fixtures.map(({ startsIn, dueIn, ...task }) => ({
+    ...task,
+    startDate: daysFromNow(startsIn),
+    dueDate: daysFromNow(dueIn),
+  }))
+}
+
 /** Gives a fixture its IRI and its type, which is what a row is addressed by. */
 function identify<T extends { id: string }>(type: string, rows: T[]) {
   return rows.map((row) => ({
@@ -696,6 +1116,7 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
     [COMMENTS_ID, COMMENTS],
     [PRODUCTS_ID, PRODUCTS],
     [ORDERS_ID, ORDERS],
+    [TASKS_ID, tasks()],
   ]
 }
 

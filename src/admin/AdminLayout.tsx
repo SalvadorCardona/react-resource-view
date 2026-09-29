@@ -5,6 +5,8 @@ import { AdminTopBar } from "@/admin/AdminTopBar"
 import { AdminHeader } from "@/admin/AdminHeader"
 import { AdminMobileNav } from "@/admin/AdminMobileNav"
 import { useIsMobile } from "@/internal/browser/useIsMobile"
+import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { isFullWidthView } from "@/utils/isFullWidthView"
 import { cn } from "@/ui/cn"
 
 export interface AdminLayoutProps extends PropsWithChildren {
@@ -32,9 +34,14 @@ export interface AdminLayoutProps extends PropsWithChildren {
  *
  * To add a logo or actions in the top bar, use {@link createAdminLayout}
  * instead of passing this component directly.
+ *
+ * Views are drawn in a column of constrained width; a view declaring
+ * `fullWidth` — a board, a calendar — takes the whole page instead, keeping
+ * the side margins.
  */
 export function AdminLayout({ children, logo, topBarEnd }: AdminLayoutProps) {
   const isMobile = useIsMobile()
+  const fullWidth = isFullWidthView(useCurrentViewResourceContext())
 
   return (
     <SidebarProvider>
@@ -42,8 +49,11 @@ export function AdminLayout({ children, logo, topBarEnd }: AdminLayoutProps) {
       <SidebarInset className="bg-muted/30">
         <AdminTopBar logo={logo} end={topBarEnd} />
         <div
+          data-slot="admin-content"
+          data-full-width={fullWidth || undefined}
           className={cn(
-            "mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8",
+            "mx-auto flex w-full flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8",
+            !fullWidth && "max-w-6xl",
             isMobile && "pb-24"
           )}
         >
