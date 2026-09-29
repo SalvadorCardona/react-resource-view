@@ -3,7 +3,7 @@ import { ActionList } from "react-data-form"
 import { Trans } from "react-mini-i18n"
 import { Link, useNavigate } from "@/ports"
 import { useScopeContext } from "@/scope/Scope"
-import { useIsActiveItemMenu } from "@/menu/menu"
+import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ResourceViewButton from "@/action/ResourceViewButton"
 import { generateLinkByResource } from "@/routes/routes"
@@ -207,7 +207,7 @@ function BackButton({ className }: { className?: string }) {
 
 function SubNavigation({ className }: { className: string }) {
   const menu = useScopeContext()?.scope?.menu ?? []
-  const isActive = useIsActiveItemMenu()
+  const isActive = useIsActiveMenuEntry()
 
   const parent = menu.find((item) => item.items?.some(isActive))
 
