@@ -1,5 +1,46 @@
 # react-resource-view
 
+## 0.12.0
+
+### Minor Changes
+
+- 1b184f0: Let a scope's `authorization` wait for a real session — `authClient.getSession()`, a `/me` call — instead of having to answer synchronously, and keep the scope hidden until it has.
+
+  `authorization` may now return `boolean | Promise<boolean>`; a synchronous
+  function works as before. Nothing of the scope renders while it is pending:
+  `authorizationFallback` shows instead, the page loader by default. An
+  `UnauthorizedError`, thrown or rejected, still calls `onUnauthorized`. A
+  `ForbiddenError`, thrown or rejected, or a `false` result, now renders
+  `forbiddenFallback` — an "Access denied" message by default — where a
+  `ForbiddenError` used to reach the error boundary and a `false` was ignored.
+  Both fallbacks are accepted on the scope and on the provider configuration,
+  the scope's winning.
+
+  The check runs again when the scope changes, and on demand through
+  `recheckAuthorization()` from `useScopeContext()`, so a sign-out is taken into
+  account without a reload. An answer that arrives after the scope changed is
+  ignored.
+
+- dcd05f1: Pin a block at the bottom of `AdminLayout`'s sidebar — "Need help?", support, documentation — instead of leaving its footer empty with no way to fill it.
+
+  `AdminLayout` and `createAdminLayout` now take `footerMenu`, menu entries drawn
+  like the scope's `menu` under an optional `footerMenuTitle`, and
+  `sidebarFooter`, any node rendered below them. An entry whose `href` is
+  absolute leaves the application: a web page opens in a new tab, a `mailto:`
+  hands over to the mail client. On narrow screens both go behind a last entry of
+  the bottom bar, named after `footerMenuTitle` ("More" without one), which opens
+  them in a drawer. Without either option the sidebar renders no footer, as
+  before.
+
+### Patch Changes
+
+- 2f8da83: Leave out the foot of a record card — its separator and the padding under it — when the resource permits none of the row's actions, instead of ending the card on a stray line above an empty strip.
+
+  The card layout now reads which actions a row offers (`behavior.rowActions`,
+  then `canUpdate`, `canDelete`…) before drawing their bar, as the calendar and
+  timeline preview already did. A card with at least one permitted action is
+  unchanged.
+
 ## 0.11.0
 
 ### Minor Changes
