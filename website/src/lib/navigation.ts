@@ -23,6 +23,7 @@ import {
   Plug,
   Route,
   Settings2,
+  ShieldCheck,
   Sparkles,
   SquarePen,
   SquareStack,
@@ -300,6 +301,13 @@ export const VIEW_SECTION: DocSection = {
           title: "Permissions & quotas",
           summary: "canCreate, canDelete, and a creation limit with a fallback.",
           icon: KeyRound,
+        },
+        {
+          href: "/docs/resource-view/authentication",
+          title: "Authentication",
+          summary:
+            "Better Auth end to end: an async scope authorization, sign-in, roles and sign-out.",
+          icon: ShieldCheck,
         },
         {
           href: "/docs/resource-view/sub-views",

@@ -15,6 +15,8 @@ export interface ResourceConfigInterface {
   defaultScope?: string
   onUnauthorized?: () => void
   scopeFallback?: ReactNode
+  authorizationFallback?: ReactNode
+  forbiddenFallback?: ReactNode
 }
 
 let config: ResourceConfigInterface = {

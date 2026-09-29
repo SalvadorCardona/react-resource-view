@@ -19,14 +19,15 @@ export const Route = createFileRoute("/docs/resource-view/permissions")({
   component: Permissions,
 })
 
-const FLAGS = `createViewResource("articles", {
+const FLAGS = `// hasRole() reads a session loaded once — see Authentication.
+createViewResource("articles", {
   path: "/api/articles",
 
   // A boolean, or a function evaluated on every render.
   canRead: true,
-  canCreate: () => user.hasRole("editor"),
-  canUpdate: () => user.hasRole("editor"),
-  canDelete: () => user.hasRole("admin"),
+  canCreate: () => hasRole("editor"),
+  canUpdate: () => hasRole("editor"),
+  canDelete: () => hasRole("admin"),
 })`
 
 const DENIED = `// ⚠️ No permission declared at all → nothing is offered.
@@ -62,9 +63,11 @@ const ASYNC_LIMIT = `limit: {
 const SCOPE_AUTH = `// Scope-level, for a whole area of the application.
 {
   name: "admin",
-  authorization: () => {
-    if (!isLogged()) throw new UnauthorizedError()   // 401
-    if (!user.isAdmin) throw new ForbiddenError()    // 403
+  // Synchronous or async: nothing of the scope renders until it has answered.
+  authorization: async () => {
+    const { data } = await authClient.getSession()
+    if (!data) throw new UnauthorizedError()                  // 401
+    if (data.user.role !== "admin") throw new ForbiddenError() // 403
     return true
   },
 }`
@@ -89,6 +92,12 @@ function Permissions() {
       </P>
 
       <CodeBlock>{FLAGS}</CodeBlock>
+
+      <P>
+        Where <C>hasRole</C> comes from — a session fetched once and read
+        synchronously afterwards — is shown step by step in{" "}
+        <A href="/docs/resource-view/authentication">Authentication</A>.
+      </P>
 
       <PropsTable
         rows={[
@@ -221,8 +230,11 @@ function Permissions() {
 
       <P>
         <C>UnauthorizedError</C> (401) and <C>ForbiddenError</C> (403) are exported
-        and carry their status. <C>onUnauthorized</C> on the resource configuration
-        is where you send the reader to sign in.
+        and carry their status, thrown or rejected alike. <C>onUnauthorized</C> on
+        the resource configuration is where you send the reader to sign in; a 403,
+        or a <C>false</C>, renders <C>forbiddenFallback</C> instead of the scope.{" "}
+        <A href="/docs/resource-view/authentication">Authentication</A> wires it to
+        Better Auth, sign-out included.
       </P>
 
       <H2 id="server">This is not security</H2>

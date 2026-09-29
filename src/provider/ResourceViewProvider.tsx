@@ -35,6 +35,8 @@ export default function ResourceViewProvider({
           configScope={configuration.scopes}
           defaultScope={configuration.defaultScope}
           unauthorizedError={configuration.onUnauthorized}
+          authorizationFallback={configuration.authorizationFallback}
+          forbiddenFallback={configuration.forbiddenFallback}
         >
           <ResourceViewProviderInner
             viewResourceContextParams={viewResourceContextParams}
