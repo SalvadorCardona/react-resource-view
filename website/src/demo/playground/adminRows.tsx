@@ -28,9 +28,9 @@ const TONES = {
   danger: "bg-destructive/10 text-destructive",
 } as const
 
-type Tone = keyof typeof TONES
+export type Tone = keyof typeof TONES
 
-function Badge({
+export function Badge({
   tone = "neutral",
   children,
 }: {
@@ -54,6 +54,18 @@ const PRICE = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR
 
 export function formatPrice(cents: number): string {
   return PRICE.format((cents ?? 0) / 100)
+}
+
+/**
+ * A day as a person says it — "3 November 2025" — from the ISO date the
+ * fixtures store. Read in UTC, which is what a bare `YYYY-MM-DD` is parsed in,
+ * so a reader west of Greenwich does not see the day before.
+ */
+const DAY = new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeZone: "UTC" })
+
+export function formatDay(isoDate: string): string {
+  const date = new Date(isoDate)
+  return Number.isNaN(date.getTime()) ? isoDate : DAY.format(date)
 }
 
 const COMPANY_TONES: Record<Company["status"], Tone> = {
@@ -95,13 +107,13 @@ export function CompanyRow({ row }: RowComponentPropsInterface) {
   )
 }
 
-const USER_TONES: Record<User["status"], Tone> = {
+export const USER_TONES: Record<User["status"], Tone> = {
   active: "info",
   invited: "warn",
   suspended: "danger",
 }
 
-const USER_LABELS: Record<User["status"], string> = {
+export const USER_LABELS: Record<User["status"], string> = {
   active: "Active",
   invited: "Invited",
   suspended: "Suspended",

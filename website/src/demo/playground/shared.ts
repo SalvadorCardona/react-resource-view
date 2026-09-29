@@ -4,8 +4,10 @@
  *
  * A block array is a long form — the palette, one card per block, dragged
  * into order — so it gets the sliding panel rather than a centred dialog: see
- * `openIn: "drawer"` in the resource-view docs. Delete stays a small popup,
- * like the rest of the playground.
+ * `openIn: "drawer"` in the resource-view docs. An account's form opens there
+ * too, over the account's page: the panel leaves the card and the tabs in
+ * view, and they are what the save redraws. Delete stays a small popup, like
+ * the rest of the playground.
  */
 export const DRAWER = {
   behavior: { openIn: "drawer", closeAfterUpdate: true },

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { FormElement, type FormInterface } from "react-data-form"
+import { ActionList, FormElement, type FormInterface } from "react-data-form"
 import { useCurrentViewResourceContext, useFormByResource } from "react-resource-view"
 import { RESUME_BLOCK, type BuilderBlock } from "@/demo/builder/blocks"
 import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
@@ -19,10 +19,13 @@ import type { User } from "@/demo/playground/adminData"
  * so `blocks` is a field of the user and this tab is where it is built.
  *
  * The tab is a `viewComponent`, which is rendered inside the record's own
- * view — `useCurrentViewResourceContext` therefore hands back the user being
- * edited, and `useFormByResource` writes through the users repository. The form
+ * view — `useCurrentViewResourceContext` therefore hands back the account on
+ * screen, and `useFormByResource` writes through the users repository. The form
  * below holds that one field, so what is submitted is `{ id, blocks }`: the
  * other fields of the account are not this screen's business.
+ *
+ * That view is the account's *read* page, and a form built in a read context
+ * is drawn read-only — so the form is told it updates, which is what it does.
  */
 const CV_FORM: FormInterface = {
   label: { submit: "Save the CV", success: "CV saved" },
@@ -43,7 +46,7 @@ export function UserResume() {
   const [blocks, setBlocks] = useState<BuilderBlock[]>(user?.blocks ?? [])
 
   const formContext = useFormByResource<User>({
-    currentResource,
+    currentResource: { ...currentResource, resourceAction: ActionList.update },
     form: CV_FORM,
     onChange: (_, form) => setBlocks((form.data?.blocks as BuilderBlock[]) ?? []),
   })

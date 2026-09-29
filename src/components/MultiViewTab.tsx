@@ -146,10 +146,17 @@ export function MultiViewTab() {
 
   return (
     // Layout responsive: mobile = pile (leftCol puis tabs), desktop = 2 colonnes si leftCol existe
+    //
+    // `minmax(0, 1fr)` rather than `1fr`: a bare `1fr` track is at least as
+    // wide as its content, and the bar below is `w-max` — so next to a side
+    // column the track grew to the width of every tab and pushed the page
+    // sideways, instead of leaving the bar to scroll inside it.
     <div
       className={
         "flex flex-col md:grid md:gap-6 " +
-        (subViews.viewComponent ? "md:grid-cols-[280px_1fr]" : "md:grid-cols-1")
+        (subViews.viewComponent
+          ? "md:grid-cols-[280px_minmax(0,1fr)]"
+          : "md:grid-cols-[minmax(0,1fr)]")
       }
     >
       {subViews.viewComponent && (
@@ -172,7 +179,7 @@ export function MultiViewTab() {
         // page scrolled sideways instead of the bar.
         className={
           orientation === "vertical"
-            ? "w-full flex flex-row items-start gap-6"
+            ? "w-full min-w-0 flex flex-row items-start gap-6"
             : "w-full min-w-0 flex flex-col"
         }
       >
@@ -197,26 +204,31 @@ export function MultiViewTab() {
           // a record with eight sub-views used to push its content down by
           // three rows of buttons on a phone, and the labels were cut to
           // twelve characters to limit the damage.
-          <ScrollArea
-            orientation="horizontal"
+          //
+          // Held by a wrapper of its own: the scroll area's root sets
+          // `position: relative` inline, which beat a `sticky` class — the bar
+          // never stuck, and its `top` pushed it 4rem below the side column.
+          <div
             className="
               sticky top-16 z-30
               bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60
             "
           >
-            <TabsList
-              aria-label="Sous-vues"
-              className="
-                w-max min-w-full
-                border-none md:border
-                gap-1 md:gap-2
-                flex-nowrap flex
-                h-auto
-              "
-            >
-              {triggers}
-            </TabsList>
-          </ScrollArea>
+            <ScrollArea orientation="horizontal">
+              <TabsList
+                aria-label="Sous-vues"
+                className="
+                  w-max min-w-full
+                  border-none md:border
+                  gap-1 md:gap-2
+                  flex-nowrap flex
+                  h-auto
+                "
+              >
+                {triggers}
+              </TabsList>
+            </ScrollArea>
+          </div>
         )}
         {subViewList.map((subView) => (
           <TabsContent

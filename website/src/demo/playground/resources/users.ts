@@ -18,15 +18,17 @@ import {
   USERS_ID,
   type User,
 } from "@/demo/playground/adminData"
-import { POPUP } from "@/demo/playground/shared"
+import { DRAWER, POPUP } from "@/demo/playground/shared"
 import { UserActivity } from "@/demo/playground/UserActivity"
+import { UserHeader, UserPage } from "@/demo/playground/UserHeader"
 import { UserResume } from "@/demo/playground/UserResume"
+import { UserSummary } from "@/demo/playground/UserSummary"
 
 /**
  * The people who can sign in. This file is the whole screen: the table and its
  * columns, the card grid, the filter bar, the create dialog, the account page
- * with the posts written under it and the CV it amounts to, and the delete
- * confirmation all come out of the declaration below.
+ * with the posts written under it and the CV it amounts to, the edit drawer and
+ * the delete confirmation all come out of the declaration below.
  */
 export const usersResource = createViewResource<User>(USERS_ID, {
   name: "Users",
@@ -92,12 +94,21 @@ export const usersResource = createViewResource<User>(USERS_ID, {
   },
   views: {
     [ActionList.create]: { name: "New user", ...POPUP },
-    // One of the forms opening on a page rather than over the list — a company
-    // is the other: an account is more than its five fields, and the
-    // collections belonging to it are laid out underneath, as tabs.
-    [ActionList.update]: {
-      name: "Edit a user",
+    // An account opens on a page of its own, not on its form: a card saying
+    // who it is, a column of figures, and the collections belonging to it laid
+    // out as tabs — the form is one click away, in the drawer of the update
+    // view below. A company does it the other way round, form first; an
+    // account is looked at far more often than it is edited.
+    [ActionList.read]: {
+      name: "User",
+      // The page's header, in place of the one `AdminLayout` draws: the card
+      // names the account, so the default header would have been a second
+      // title above it.
+      components: { navigation: UserHeader },
+      viewComponent: UserPage,
       subViewResource: {
+        // Beside the tabs on a desktop, above them on a phone.
+        viewComponent: UserSummary,
         list: [
           {
             slug: "posts",
@@ -123,7 +134,7 @@ export const usersResource = createViewResource<User>(USERS_ID, {
             // The CV of this person — one account, one CV, so it is a field of
             // the user and not a collection beside it. A tab with a component
             // of its own rather than a nested resource: `UserResume` mounts the
-            // page builder on the account being edited, and writes the blocks
+            // page builder on the account on screen, and writes the blocks
             // back through this very resource.
             slug: "cv",
             name: "Curriculum vitæ",
@@ -142,6 +153,10 @@ export const usersResource = createViewResource<User>(USERS_ID, {
         ],
       },
     },
+    // Six fields: a drawer over the account's page, or over the list, rather
+    // than a page of their own. `admin_users/update/1` still opens the form on
+    // its own, for a link that names it.
+    [ActionList.update]: { name: "Edit a user", ...DRAWER },
     [ActionList.delete]: { name: "Delete a user", ...POPUP },
   },
 })
