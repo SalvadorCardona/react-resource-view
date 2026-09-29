@@ -73,6 +73,18 @@ export interface ViewInterface<_Read = IdAbleInterface> {
     list: SubViewResourceInterface[]
   }
   viewVariants?: ViewInterface[]
+  /**
+   * Gives the view the page's whole width in `AdminLayout`, instead of the
+   * column every other view is kept in — the shape a board, a calendar, a
+   * timeline or a wide table wants. The side margins stay.
+   *
+   * Set on the resource's `view`, it covers every action of the resource; on
+   * one of `views`, that action only; on a list variant, that variant only.
+   * The most specific one wins, so a resource shown full width can still keep
+   * its forms narrow with `views: { update: { fullWidth: false } }`. Defaults
+   * to `false`. See {@link isFullWidthView}.
+   */
+  fullWidth?: boolean
   className?: string
 
   label?: {

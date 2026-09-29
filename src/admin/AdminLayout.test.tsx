@@ -56,11 +56,21 @@ const usersResource = createViewResource<Article>("admin_users", {
   view: { name: "Users", listComponent: ArticleList },
 })
 
+// A board: the one view of the scope that takes the page's whole width.
+const tasksResource = createViewResource<Article>("admin_tasks", {
+  name: "Tasks",
+  scope: "admin",
+  getCollection: async () => ({
+    data: { "@id": "admin_tasks", "@type": "Collection", member: [], totalItems: 0 },
+  }),
+  view: { name: "Tasks", listComponent: ArticleList, fullWidth: true },
+})
+
 const adminScope: ScopeInterface = {
   name: "admin",
   label: "Back office",
   decoratorComponent: AdminLayout,
-  resources: [articlesResource, usersResource],
+  resources: [articlesResource, usersResource, tasksResource],
   menu: [
     createItemMenuWithResource({ resource: articlesResource }),
     createItemMenuWithResource({ resource: usersResource }),
@@ -196,5 +206,27 @@ describe("AdminLayout", () => {
     } finally {
       view.components = components
     }
+  })
+
+  it("keeps views in a column, unless one asks for the whole width", async () => {
+    await renderAdmin()
+
+    const content = document.querySelector('[data-slot="admin-content"]')
+    expect(content).toHaveClass("max-w-6xl")
+    expect(content).not.toHaveAttribute("data-full-width")
+  })
+
+  it("gives the whole width to a view declared fullWidth", async () => {
+    await renderAdmin({
+      scope: "admin",
+      resourceId: tasksResource["@id"],
+      resourceAction: ActionList.list,
+    })
+
+    const content = document.querySelector('[data-slot="admin-content"]')
+    expect(content).not.toHaveClass("max-w-6xl")
+    expect(content).toHaveAttribute("data-full-width", "true")
+    // The side margins stay.
+    expect(content).toHaveClass("px-4")
   })
 })

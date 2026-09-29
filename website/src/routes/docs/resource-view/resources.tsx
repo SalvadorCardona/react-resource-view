@@ -68,6 +68,29 @@ const OPEN_IN = `createViewResource("articles", {
   },
 })`
 
+const FULL_WIDTH = `createViewResource("tasks", {
+  path: "/api/tasks",
+  view: {
+    // Every action of the resource takes the page's whole width…
+    fullWidth: true,
+    viewVariants: [
+      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
+      tableViewOptionFactory({ name: "Table" }),
+    ],
+  },
+  views: {
+    // …but its forms, which read better narrow.
+    [ActionList.create]: { fullWidth: false },
+    [ActionList.update]: { fullWidth: false },
+  },
+})
+
+// Or a single layout of a list, the others keeping the column:
+viewVariants: [
+  columnViewOptionFactory({ name: "Board", fullWidth: true }),
+  tableViewOptionFactory({ name: "Table" }),
+]`
+
 const HOOKS = `createViewResource("articles", {
   path: "/api/articles",
 
@@ -104,6 +127,7 @@ function Resources() {
         { id: "basic", title: "The smallest declaration" },
         { id: "five-views", title: "Five views from one description" },
         { id: "open-in", title: "Where an action opens" },
+        { id: "full-width", title: "Full width" },
         { id: "reference", title: "Resource reference" },
         { id: "repository", title: "Where the data comes from" },
         { id: "hooks", title: "Shaping requests" },
@@ -265,6 +289,44 @@ function Resources() {
         decide what happens once the write lands.
       </P>
 
+      <H2 id="full-width">Full width</H2>
+
+      <P>
+        Under <A href="/docs/resource-view/admin-layout">AdminLayout</A>, views are
+        drawn in a column of constrained width — the right measure for a form or a
+        record, too narrow for a board, a calendar, a timeline or a table with a
+        dozen columns. <C>fullWidth</C> hands the page&apos;s whole width to the
+        views that need it, and to those only.
+      </P>
+
+      <CodeBlock>{FULL_WIDTH}</CodeBlock>
+
+      <P>
+        It is read at three levels, and the most specific one wins: a list variant,
+        then the action&apos;s entry in <C>views</C>, then the resource&apos;s{" "}
+        <C>view</C>. So a resource declared full width keeps its forms narrow with a{" "}
+        <C>fullWidth: false</C> on those actions, and a board can be the one wide
+        layout of a list whose table stays in the column.
+      </P>
+
+      <PropsTable
+        rows={[
+          {
+            name: "fullWidth",
+            type: "boolean",
+            default: "false",
+            description: (
+              <>
+                On <C>view</C>, every action of the resource; on{" "}
+                <C>views.&lt;action&gt;</C>, that action; on a variant built by a{" "}
+                <C>*ViewOptionFactory</C>, that variant. The side margins stay, and a
+                narrow screen is laid out as before. Since 0.11.
+              </>
+            ),
+          },
+        ]}
+      />
+
       <H2 id="reference">Resource reference</H2>
 
       <PropsTable
@@ -314,7 +376,12 @@ function Resources() {
           {
             name: "view",
             type: "ViewListInterface",
-            description: "The description every action starts from.",
+            description: (
+              <>
+                The description every action starts from — <C>fullWidth</C> included,
+                see <A href="#full-width">Full width</A>.
+              </>
+            ),
           },
           {
             name: "views",

@@ -43,7 +43,7 @@ Everything below, at length and with the examples running rather than quoted:
 [the documentation site](https://cardona.digital/react-resource-view/docs/resource-view)
 — a page per layout, per filter, per dialect — and a
 [playground](https://cardona.digital/react-resource-view/playground):
-a whole back office built from seven resource declarations, every edit real,
+a whole back office built from eight resource declarations, every edit real,
 every screen a URL, and the source of each screen one click away.
 
 [![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://cardona.digital/react-resource-view/playground)
@@ -263,6 +263,45 @@ configureClient({
 
 `configureApi` falls back to those settings when it is given none of its own,
 so nothing has to move.
+
+## Admin layout
+
+A scope's `decoratorComponent` wraps every view of that scope. `AdminLayout` is
+a ready-made one — a collapsible sidebar built from the scope's `menu`, a top
+bar with a breadcrumb, a page header naming the record on screen, and a bottom
+bar instead of the sidebar on a phone:
+
+```ts
+const adminScope: ScopeInterface = {
+  name: "admin",
+  label: "Back office",
+  decoratorComponent: createAdminLayout({ logo: <MyLogo />, topBarEnd: <UserMenu /> }),
+  menu: [createItemMenuWithResource({ resource: tasks })],
+}
+```
+
+Views sit in a column of constrained width; a board, a calendar or a wide table
+takes the whole page with `fullWidth` — on the resource's `view`, on one action
+of `views`, or on a single list variant, the most specific one winning:
+
+```ts
+createViewResource("tasks", {
+  view: {
+    fullWidth: true,
+    viewVariants: [
+      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
+    ],
+  },
+  // The forms keep the column.
+  views: { [ActionList.update]: { fullWidth: false } },
+})
+```
+
+[The admin layout
+page](https://cardona.digital/react-resource-view/docs/resource-view/admin-layout)
+goes through the navigation, the slots and the theme; the
+[playground](https://cardona.digital/react-resource-view/playground?view=admin/admin_tasks/list)
+runs on it, its task board full width.
 
 ## Layouts
 
