@@ -280,6 +280,18 @@ const adminScope: ScopeInterface = {
 }
 ```
 
+Links kept out of the way of the pages — help, support, documentation — are
+pinned at the bottom of the sidebar with `footerMenu` (an absolute `href` opens
+in a new tab), or any node with `sidebarFooter`; on a phone they go behind a
+last entry of the bottom bar:
+
+```ts
+createAdminLayout({
+  footerMenuTitle: "Need help?",
+  footerMenu: [{ name: "Documentation", href: "https://example.com/docs" }],
+})
+```
+
 Views sit in a column of constrained width; a board, a calendar or a wide table
 takes the whole page with `fullWidth` — on the resource's `view`, on one action
 of `views`, or on a single list variant, the most specific one winning:

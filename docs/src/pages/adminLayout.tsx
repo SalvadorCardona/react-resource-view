@@ -63,6 +63,18 @@ const adminLayoutResource = createViewResource("admin-layout", {
         </Section>
 
         <Section
+          title="The bottom of the sidebar"
+          intro="Help, support, documentation: footerMenu pins links at the bottom of the sidebar, drawn like the menu, under an optional footerMenuTitle; sidebarFooter takes any node instead."
+        >
+          <CodeBlock>{sidebarFooter}</CodeBlock>
+          <p>
+            An absolute <code>href</code> opens in a new tab. Without either option
+            the sidebar has no footer; on a phone, both go behind a last entry of the
+            bottom bar, which opens them in a drawer.
+          </p>
+        </Section>
+
+        <Section
           title="The page header"
           intro="On a record, the header says which one is on screen and how to get back: a link to the list, the record's name as the title, the action and its id underneath, and the actions still worth offering — edit from the read page, delete from either."
         >
@@ -160,6 +172,16 @@ const adminScope: ScopeInterface = {
   }),
   menu: [/* … */],
 }`
+
+const sidebarFooter = `decoratorComponent: createAdminLayout({
+  footerMenuTitle: "Need help?",
+  footerMenu: [
+    { name: "Documentation", icon: BookOpen, href: "https://example.com/docs" },
+    { name: "Contact", icon: Mail, href: "mailto:support@example.com" },
+  ],
+  // Or anything at all, under the links.
+  sidebarFooter: <PlanBadge />,
+}),`
 
 const headerOverrides = `views: {
   [ActionList.update]: {

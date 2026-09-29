@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { act, render, screen } from "@testing-library/react"
 import { createItemMenuWithResource, createViewResource } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
-import { AdminLayout } from "@/admin/AdminLayout"
+import { AdminLayout, createAdminLayout } from "@/admin/AdminLayout"
 import { ScopeInterface } from "@/scope/scopeInterface"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { ActionList } from "react-data-form"
@@ -83,7 +83,10 @@ const adminScope: ScopeInterface = {
 // `configuration.scopes` resolves the scope through `use()`, inside the
 // `Suspense` boundary `ResourceViewProvider` sets up for that. Rendering
 // outside `act` leaves that first suspend-and-resolve cycle unflushed.
-async function renderAdmin(viewResourceContextParams?: ViewResourceContextParams) {
+async function renderAdmin(
+  viewResourceContextParams?: ViewResourceContextParams,
+  decoratorComponent?: ScopeInterface["decoratorComponent"]
+) {
   let result!: ReturnType<typeof render>
 
   await act(async () => {
@@ -93,12 +96,35 @@ async function renderAdmin(viewResourceContextParams?: ViewResourceContextParams
         configuration={{
           scopes: { admin: async () => adminScope },
           defaultScope: "admin",
+          decoratorComponent,
         }}
       />
     )
   })
 
   return result
+}
+
+const helpMenu = [
+  { name: "Documentation", href: "https://example.com/docs" },
+  { name: "Contact", href: "mailto:support@example.com" },
+  createItemMenuWithResource({ resource: usersResource }),
+]
+
+function mockNarrowScreen() {
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query) =>
+      ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      }) as MediaQueryList
+  )
 }
 
 describe("AdminLayout", () => {
@@ -131,19 +157,7 @@ describe("AdminLayout", () => {
   })
 
   it("swaps the sidebar for a bottom navigation bar on narrow screens", async () => {
-    vi.spyOn(window, "matchMedia").mockImplementation(
-      (query) =>
-        ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addEventListener: () => {},
-          removeEventListener: () => {},
-          addListener: () => {},
-          removeListener: () => {},
-          dispatchEvent: () => false,
-        }) as MediaQueryList
-    )
+    mockNarrowScreen()
 
     await renderAdmin()
 
@@ -228,5 +242,79 @@ describe("AdminLayout", () => {
     expect(content).toHaveAttribute("data-full-width", "true")
     // The side margins stay.
     expect(content).toHaveClass("px-4")
+  })
+
+  it("renders no sidebar footer when none is given", async () => {
+    await renderAdmin()
+
+    expect(document.querySelector('[data-slot="sidebar-footer"]')).toBeNull()
+    expect(screen.queryByRole("button", { name: "More" })).toBeNull()
+  })
+
+  it("pins the sidebarFooter at the bottom of the sidebar", async () => {
+    await renderAdmin(
+      undefined,
+      createAdminLayout({
+        sidebarFooter: <p>Plan: Pro</p>,
+      })
+    )
+
+    const footer = document.querySelector('[data-slot="sidebar-footer"]')
+    expect(footer).toHaveTextContent("Plan: Pro")
+  })
+
+  it("renders the footerMenu under its title, external links in a new tab", async () => {
+    await renderAdmin(
+      undefined,
+      createAdminLayout({
+        footerMenu: helpMenu,
+        footerMenuTitle: "Need help?",
+      })
+    )
+
+    const footer = document.querySelector('[data-slot="sidebar-footer"]')!
+    expect(footer).toHaveTextContent("Need help?")
+
+    const nav = screen.getByRole("navigation", { name: "Need help?" })
+    expect(footer).toContainElement(nav)
+
+    const docs = screen.getByRole("link", { name: "Documentation" })
+    expect(docs).toHaveAttribute("href", "https://example.com/docs")
+    expect(docs).toHaveAttribute("target", "_blank")
+    expect(docs).toHaveAttribute("rel", "noopener noreferrer")
+
+    const contact = screen.getByRole("link", { name: "Contact" })
+    expect(contact).toHaveAttribute("href", "mailto:support@example.com")
+    expect(contact).not.toHaveAttribute("target")
+
+    // A page of the application stays a router link, in the same tab.
+    const users = screen
+      .getAllByRole("link", { name: "Users" })
+      .find((link) => footer.contains(link))!
+    expect(users.getAttribute("href")).toContain("admin_users")
+    expect(users).not.toHaveAttribute("target")
+  })
+
+  it("lists the footerMenu behind a last entry of the bottom bar on narrow screens", async () => {
+    mockNarrowScreen()
+
+    await renderAdmin(
+      undefined,
+      createAdminLayout({
+        footerMenu: helpMenu,
+        footerMenuTitle: "Need help?",
+      })
+    )
+
+    expect(screen.queryByRole("link", { name: "Documentation" })).toBeNull()
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Need help?" }).click()
+    })
+
+    const docs = await screen.findByRole("link", { name: "Documentation" })
+    expect(docs).toHaveAttribute("href", "https://example.com/docs")
+    expect(docs).toHaveAttribute("target", "_blank")
+    expect(screen.getByRole("link", { name: "Contact" })).toBeInTheDocument()
   })
 })

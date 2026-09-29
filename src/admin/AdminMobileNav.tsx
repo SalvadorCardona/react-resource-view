@@ -1,25 +1,47 @@
-import { useState } from "react"
+import { ReactNode, useState } from "react"
+import { Ellipsis } from "lucide-react"
+import { Trans } from "react-mini-i18n"
 import { useNavigate } from "@/ports"
 import { useScopeContext } from "@/scope/Scope"
 import { MenuItemInterface } from "@/menu/menu"
 import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
-import { Button } from "@/ui/button"
+import { externalLinkProps, isExternalHref } from "@/internal/url/externalLink"
+import { Button, buttonVariants } from "@/ui/button"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/ui/drawer"
 import { cn } from "@/ui/cn"
+
+export interface AdminMobileNavProps {
+  /** The sidebar's footer block, shown at the bottom of the "more" drawer. */
+  footer?: ReactNode
+  /** The sidebar's footer links, listed in the "more" drawer. */
+  footerMenu?: MenuItemInterface[]
+  /** Names the "more" entry and its drawer — "More" when absent. */
+  footerMenuTitle?: string
+}
 
 /**
  * Bottom navigation bar for narrow screens, where a permanent sidebar would
  * take too much of the viewport. A top-level entry with children opens a
- * drawer listing them instead of a nested menu.
+ * drawer listing them instead of a nested menu; what the sidebar pins at its
+ * bottom goes behind a last "more" entry, in a drawer of its own.
  */
-export function AdminMobileNav() {
+export function AdminMobileNav({
+  footer,
+  footerMenu,
+  footerMenuTitle,
+}: AdminMobileNavProps) {
   const scope = useScopeContext()?.scope
   const isActive = useIsActiveMenuEntry()
   const navigate = useNavigate()
   const [openGroup, setOpenGroup] = useState<MenuItemInterface | null>(null)
+  const [footerOpen, setFooterOpen] = useState(false)
 
   const items = (scope?.menu ?? []).filter((item) => !item.hidden)
-  if (items.length === 0) return null
+  const footerItems = (footerMenu ?? []).filter((item) => !item.hidden)
+  const hasFooter = footerItems.length > 0 || !!footer
+  if (items.length === 0 && !hasFooter) return null
+
+  const moreLabel = footerMenuTitle ?? <Trans>More</Trans>
 
   const handleItemClick = (item: MenuItemInterface) => {
     const children = item.items?.filter((subItem) => !subItem.hidden) ?? []
@@ -54,6 +76,16 @@ export function AdminMobileNav() {
             </Button>
           )
         })}
+        {hasFooter && (
+          <Button
+            variant="ghost"
+            onClick={() => setFooterOpen(true)}
+            className="mx-1 flex min-w-16 flex-col items-center gap-0.5 rounded-lg p-3 text-foreground"
+          >
+            <Ellipsis className="size-5" />
+            <span className="fc text-xs whitespace-nowrap">{moreLabel}</span>
+          </Button>
+        )}
       </div>
 
       <Drawer
@@ -90,6 +122,50 @@ export function AdminMobileNav() {
           </div>
         </DrawerContent>
       </Drawer>
+
+      {hasFooter && (
+        <Drawer open={footerOpen} onOpenChange={setFooterOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>{moreLabel}</DrawerTitle>
+            </DrawerHeader>
+            <div className="grid gap-3 overflow-y-auto p-4 pt-0">
+              {footerItems.map((item) => {
+                const Icon = item.icon
+                const content = (
+                  <>
+                    {Icon && <Icon className="size-5 shrink-0" />}
+                    <span className="fc font-medium">{item.name}</span>
+                  </>
+                )
+
+                return isExternalHref(item.href) ? (
+                  <a
+                    key={item.name}
+                    {...externalLinkProps(item.href!)}
+                    className={buttonVariants({ variant: "outline" })}
+                    onClick={() => setFooterOpen(false)}
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <Button
+                    key={item.name}
+                    variant={isActive(item) ? "default" : "outline"}
+                    onClick={() => {
+                      setFooterOpen(false)
+                      handleItemClick(item)
+                    }}
+                  >
+                    {content}
+                  </Button>
+                )
+              })}
+              {footer}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
     </div>
   )
 }

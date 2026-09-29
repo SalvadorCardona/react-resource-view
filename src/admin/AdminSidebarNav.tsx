@@ -5,6 +5,7 @@ import { useScopeContext } from "@/scope/Scope"
 import { MenuItemInterface } from "@/menu/menu"
 import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
 import { cn } from "@/ui/cn"
+import { externalLinkProps, isExternalHref } from "@/internal/url/externalLink"
 import { ScrollArea } from "@/ui/scroll-area"
 import {
   Collapsible,
@@ -47,17 +48,34 @@ function writeOpenGroups(groups: Record<string, boolean>) {
   }
 }
 
+export interface AdminSidebarNavProps {
+  logo?: React.ReactNode
+  /** Pinned at the bottom of the sidebar, below `footerMenu`. */
+  footer?: React.ReactNode
+  /** Links pinned at the bottom of the sidebar — help, support, docs... */
+  footerMenu?: MenuItemInterface[]
+  /** Heading above `footerMenu` — "Need help?". */
+  footerMenuTitle?: string
+}
+
 /**
  * The desktop sidebar of a ready-made admin layout: the scope's `menu`
  * rendered as a two-level navigation, with sub-groups collapsible and their
- * open state remembered across reloads.
+ * open state remembered across reloads, and an optional block pinned at the
+ * bottom.
  *
  * Nothing here is specific to a project — swap it out entirely by passing a
  * different `decoratorComponent` to a scope if this shape doesn't fit.
  */
-export function AdminSidebarNav({ logo }: { logo?: React.ReactNode }) {
+export function AdminSidebarNav({
+  logo,
+  footer,
+  footerMenu,
+  footerMenuTitle,
+}: AdminSidebarNavProps) {
   const scope = useScopeContext()?.scope
   const items = (scope?.menu ?? []).filter((item) => !item.hidden)
+  const footerItems = (footerMenu ?? []).filter((item) => !item.hidden)
 
   return (
     <Sidebar>
@@ -75,8 +93,43 @@ export function AdminSidebarNav({ logo }: { logo?: React.ReactNode }) {
           </ScrollArea>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      {(footerItems.length > 0 || footer) && (
+        <SidebarFooter>
+          {footerItems.length > 0 && (
+            <nav aria-label={footerMenuTitle}>
+              {footerMenuTitle && (
+                <div className="fc px-3 pb-1 text-xs font-medium text-muted-foreground">
+                  {footerMenuTitle}
+                </div>
+              )}
+              <SidebarMenu>
+                {footerItems.map((item) =>
+                  isExternalHref(item.href) ? (
+                    <SidebarMenuItem key={item.name}>
+                      <ExternalNavLink item={item} />
+                    </SidebarMenuItem>
+                  ) : (
+                    <NavItem key={item.name} item={item} />
+                  )
+                )}
+              </SidebarMenu>
+            </nav>
+          )}
+          {footer}
+        </SidebarFooter>
+      )}
     </Sidebar>
+  )
+}
+
+// Leaves the application: a plain anchor, not a router link that would try to
+// resolve it as one of its pages.
+function ExternalNavLink({ item }: { item: MenuItemInterface }) {
+  return (
+    <SidebarMenuButton render={<a {...externalLinkProps(item.href!)} />}>
+      {item.icon && <item.icon />}
+      <span className="fc">{item.name}</span>
+    </SidebarMenuButton>
   )
 }
 

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/admin-layout")({
       {
         name: "description",
         content:
-          "AdminLayout: a ready-made decoratorComponent — a collapsible sidebar built from the scope's menu, a top bar with a breadcrumb, a page header naming the record, a bottom bar on narrow screens, and full-width views for boards and calendars.",
+          "AdminLayout: a ready-made decoratorComponent — a collapsible sidebar built from the scope's menu, a top bar with a breadcrumb, a page header naming the record, a block pinned at the bottom of the sidebar, a bottom bar on narrow screens, and full-width views for boards and calendars.",
       },
     ],
   }),
@@ -79,6 +79,27 @@ export const adminScope: ScopeInterface = {
   menu: [/* … */],
 }`
 
+const FOOTER = `import { BookOpen, Github, Mail } from "lucide-react"
+import { createAdminLayout } from "react-resource-view"
+
+decoratorComponent: createAdminLayout({
+  footerMenuTitle: "Need help?",
+  footerMenu: [
+    // An absolute URL opens in a new tab…
+    { name: "Documentation", icon: BookOpen, href: "https://example.com/docs" },
+    { name: "GitHub", icon: Github, href: "https://github.com/acme/app" },
+    // …a mailto: hands over to the mail client…
+    { name: "Contact", icon: Mail, href: "mailto:support@example.com" },
+    // …and a page of the application stays in it.
+    createItemMenuWithResource({ resource: faq }),
+  ],
+})`
+
+const FOOTER_NODE = `decoratorComponent: createAdminLayout({
+  // Anything at all, under the footerMenu when there is one.
+  sidebarFooter: <PlanBadge />,
+})`
+
 const HEADER = `views: {
   [ActionList.update]: {
     // The field that names an account, instead of \`title\` or \`name\`.
@@ -132,6 +153,7 @@ function AdminLayoutPage() {
         { id: "usage", title: "Pointing a scope at it" },
         { id: "menu", title: "The navigation" },
         { id: "options", title: "A logo, a search, a user menu" },
+        { id: "footer", title: "The bottom of the sidebar" },
         { id: "header", title: "The page header" },
         { id: "full-width", title: "Full width" },
         { id: "theme", title: "Theme and dark mode" },
@@ -228,6 +250,39 @@ function AdminLayoutPage() {
         playground puts its link to the builder there.
       </P>
 
+      <H2 id="footer">The bottom of the sidebar</H2>
+
+      <P>
+        Help, support, documentation — the links an application keeps out of the way
+        of its pages go in a block pinned at the bottom of the sidebar.{" "}
+        <C>footerMenu</C> takes menu entries, drawn like the scope&apos;s menu, under
+        an optional <C>footerMenuTitle</C>:
+      </P>
+
+      <CodeBlock filename="scopes/admin.ts">{FOOTER}</CodeBlock>
+
+      <P>
+        For something else than links — a plan badge, a card, a button —{" "}
+        <C>sidebarFooter</C> takes any node:
+      </P>
+
+      <CodeBlock>{FOOTER_NODE}</CodeBlock>
+
+      <P>
+        Without either, the sidebar has no footer at all. On a phone, both go behind
+        a last entry of the bottom bar, named after <C>footerMenuTitle</C> —
+        &laquo;&nbsp;More&nbsp;&raquo; without one — which opens them in a drawer.
+        The playground&apos;s back office has a &laquo;&nbsp;Need help?&nbsp;&raquo;
+        block of this kind.
+      </P>
+
+      <Callout kind="note" title="Since 0.12">
+        <P>
+          <C>sidebarFooter</C>, <C>footerMenu</C> and <C>footerMenuTitle</C> arrived
+          in react-resource-view 0.12.
+        </P>
+      </Callout>
+
       <H2 id="header">The page header</H2>
 
       <P>
@@ -297,7 +352,8 @@ function AdminLayoutPage() {
       <P>
         Below the <C>md</C> breakpoint the sidebar is replaced with a bottom
         navigation bar; a menu entry with children opens a drawer instead of a
-        nested menu. Nothing to configure — <C>AdminLayout</C> switches on the
+        nested menu, and the bottom of the sidebar goes behind a last
+        &laquo;&nbsp;more&nbsp;&raquo; entry. Nothing to configure — <C>AdminLayout</C> switches on the
         viewport width itself.
       </P>
 
@@ -308,7 +364,7 @@ function AdminLayoutPage() {
       <Ul>
         <Li>
           <C>AdminSidebarNav</C> — the desktop sidebar, built from the scope&apos;s
-          menu.
+          menu, with its footer.
         </Li>
         <Li>
           <C>AdminTopBar</C> — sticky top bar: the sidebar toggle, the breadcrumb,
@@ -339,6 +395,29 @@ function AdminLayoutPage() {
             type: "ReactNode",
             description:
               "Rendered at the end of the top bar — a search field, a user menu…",
+          },
+          {
+            name: "footerMenu",
+            type: "MenuItemInterface[]",
+            description: (
+              <>
+                Links pinned at the bottom of the sidebar, drawn like the menu. An
+                absolute <C>href</C> opens in a new tab. On mobile, in the drawer of
+                the bottom bar&apos;s last entry.
+              </>
+            ),
+          },
+          {
+            name: "footerMenuTitle",
+            type: "string",
+            description:
+              "Heading above footerMenu — “Need help?”; names the last entry of the bottom bar on mobile.",
+          },
+          {
+            name: "sidebarFooter",
+            type: "ReactNode",
+            description:
+              "Pinned at the bottom of the sidebar, under footerMenu. On mobile, in the same drawer.",
           },
         ]}
       />
