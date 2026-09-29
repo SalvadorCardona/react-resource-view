@@ -44,6 +44,8 @@ interface BlockBuilderInputInterface extends FormInputInterface<BuilderBlock[]> 
   forms?: string[]
   /** What the empty list offers to add, in the reader's words. */
   addLabel?: string
+  /** What the button under a list that already has blocks says. */
+  appendLabel?: string
 }
 
 export function createBlockBuilderInput(
@@ -230,7 +232,7 @@ function BlockBuilderInputController({
           onOpen={() => setPaletteAt(blocks.length)}
           onClose={() => setPaletteAt(undefined)}
           onPick={(form) => insert(form, blocks.length)}
-          last
+          appendLabel={formInput.appendLabel ?? "Add a block"}
         />
       )}
     </div>
@@ -244,6 +246,10 @@ function BlockBuilderInputController({
  * end", so building a page in the order one thinks of it means adding then
  * dragging. Here the `+` belongs to an interval, and the palette opens knowing
  * which one.
+ *
+ * The last interval is the one people add from, so it is not a `+` waiting for
+ * a hover: it is a labelled button the width of the list, readable at rest and
+ * tall enough for a thumb.
  */
 function Gap({
   open,
@@ -252,7 +258,7 @@ function Gap({
   onOpen,
   onClose,
   onPick,
-  last,
+  appendLabel,
 }: {
   open: boolean
   dropping: boolean
@@ -260,7 +266,8 @@ function Gap({
   onOpen: () => void
   onClose: () => void
   onPick: (form: FormResourceItem) => void
-  last?: boolean
+  /** Set on the last interval only, which draws a button rather than a `+`. */
+  appendLabel?: string
 }) {
   if (open) {
     return (
@@ -300,16 +307,36 @@ function Gap({
     )
   }
 
+  /* Where the dragged block would land — two pixels, between the right pair
+     of cards, instead of the whole target card changing colour. */
+  const dropLine = (
+    <span
+      className={cn(
+        "absolute inset-x-0 h-0.5 rounded-full transition",
+        dropping ? "bg-primary" : "bg-transparent"
+      )}
+    />
+  )
+
+  if (appendLabel !== undefined) {
+    return (
+      <div>
+        <div className="relative flex h-2 items-center">{dropLine}</div>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-muted-foreground/50 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-primary hover:bg-primary/5 hover:text-primary focus-visible:border-primary focus-visible:bg-primary/5 focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+        >
+          <Plus className="size-4 shrink-0" />
+          {appendLabel}
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className={cn("group/gap relative flex h-2 items-center", last && "h-6")}>
-      {/* Where the dragged block would land — two pixels, between the right
-          pair of cards, instead of the whole target card changing colour. */}
-      <span
-        className={cn(
-          "absolute inset-x-0 h-0.5 rounded-full transition",
-          dropping ? "bg-primary" : "bg-transparent"
-        )}
-      />
+    <div className="group/gap relative flex h-2 items-center">
+      {dropLine}
       <button
         type="button"
         onClick={onOpen}

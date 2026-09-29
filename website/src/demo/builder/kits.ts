@@ -66,6 +66,7 @@ export const resumeForm: FormInterface = {
       label: "Sections",
       forms: [RESUME_BLOCK],
       addLabel: "Add a first section",
+      appendLabel: "Add a section",
     }),
   },
 }
