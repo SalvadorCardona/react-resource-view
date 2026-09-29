@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { Blocks, Newspaper, ShoppingBag } from "lucide-react"
+import { Blocks, BookOpen, Bug, Github, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   createAdminLayout,
@@ -39,6 +39,36 @@ function BuilderLink() {
 }
 
 /**
+ * A "Need help?" block pinned at the bottom of the sidebar — on a phone, a
+ * last entry of the bottom bar opening the same links in a drawer. Absolute
+ * URLs, so each one opens in a new tab and the playground stays where it was.
+ *
+ * Spread rather than written out in `createAdminLayout`: `footerMenu` arrived
+ * in react-resource-view 0.12, and a spread keeps this scope compiling against
+ * whichever release the site is installed on.
+ */
+const HELP_FOOTER = {
+  footerMenuTitle: "Need help?",
+  footerMenu: [
+    {
+      name: "Documentation",
+      icon: BookOpen,
+      href: "https://cardona.digital/react-resource-view/docs/resource-view/admin-layout",
+    },
+    {
+      name: "GitHub",
+      icon: Github,
+      href: "https://github.com/SalvadorCardona/react-resource-view",
+    },
+    {
+      name: "Report an issue",
+      icon: Bug,
+      href: "https://github.com/SalvadorCardona/react-resource-view/issues",
+    },
+  ],
+}
+
+/**
  * The back office of the playground: one area, eight resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
@@ -66,7 +96,10 @@ export const adminScope: ScopeInterface = {
     ordersResource,
     tasksResource,
   ],
-  decoratorComponent: createAdminLayout({ topBarEnd: <BuilderLink /> }),
+  decoratorComponent: createAdminLayout({
+    topBarEnd: <BuilderLink />,
+    ...HELP_FOOTER,
+  }),
   // Where the scope opens when the URL names it and nothing else.
   defaultViewResourceContextParams: {
     resourceId: overviewResource["@id"],
