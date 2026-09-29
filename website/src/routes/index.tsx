@@ -16,6 +16,14 @@ import {
   Sparkles,
   Terminal,
 } from "lucide-react"
+import {
+  BackendsIllustration,
+  DictionaryIllustration,
+  LayoutsIllustration,
+  PortsIllustration,
+  UrlIllustration,
+  ValidationIllustration,
+} from "@/components/FeatureIllustrations"
 import { Header } from "@/components/Header"
 import { HeroBackdrop } from "@/components/HeroBackdrop"
 import { HomeBuilder } from "@/components/HomeBuilder"
@@ -487,31 +495,37 @@ function Layouts() {
 const FEATURES = [
   {
     icon: Link2,
+    illustration: UrlIllustration,
     title: "The URL is the state",
     body: "Filters, pagination, the chosen layout and the open item all live in the address bar. A shared link reopens exactly what the sender was looking at.",
   },
   {
     icon: PlugZap,
+    illustration: PortsIllustration,
     title: "Ports, not assumptions",
     body: "Neither package knows your router, your API client or your brand. Each touch point is a port with a default, injected once at startup.",
   },
   {
     icon: Boxes,
+    illustration: BackendsIllustration,
     title: "API Platform, Strapi, Supabase",
     body: "A dialect holds what each backend spells differently — pages, filters, envelopes, errors — so one declared resource renders against any of the three, or a fourth you write.",
   },
   {
     icon: ShieldCheck,
+    illustration: ValidationIllustration,
     title: "Validation on both sides",
     body: "A validator per field for the browser, and a mapper that puts a 422 from the server back on the fields that caused it.",
   },
   {
     icon: Languages,
+    illustration: DictionaryIllustration,
     title: "One dictionary",
     body: "Labels go through react-mini-i18n, so your application and the libraries translate from the same place.",
   },
   {
     icon: LayoutGrid,
+    illustration: LayoutsIllustration,
     title: "Seven layouts, and yours",
     body: "Table, cards, item list, columns, split, calendar and timeline — declared side by side, switched by the reader. An eighth of your own is one command and one file.",
   },
@@ -525,7 +539,7 @@ function Features() {
       </h2>
 
       <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map(({ icon: Icon, title, body }) => (
+        {FEATURES.map(({ icon: Icon, illustration: Illustration, title, body }) => (
           <article
             key={title}
             className="group relative bg-background p-6 transition-colors hover:bg-muted/40"
@@ -534,8 +548,16 @@ function Features() {
               className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100"
               aria-hidden
             />
-            <Icon className="size-5 text-primary transition-transform duration-300 group-hover:-translate-y-0.5" />
-            <h3 className="mt-4 font-semibold tracking-tight">{title}</h3>
+            <div className="mb-5 rounded-xl border border-border bg-muted/30 p-2">
+              <Illustration />
+            </div>
+            <h3 className="flex items-center gap-2 font-semibold tracking-tight">
+              <Icon
+                className="size-4 shrink-0 text-primary transition-transform duration-300 group-hover:-translate-y-0.5"
+                aria-hidden
+              />
+              {title}
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {body}
             </p>

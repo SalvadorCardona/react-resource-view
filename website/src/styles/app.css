@@ -362,6 +362,47 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   The landing's feature drawings
+   Two small loops: the layout the reader picks moves on one thumbnail a beat,
+   and the 422 flows back from the server onto its field. Without motion, the
+   first layout stays picked and the arrow stays still.
+   -------------------------------------------------------------------------- */
+
+@layer components {
+  .feature-layout-pick {
+    opacity: 0;
+    animation: feature-layout-pick 7s linear infinite;
+  }
+
+  @keyframes feature-layout-pick {
+    0% {
+      opacity: 0;
+    }
+    2%,
+    12.5% {
+      opacity: 1;
+    }
+    14.3%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .feature-flow {
+    animation: feature-flow 1.2s linear infinite;
+  }
+
+  @keyframes feature-flow {
+    from {
+      stroke-dashoffset: 16;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
 /* Shiki renders both themes at once; the unused one is switched off in CSS so
    toggling the site theme costs no re-highlight. */
 .shiki,
@@ -382,8 +423,14 @@
 
   /* The hero reads the same without any of it. */
   .aurora,
-  .rise {
+  .rise,
+  .feature-layout-pick,
+  .feature-flow {
     animation: none;
+  }
+
+  .feature-layout-pick[data-resting] {
+    opacity: 1;
   }
 
   .rise {
