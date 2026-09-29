@@ -4,6 +4,8 @@ import { createItemMenuWithResource, createViewResource } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
 import { AdminLayout } from "@/admin/AdminLayout"
 import { ScopeInterface } from "@/scope/scopeInterface"
+import { ViewResourceContextParams } from "@/ViewResourceContext"
+import { ActionList } from "react-data-form"
 
 /**
  * `AdminLayout` used as a scope's `decoratorComponent`: a ready-made admin
@@ -23,6 +25,17 @@ function ArticleList() {
 const articlesResource = createViewResource<Article>("admin_articles", {
   name: "Articles",
   scope: "admin",
+  canRead: true,
+  canUpdate: true,
+  canDelete: true,
+  getItem: async () => ({
+    data: {
+      "@id": "/api/articles/1",
+      "@type": "Article",
+      id: "1",
+      title: "Describing a form as data",
+    },
+  }),
   getCollection: async () => ({
     data: {
       "@id": "admin_articles",
@@ -45,6 +58,7 @@ const usersResource = createViewResource<Article>("admin_users", {
 
 const adminScope: ScopeInterface = {
   name: "admin",
+  label: "Back office",
   decoratorComponent: AdminLayout,
   resources: [articlesResource, usersResource],
   menu: [
@@ -59,12 +73,13 @@ const adminScope: ScopeInterface = {
 // `configuration.scopes` resolves the scope through `use()`, inside the
 // `Suspense` boundary `ResourceViewProvider` sets up for that. Rendering
 // outside `act` leaves that first suspend-and-resolve cycle unflushed.
-async function renderAdmin() {
+async function renderAdmin(viewResourceContextParams?: ViewResourceContextParams) {
   let result!: ReturnType<typeof render>
 
   await act(async () => {
     result = render(
       <ResourceViewProvider
+        viewResourceContextParams={viewResourceContextParams}
         configuration={{
           scopes: { admin: async () => adminScope },
           defaultScope: "admin",
@@ -125,5 +140,61 @@ describe("AdminLayout", () => {
     expect(screen.getByRole("heading", { name: "Articles" })).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: "Articles" })).toBeNull()
     expect(screen.getByRole("button", { name: "Articles" })).toBeInTheDocument()
+  })
+
+  it("names the record being edited, and leads back to its list", async () => {
+    // The regression this guards: an edit page titled "Edit — Articles" and
+    // nothing else, under a top bar with nothing in it — which record, and
+    // how to get back, were left for the reader to work out.
+    await renderAdmin({
+      scope: "admin",
+      resourceId: articlesResource["@id"],
+      resourceAction: ActionList.update,
+      id: "1",
+    })
+
+    expect(
+      await screen.findByRole("heading", { name: "Describing a form as data" })
+    ).toBeInTheDocument()
+    expect(screen.getByText("Edit — Articles · #1")).toBeInTheDocument()
+
+    const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" })
+    expect(breadcrumb).toHaveTextContent("Back office")
+    expect(breadcrumb).toHaveTextContent("Describing a form as data")
+
+    const backLinks = screen
+      .getAllByRole("link", { name: "Articles" })
+      .filter((link) => link.getAttribute("href")?.includes("admin_articles/list"))
+    // The one in the breadcrumb, and the one above the title.
+    expect(backLinks.length).toBeGreaterThanOrEqual(2)
+
+    expect(screen.getByRole("button", { name: "delete" })).toBeInTheDocument()
+  })
+
+  it("lets a view write its own title and actions", async () => {
+    const view = articlesResource.views!.update!
+    const components = view.components
+    view.components = {
+      ...components,
+      title: () => <h2>Custom title</h2>,
+      actions: () => <button>Publish</button>,
+    }
+
+    try {
+      await renderAdmin({
+        scope: "admin",
+        resourceId: articlesResource["@id"],
+        resourceAction: ActionList.update,
+        id: "1",
+      })
+
+      expect(
+        await screen.findByRole("heading", { name: "Custom title" })
+      ).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: "delete" })).toBeNull()
+    } finally {
+      view.components = components
+    }
   })
 })
