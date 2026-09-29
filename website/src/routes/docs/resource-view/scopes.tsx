@@ -247,7 +247,7 @@ function Scopes() {
           in an application, and the wrong one for an example sitting in a page of
           prose — which is why the demos below pass <C>resources</C> directly, while
           the <A href="/playground">playground</A>, being a real application,
-          declares two lazily loaded scopes: a back office and the demos' own.
+          declares its back office as a lazily loaded scope.
         </P>
       </Callout>
 

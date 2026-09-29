@@ -29,8 +29,8 @@ export const Route = createFileRoute("/playground/")({
  * navigation and the page heading around them are `AdminLayout`, which is what
  * the package calls an admin template.
  *
- * The view context is read back out of the URL with `parseLink`, so a link
- * copied from a documentation demo lands here on the same item.
+ * The view context is read back out of the URL with `parseLink`, so every
+ * screen of the back office is a link that can be shared.
  */
 function PlaygroundRoute() {
   return (
@@ -40,26 +40,30 @@ function PlaygroundRoute() {
   )
 }
 
+// One import() per area, which is the split point: the documentation pages,
+// which embed their demos directly, never download the administration.
+const SCOPES = {
+  admin: () => import("@/demo/playground/adminScope").then((m) => m.adminScope),
+}
+
 function Playground() {
   // The query string alone, never the path: in query mode the whole context
   // lives in one parameter, and handing the pathname to `parseLink` would read
   // "playground" — or the repository prefix GitHub Pages serves the site under
   // — as the scope of a view.
   const searchStr = useRouterState({ select: (state) => state.location.searchStr })
+  const params = parseLink(searchStr)
 
   return (
     <ResourceViewProvider
-      viewResourceContextParams={parseLink(searchStr)}
+      // A link naming a scope the playground does not declare — the old
+      // `docs` area, shared or bookmarked before it was retired — opens the
+      // back office where it starts, rather than failing to load that scope.
+      viewResourceContextParams={
+        params.scope && !(params.scope in SCOPES) ? undefined : params
+      }
       configuration={{
-        // One import() per area, which is the split point: opening the
-        // playground downloads the administration, following a link from a
-        // documentation page downloads the demos, and neither pays for the
-        // other.
-        scopes: {
-          admin: () =>
-            import("@/demo/playground/adminScope").then((m) => m.adminScope),
-          docs: () => import("@/demo/playground/docsScope").then((m) => m.docsScope),
-        },
+        scopes: SCOPES,
         // A URL naming no scope opens the back office; each scope decides for
         // itself which of its resources that means.
         defaultScope: "admin",
