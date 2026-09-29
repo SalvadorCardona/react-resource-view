@@ -35,11 +35,11 @@ function LandingPage() {
       <Header />
       <main>
         <Hero />
-        <DemoVideo />
         <Packages />
         <OneDescription />
         <Story />
         <Layouts />
+        <DemoVideo />
         <Features />
         <Closing />
       </main>
@@ -145,26 +145,33 @@ function Hero() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The page builder, filmed: a minute of the playground doing what the rest of
- * this page describes. The video sits in public/, so its URL carries the same
- * /<repository>/ prefix as every other asset; it only loads its metadata until
- * the reader presses play.
+ * What the two packages build together, filmed: the page builder is not a
+ * third product but a form (the blocks) whose records a resource lists and
+ * reopens. The video sits in public/, so its URL carries the same /<repository>/
+ * prefix as every other asset; it only loads its metadata until the reader
+ * presses play.
  */
 function DemoVideo() {
   const base = import.meta.env.BASE_URL
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pt-20 lg:px-8">
+    <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
       <header className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-medium uppercase tracking-wider text-primary">
-          See it in action
+        <p className="bg-gradient-to-r from-form to-view bg-clip-text text-xs font-medium uppercase tracking-wider text-transparent">
+          Forms + views
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-          A page builder, declared as data
+          Put the two together and you get a page builder
         </h2>
         <p className="mt-3 text-muted-foreground">
-          Blocks on the left, the live page on the right, and the JSON behind it —
-          all of it from one form declaration.
+          A page builder is not a third package. The blocks you stack and edit are a{" "}
+          <strong className="font-medium whitespace-nowrap text-foreground">react-data-form</strong>{" "}
+          form, saved as plain JSON; once published, the page is a record of a{" "}
+          <strong className="font-medium whitespace-nowrap text-foreground">
+            react-resource-view
+          </strong>{" "}
+          resource — listed, filtered and reopened in the back office like any
+          other. The same pairing gives you a CV editor, a product sheet or a blog.
         </p>
       </header>
 
