@@ -32,6 +32,7 @@ const CV_FORM: FormInterface = {
       label: "Sections",
       forms: [RESUME_BLOCK],
       addLabel: "Start this CV",
+      appendLabel: "Add a section",
     }),
   },
 }
