@@ -72,6 +72,22 @@ const menuResource = createViewResource<Article>("tabs_companies", {
   },
 })
 
+function Summary() {
+  return <p>Summary</p>
+}
+
+// The left column of a record beside the default, scrolling bar.
+const summaryResource = createViewResource<Article>("tabs_accounts", {
+  name: "Accounts",
+  scope: "tabs",
+  getCollection: async () => ({ data: collection("tabs_accounts") }),
+  view: {
+    name: "Accounts",
+    listComponent: ArticleList,
+    subViewResource: { viewComponent: Summary, list: subViewList },
+  },
+})
+
 /** Answers every query the way a screen of that width would. */
 function screenWidth(width: number) {
   window.matchMedia = (query: string) =>
@@ -91,7 +107,13 @@ function renderView(resourceId: string) {
     <ResourceViewProvider
       viewResourceContextParams={{ scope: "tabs", resourceId }}
       configuration={{
-        resources: [barResource, menuResource, commentsResource, invoicesResource],
+        resources: [
+          barResource,
+          menuResource,
+          summaryResource,
+          commentsResource,
+          invoicesResource,
+        ],
         defaultScope: "tabs",
       }}
     />
@@ -154,5 +176,27 @@ describe("the navigation between sub-views", () => {
       container.querySelector('[data-slot="tabs"][data-orientation="vertical"]')
     ).toBeNull()
     expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull()
+  })
+
+  // A grid item is at least as wide as its content: beside the left column the
+  // tabs' track used to grow to the whole row of tabs, and the page scrolled
+  // sideways rather than the bar. jsdom lays nothing out, so the classes that
+  // bound the track are what is checked.
+  it("keeps the bar within its column beside a left column", async () => {
+    wideScreen()
+    const { container } = renderView("tabs_accounts")
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Comments" })).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Summary")).toBeInTheDocument()
+    const tabs = container.querySelector(
+      '[data-slot="tabs"][data-orientation="horizontal"]'
+    )!
+    expect(tabs).toHaveClass("min-w-0")
+    expect(tabs).toContainElement(
+      container.querySelector('[data-slot="scroll-area"]') as HTMLElement
+    )
   })
 })
