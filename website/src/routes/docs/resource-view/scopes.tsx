@@ -21,6 +21,7 @@ export const Route = createFileRoute("/docs/resource-view/scopes")({
 
 const SCOPE = `import type { ScopeInterface } from "react-resource-view"
 import { UnauthorizedError } from "react-resource-view"
+import { authClient } from "../auth-client"
 
 export const adminScope: ScopeInterface = {
   name: "admin",
@@ -32,8 +33,10 @@ export const adminScope: ScopeInterface = {
     createItemMenuWithResource({ resource: authors }),
     { name: "Reports", href: "/admin/reports", icon: BarChart },
   ],
-  authorization: () => {
-    if (!isLogged()) throw new UnauthorizedError()
+  // Synchronous or async — the scope renders once it has answered.
+  authorization: async () => {
+    const { data } = await authClient.getSession()
+    if (!data) throw new UnauthorizedError()
     return true
   },
   decoratorComponent: AdminShell,
@@ -104,8 +107,10 @@ function Scopes() {
           different scopes.
         </Li>
         <Li>
-          <strong>An authorisation boundary.</strong> One function decides access to
-          everything inside.
+          <strong>An authorisation boundary.</strong> One function, synchronous or
+          async, decides access to everything inside —{" "}
+          <A href="/docs/resource-view/authentication">Authentication</A> wires it
+          to a real session.
         </Li>
         <Li>
           <strong>A code-splitting boundary.</strong> Scopes are loaded lazily, so an
@@ -161,13 +166,25 @@ function Scopes() {
           },
           {
             name: "authorization",
-            type: "() => boolean",
+            type: "() => boolean | Promise<boolean>",
             description: (
               <>
-                Throws <C>UnauthorizedError</C> (401) or <C>ForbiddenError</C> (403)
-                to refuse.
+                Throws or rejects with <C>UnauthorizedError</C> (401) or{" "}
+                <C>ForbiddenError</C> (403) to refuse; <C>false</C> counts as a 403.
+                Nothing of the scope renders until it has answered — see{" "}
+                <A href="/docs/resource-view/authentication">Authentication</A>.
               </>
             ),
+          },
+          {
+            name: "authorizationFallback",
+            type: "ReactNode",
+            description: "Shown while authorization is pending.",
+          },
+          {
+            name: "forbiddenFallback",
+            type: "ReactNode",
+            description: "Shown on a 403 instead of the scope.",
           },
           {
             name: "decoratorComponent",
@@ -231,7 +248,19 @@ function Scopes() {
             name: "onUnauthorized",
             type: "() => void",
             description:
-              "Called when an authorisation throws. Where you redirect to sign-in.",
+              "Called when an authorisation throws or rejects with a 401. Where you redirect to sign-in.",
+          },
+          {
+            name: "authorizationFallback",
+            type: "ReactNode",
+            description:
+              "Shown while a scope's authorization is pending, unless the scope sets its own.",
+          },
+          {
+            name: "forbiddenFallback",
+            type: "ReactNode",
+            description:
+              "Shown on a 403, unless the scope sets its own. Defaults to an “Access denied” message.",
           },
           {
             name: "scopeFallback",
