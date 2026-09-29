@@ -12,7 +12,7 @@ import {
  * component.
  *
  * A sub-view is rendered inside the record's own view, so
- * `useCurrentViewResourceContext` hands back the user being edited.
+ * `useCurrentViewResourceContext` hands back the account on screen.
  */
 export function UserActivity() {
   const user = useCurrentViewResourceContext()?.data as User | undefined
