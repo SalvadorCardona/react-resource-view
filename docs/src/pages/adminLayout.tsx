@@ -5,8 +5,14 @@ import adminLayoutDemoResource from "./adminLayoutDemo"
 
 const blocks: [string, string][] = [
   ["AdminSidebarNav", "The desktop sidebar, built from the scope's menu"],
-  ["AdminTopBar", "Sticky top bar: the sidebar toggle, and a slot for the rest"],
-  ["AdminHeader", "Page title, and the sub-navigation tabs a menu group opts into"],
+  [
+    "AdminTopBar",
+    "Sticky top bar: the sidebar toggle, the breadcrumb, and a slot for the rest",
+  ],
+  [
+    "AdminHeader",
+    "Page header: back to the list, the record's name, its actions, and the sub-navigation tabs a menu group opts into",
+  ],
   [
     "AdminMobileNav",
     "Bottom navigation bar, in place of the sidebar on narrow screens",
@@ -54,6 +60,19 @@ const adminLayoutResource = createViewResource("admin-layout", {
           intro="decoratorComponent only ever receives children, so AdminLayout itself takes no props there — createAdminLayout bakes them in instead."
         >
           <CodeBlock>{withOptions}</CodeBlock>
+        </Section>
+
+        <Section
+          title="The page header"
+          intro="On a record, the header says which one is on screen and how to get back: a link to the list, the record's name as the title, the action and its id underneath, and the actions still worth offering — edit from the read page, delete from either."
+        >
+          <p>
+            The name is read from <code>title</code>, <code>name</code> or{" "}
+            <code>label</code>; a view names another field with <code>titleKey</code>
+            . The same name ends the breadcrumb in the top bar, after the scope's{" "}
+            <code>label</code> and the resource.
+          </p>
+          <CodeBlock>{headerOverrides}</CodeBlock>
         </Section>
 
         <Section
@@ -122,6 +141,18 @@ const adminScope: ScopeInterface = {
     topBarEnd: <UserMenu />,
   }),
   menu: [/* … */],
+}`
+
+const headerOverrides = `views: {
+  [ActionList.update]: {
+    // The field that names an account, instead of \`name\`.
+    titleKey: "email",
+    components: {
+      // Either of them, or both — the rest of the header stays.
+      title: () => <h2>…</h2>,
+      actions: () => <PublishButton />,
+    },
+  },
 }`
 
 export default adminLayoutResource

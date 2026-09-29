@@ -18,6 +18,12 @@ export interface ViewInterface<_Read = IdAbleInterface> {
   description?: string
   icon?: IconType
   identifierKey?: string
+  /**
+   * The field that names a record — `email` for an account known by its
+   * address. Read by the admin header and its breadcrumb to say which record
+   * is on screen; without it they try `title`, `name` and `label`.
+   */
+  titleKey?: string
   identifierKeyList?: ValueOptionInterface[]
   behavior?: {
     /**
@@ -79,6 +85,16 @@ export interface ViewInterface<_Read = IdAbleInterface> {
 
   components?: {
     navigation?: FC
+    /**
+     * The title of the admin header, in place of the record's name. The back
+     * link, the breadcrumb and the actions stay as they are.
+     */
+    title?: FC
+    /**
+     * The actions on the right of the admin header, in place of the ones it
+     * derives from the resource's permissions.
+     */
+    actions?: FC
     top?: FC
     bottom?: FC
     pagination?: FC
