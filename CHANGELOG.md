@@ -1,5 +1,64 @@
 # react-resource-view
 
+## 0.11.0
+
+### Minor Changes
+
+- 509f297: Name the record on screen in `AdminLayout`, instead of an empty top bar above a bare "Edit a user".
+
+  The top bar now carries a breadcrumb — the scope's `label`, the resource, the
+  record — where it used to hold nothing but the sidebar toggle. On a record, the
+  page header links back to the list, takes the record's name as its title (read
+  from `title`, `name` or `label`, or from the view's new `titleKey`), says the
+  action and the id underneath, and offers the actions still worth having there:
+  edit from the read page, delete from either — deleting goes back to the list.
+
+  A view overrides the title with `components.title` and the actions with
+  `components.actions`; `components.navigation` still replaces the whole header.
+
+- e9b26ae: Give a board, a calendar or a wide table the whole page in `AdminLayout`, instead of the column every view was squeezed into.
+
+  A view now takes `fullWidth`. Set on a resource's `view`, it covers every action
+  of the resource; on one of `views`, that action; on a list variant built by a
+  `*ViewOptionFactory`, that variant only. The most specific declaration wins, so
+  a resource drawn full width keeps its forms narrow with
+  `views: { update: { fullWidth: false } }`, and a board can be the one wide
+  layout of a list whose table stays in the column. `AdminLayout` drops its width
+  constraint for such a view and keeps its side margins; nothing changes for a
+  view that does not ask.
+
+  `isFullWidthView` resolves the option for the view on screen, for a
+  `decoratorComponent` of one's own that wants to honour it too.
+
+### Patch Changes
+
+- caa2c75: Light the sidebar entry of the page `AdminLayout` opens on, and unfold the group of the page on screen, instead of leaving the reader to find either.
+
+  A scope opened bare — `/playground`, `?view=admin` — shows the page its
+  `defaultViewResourceContextParams` name, but its URL names none, so no entry
+  was lit until the reader clicked on one. `useIsActiveItemMenu` now takes that
+  default view, and `AdminLayout` hands it the scope's.
+
+  A sub-entry on screen now unfolds its group, even one the reader had folded on
+  an earlier visit, and marks it with the accent colour, without the background
+  the page itself carries. The entry on screen also carries `aria-current="page"`.
+
+- 0b22ae2: Fold the admin sidebar away, and keep a menu entry lit on the page it points at.
+
+  Two things `AdminLayout` got wrong on the screen it is mostly read on. The top
+  bar's button only ever opened the mobile drawer, so on a wide screen — the one
+  place it is shown — pressing it did nothing; it now folds the sidebar column
+  away and back.
+
+  And a menu entry was matched against the address bar as a string, which held
+  only while the URL was exactly the one the entry was built from: opening a
+  record of a resource turned its entry off, and in query mode an application
+  whose views are mounted somewhere other than the configured `basePath` never
+  lit any entry at all. The comparison is now made context by context — scope,
+  resource, record — so an entry pointing at a list stays lit for everything
+  inside that list, while two entries on the same resource (its list, its
+  creation form) stay distinguishable.
+
 ## 0.10.0
 
 ### Minor Changes
