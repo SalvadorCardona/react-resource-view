@@ -167,10 +167,13 @@ export function MultiViewTab() {
         value={page}
         onValueChange={(newPage) => goToNextPage(newPage)}
         orientation={orientation}
+        // `min-w-0` because a grid item is as wide as its content at least: beside
+        // the left column the `1fr` track grew to the whole row of tabs, and the
+        // page scrolled sideways instead of the bar.
         className={
           orientation === "vertical"
             ? "w-full flex flex-row items-start gap-6"
-            : "w-full flex flex-col"
+            : "w-full min-w-0 flex flex-col"
         }
       >
         {orientation === "vertical" ? (

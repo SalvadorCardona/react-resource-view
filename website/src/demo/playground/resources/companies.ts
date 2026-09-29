@@ -1,4 +1,14 @@
-import { Building2, Users } from "lucide-react"
+import {
+  Building2,
+  Coffee,
+  FileText,
+  Handshake,
+  Inbox,
+  NotebookPen,
+  Receipt,
+  Truck,
+  Users,
+} from "lucide-react"
 import {
   ActionList,
   DatePickerInputController,
@@ -10,6 +20,10 @@ import {
   tableViewOptionFactory,
 } from "react-resource-view"
 import { CompanyRow } from "@/demo/playground/adminRows"
+import {
+  CompanySummary,
+  companyNothingYet,
+} from "@/demo/playground/CompanySummary"
 import {
   COMPANIES_ID,
   COMPANY_STATUSES,
@@ -76,7 +90,12 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
     // segment of the URL, so `/update/1/team` lands right back here.
     [ActionList.update]: {
       name: "Edit a company",
+      // The summary down the left and the default, scrolling bar beside it —
+      // with more tabs than there is room for, so the bar has to scroll within
+      // its column rather than push the page wider (posts has the column with
+      // a vertical menu, users the bar with no column).
       subViewResource: {
+        viewComponent: CompanySummary,
         list: [
           {
             slug: "team",
@@ -97,6 +116,48 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
                 defaultData: { company },
               }
             },
+          },
+          {
+            slug: "deliveries",
+            name: "Delivery schedule",
+            icon: Truck,
+            viewComponent: companyNothingYet("delivery"),
+          },
+          {
+            slug: "invoices",
+            name: "Invoices and payments",
+            icon: Receipt,
+            viewComponent: companyNothingYet("invoice"),
+          },
+          {
+            slug: "agreements",
+            name: "Price agreements",
+            icon: Handshake,
+            viewComponent: companyNothingYet("price agreement"),
+          },
+          {
+            slug: "equipment",
+            name: "Equipment on loan",
+            icon: Coffee,
+            viewComponent: companyNothingYet("equipment on loan"),
+          },
+          {
+            slug: "contracts",
+            name: "Contracts",
+            icon: FileText,
+            viewComponent: companyNothingYet("contract"),
+          },
+          {
+            slug: "requests",
+            name: "Contact requests",
+            icon: Inbox,
+            viewComponent: companyNothingYet("contact request"),
+          },
+          {
+            slug: "notes",
+            name: "Notes",
+            icon: NotebookPen,
+            viewComponent: companyNothingYet("note"),
           },
         ],
       },
