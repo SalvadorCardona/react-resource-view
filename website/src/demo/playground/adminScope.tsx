@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router"
-import { BookOpen, Blocks, Newspaper, ShoppingBag } from "lucide-react"
+import { Blocks, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   createAdminLayout,
   createItemMenuWithResource,
-  generateLink,
   type ScopeInterface,
 } from "react-resource-view"
 import {
@@ -50,8 +49,8 @@ function BuilderLink() {
  * own instead of a list.
  *
  * The scope is loaded lazily by the playground, which is the point of a scope
- * being a module rather than a folder: a reader who only follows a link from a
- * documentation page never downloads any of it.
+ * being a module rather than a folder: a reader who only browses the
+ * documentation never downloads any of it.
  */
 export const adminScope: ScopeInterface = {
   name: "admin",
@@ -93,13 +92,6 @@ export const adminScope: ScopeInterface = {
         createItemMenuWithResource({ resource: productsResource }),
         createItemMenuWithResource({ resource: ordersResource }),
       ],
-    },
-    // Naming only the scope lands on its `defaultViewResourceContextParams`,
-    // which is how one area links to another without knowing its resources.
-    {
-      name: "Documentation demos",
-      icon: BookOpen,
-      href: generateLink({ scope: "docs" }),
     },
   ],
 }

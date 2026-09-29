@@ -24,9 +24,9 @@ export interface ResourceDemoProps {
  * A resource view running inside a documentation page.
  *
  * The context is passed as props rather than read from the address bar: a
- * documentation page is not a CRUD screen, and several examples share it. Links
- * built inside the view therefore point at the playground — see
- * `configureLibraries` — where the same context is read back from the URL.
+ * documentation page is not a CRUD screen, and several examples share it. The
+ * resources it shows open their forms over the page — see `@/demo/resources` —
+ * so the reader never leaves the prose.
  */
 export function ResourceDemo({
   resource,

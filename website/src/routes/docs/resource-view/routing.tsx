@@ -215,9 +215,9 @@ function Routing() {
       </Callout>
 
       <P>
-        This site uses query mode aimed at <C>/playground</C>: an action link inside
-        a documentation demo has to leave the page it sits on, and it lands on the
-        playground already on that record.
+        This site uses query mode aimed at <C>/playground</C>: every screen of the
+        playground&apos;s back office is a URL that can be shared, while the demos on
+        these pages open their forms over the prose instead of leaving it.
       </P>
 
       <H2 id="mounting">Mounting the views</H2>

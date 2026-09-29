@@ -82,10 +82,10 @@ export function configureLibraries(): void {
     // documentation recommends — no bespoke navigation port for the docs.
     navigation: tanstackAdapter,
     dateLocale: enGB,
-    // Query mode, aimed at /playground: a link built inside an embedded demo
-    // has to leave the documentation page it sits on — the prose around it is
-    // not a CRUD screen. It lands on the playground, on the very item that was
-    // clicked, and the URL is shareable.
+    // Query mode, aimed at /playground: the back office there reads its whole
+    // context from one parameter, so every screen is a shareable URL. The
+    // demos embedded in the documentation open their forms over the page and
+    // never navigate there.
     routing: { mode: "query", param: "view", basePath: PLAYGROUND_PATH },
     appName: "Resource & Form",
     description:
