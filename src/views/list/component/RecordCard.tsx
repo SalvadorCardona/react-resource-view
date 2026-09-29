@@ -1,7 +1,11 @@
 import { ReactNode } from "react"
 import { cn } from "@/ui/cn"
 import { RowInterface } from "@/ViewInterface"
-import ListResourceViewButton from "@/action/ListResourceViewButton"
+import ListResourceViewButton, {
+  useRowActions,
+} from "@/action/ListResourceViewButton"
+import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { permissionResource } from "@/utils/permissionResource"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 
 export interface RecordCardProps {
@@ -28,6 +32,13 @@ export function RecordCard({
   className,
   children,
 }: RecordCardProps) {
+  const { resource } = useCurrentViewResourceContext()
+  // A resource permitting none of the row's actions would otherwise be given a
+  // separator with nothing under it, and the padding below it.
+  const hasActions = useRowActions().some((action) =>
+    permissionResource(resource, action)
+  )
+
   return (
     <div
       className={cn(
@@ -38,7 +49,7 @@ export function RecordCard({
     >
       <div className="min-w-0">{children ?? <DefaultRowComponent row={row} />}</div>
 
-      {withActions && (
+      {withActions && hasActions && (
         // `mt-auto` pins the actions to the bottom edge: the grid stretches
         // every card of a row to the tallest one, and without it a card whose
         // record is one line shorter puts its buttons a line higher than its
