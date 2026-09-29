@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "@/ports"
 import { useScopeContext } from "@/scope/Scope"
-import { MenuItemInterface, useIsActiveItemMenu } from "@/menu/menu"
+import { MenuItemInterface } from "@/menu/menu"
+import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
 import { Button } from "@/ui/button"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/ui/drawer"
 import { cn } from "@/ui/cn"
@@ -13,7 +14,7 @@ import { cn } from "@/ui/cn"
  */
 export function AdminMobileNav() {
   const scope = useScopeContext()?.scope
-  const isActive = useIsActiveItemMenu()
+  const isActive = useIsActiveMenuEntry()
   const navigate = useNavigate()
   const [openGroup, setOpenGroup] = useState<MenuItemInterface | null>(null)
 

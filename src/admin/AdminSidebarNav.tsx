@@ -2,7 +2,8 @@ import * as React from "react"
 import { ChevronRight } from "lucide-react"
 import { Link } from "@/ports"
 import { useScopeContext } from "@/scope/Scope"
-import { MenuItemInterface, useIsActiveItemMenu } from "@/menu/menu"
+import { MenuItemInterface } from "@/menu/menu"
+import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
 import { cn } from "@/ui/cn"
 import { ScrollArea } from "@/ui/scroll-area"
 import {
@@ -105,9 +106,21 @@ function NavItem({ item }: { item: MenuItemInterface }) {
 }
 
 function NavItemWithChildren({ item }: { item: MenuItemInterface }) {
+  const isActive = useIsActiveMenuEntry()
+  const hasActiveChild = item.items?.some(isActive) ?? false
   const [open, setOpen] = React.useState<boolean>(
-    () => readOpenGroups()[item.name] ?? true
+    () => hasActiveChild || (readOpenGroups()[item.name] ?? true)
   )
+
+  // Reaching one of its pages — a click, the back button, a link from inside a
+  // view — unfolds the group even if the reader had folded it: the entry lit
+  // for the page on screen must be in sight. Adjusted during render rather
+  // than in an effect, so the group never paints folded first.
+  const [hadActiveChild, setHadActiveChild] = React.useState(hasActiveChild)
+  if (hasActiveChild !== hadActiveChild) {
+    setHadActiveChild(hasActiveChild)
+    if (hasActiveChild) setOpen(true)
+  }
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
@@ -119,7 +132,13 @@ function NavItemWithChildren({ item }: { item: MenuItemInterface }) {
       <SidebarMenuItem>
         <CollapsibleTrigger
           render={
-            <SidebarMenuButton>
+            // Marked more quietly than the page itself: the accent colour and
+            // a heavier weight, no background, so the sub-entry stays the one
+            // that reads as selected.
+            <SidebarMenuButton
+              data-active-child={hasActiveChild || undefined}
+              className={cn(hasActiveChild && "font-semibold text-primary")}
+            >
               {item.icon && <item.icon />}
               <span className="fc">{item.name}</span>
               <ChevronRight
@@ -148,13 +167,15 @@ function NavItemWithChildren({ item }: { item: MenuItemInterface }) {
 }
 
 function GroupLink({ item }: { item: MenuItemInterface }) {
-  const isActive = useIsActiveItemMenu()
+  const isActive = useIsActiveMenuEntry()
   const children = item.items?.filter((subItem) => !subItem.hidden) ?? []
   const href = item.href ?? children[0]?.href ?? "/"
+  const active = children.some(isActive)
 
   return (
     <SidebarMenuButton
-      isActive={children.some(isActive)}
+      isActive={active}
+      aria-current={active ? "page" : undefined}
       render={<Link to={href} />}
     >
       {item.icon && <item.icon />}
@@ -164,16 +185,19 @@ function GroupLink({ item }: { item: MenuItemInterface }) {
 }
 
 function NavLink({ item }: { item: MenuItemInterface }) {
-  const isActive = useIsActiveItemMenu()
+  const isActive = useIsActiveMenuEntry()
 
   if (item.component) {
     const Component = item.component
     return <Component menuItem={item} />
   }
 
+  const active = isActive(item)
+
   return (
     <SidebarMenuButton
-      isActive={isActive(item)}
+      isActive={active}
+      aria-current={active ? "page" : undefined}
       render={<Link to={item.href || "/"} />}
     >
       {item.icon && <item.icon />}
@@ -183,16 +207,19 @@ function NavLink({ item }: { item: MenuItemInterface }) {
 }
 
 function NavSubLink({ item }: { item: MenuItemInterface }) {
-  const isActive = useIsActiveItemMenu()
+  const isActive = useIsActiveMenuEntry()
 
   if (item.component) {
     const Component = item.component
     return <Component menuItem={item} />
   }
 
+  const active = isActive(item)
+
   return (
     <SidebarMenuSubButton
-      isActive={isActive(item)}
+      isActive={active}
+      aria-current={active ? "page" : undefined}
       render={<Link to={item.href || "/"} />}
     >
       {item.icon && <item.icon />}

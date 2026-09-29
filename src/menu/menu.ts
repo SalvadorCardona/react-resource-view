@@ -73,11 +73,7 @@ export function isActiveItemMenu(item: MenuItemInterface) {
   if (!item.href) return false
   if (typeof window === "undefined") return false
 
-  return matchesCurrent(
-    item.href,
-    window.location.pathname,
-    window.location.search
-  )
+  return matchesCurrent(item.href, window.location.pathname, window.location.search)
 }
 
 /**
@@ -86,18 +82,27 @@ export function isActiveItemMenu(item: MenuItemInterface) {
  * A router knows the current location while rendering on a server; `window`
  * does not exist there. Returns a predicate rather than a boolean so a menu
  * can test each of its entries — a hook cannot be called inside a loop.
+ *
+ * `defaultView` is what is on screen when the URL names no resource — a scope
+ * opened bare, whose `defaultViewResourceContextParams` pick the page. Without
+ * it, the entry for that page stays dark until the reader clicks on it, though
+ * nothing on screen changes.
  */
-export function useIsActiveItemMenu(): (item: MenuItemInterface) => boolean {
+export function useIsActiveItemMenu(
+  defaultView?: ViewResourceContextParams
+): (item: MenuItemInterface) => boolean {
   const { pathname, searchStr } = getPorts().navigation.useLocation()
 
   return (item) =>
-    Boolean(item.href) && matchesCurrent(item.href!, pathname, searchStr)
+    Boolean(item.href) &&
+    matchesCurrent(item.href!, pathname, searchStr, defaultView)
 }
 
 function matchesCurrent(
   href: string,
   pathname: string,
-  searchStr: string
+  searchStr: string,
+  defaultView?: ViewResourceContextParams
 ): boolean {
   const { mode, param } = getPorts().routing
   const current = mode === "query" ? pathname + searchStr : pathname
@@ -109,7 +114,33 @@ function matchesCurrent(
     return current.startsWith(href)
   }
 
-  return matchesContext(parseLink(href), parseLink(current))
+  return matchesContext(parseLink(href), readCurrentView(current, defaultView))
+}
+
+/**
+ * The view context the current URL stands for, the scope's default view
+ * filling in when the URL names no resource.
+ */
+function readCurrentView(
+  current: string,
+  defaultView?: ViewResourceContextParams
+): ViewResourceContextParams {
+  const { mode, param } = getPorts().routing
+  // In query mode a URL without the parameter names no view at all: its path
+  // is the page the views are mounted under, not a scope.
+  const parsed =
+    mode === "query" && !readRoutingParam(current, param) ? {} : parseLink(current)
+
+  if (parsed.resourceId || !defaultView) return parsed
+  if (parsed.scope && defaultView.scope && parsed.scope !== defaultView.scope) {
+    return parsed
+  }
+
+  return {
+    ...defaultView,
+    resourceId: defaultView.resourceId ?? defaultView.resource?.["@id"],
+    ...parsed,
+  }
 }
 
 function readRoutingParam(url: string, param: string): string | null {
