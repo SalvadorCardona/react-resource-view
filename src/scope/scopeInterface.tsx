@@ -29,11 +29,15 @@ export interface ScopeInterface {
   label?: string
   defaultViewResourceContextParams?: ViewResourceContextParams
   /**
-   * Fonction d'autorisation
+   * Fonction d'autorisation, synchrone ou asynchrone. Renvoyer `false` vaut un 403.
    * @throws {UnauthorizedError} 401 - Not signed in
    * @throws {ForbiddenError} 403 - Not allowed
    */
-  authorization?: () => boolean
+  authorization?: () => boolean | Promise<boolean>
+  /** Rendu à la place du scope tant que l'autorisation n'a pas répondu. */
+  authorizationFallback?: ReactNode
+  /** Rendu à la place du scope quand l'autorisation refuse l'accès (403). */
+  forbiddenFallback?: ReactNode
 }
 
 export type ScopeConfig = Record<string, () => Promise<ScopeInterface>>
