@@ -37,6 +37,17 @@ Built on [`react-data-form`](https://github.com/SalvadorCardona/react-data-form)
 for the forms. Which API answers, and how it spells a page or a filter, is a
 [dialect](#connecting-an-api) — JSON-LD is the default, not a requirement.
 
+Two libraries, one idea: `react-data-form` for the forms, `react-resource-view`
+for the application around them.
+[Watch the 1-minute tour](https://cardona.digital/react-resource-view/videos/two-libraries.mp4)
+(with sound).
+
+<p align="center">
+  <a href="https://cardona.digital/react-resource-view/videos/two-libraries.mp4">
+    <img src="website/public/videos/two-libraries-poster.jpg" alt="Describe your app. Don't draw it. — a one-minute tour of react-data-form and react-resource-view" width="100%">
+  </a>
+</p>
+
 ## See it in action
 
 A page builder declared as data: blocks on the left, the live page on the

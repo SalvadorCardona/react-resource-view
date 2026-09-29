@@ -62,3 +62,22 @@ export function softwareSourceCodeJsonLd(section: DocSection) {
     author: AUTHOR,
   }
 }
+
+/** Structured data for the one-minute tour the landing page opens with. */
+export function tourVideoJsonLd() {
+  const videos = `${SITE_ORIGIN}${import.meta.env.BASE_URL}videos/`
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: "Two libraries, one idea: react-data-form and react-resource-view",
+    description:
+      "A one-minute tour: react-data-form builds complex forms from a plain object, react-resource-view builds a whole CRUD application from one resource declaration, and together they make a page builder.",
+    thumbnailUrl: `${videos}two-libraries-poster.jpg`,
+    contentUrl: `${videos}two-libraries.mp4`,
+    uploadDate: "2026-09-29",
+    duration: "PT58S",
+    inLanguage: "en",
+    author: AUTHOR,
+  }
+}
