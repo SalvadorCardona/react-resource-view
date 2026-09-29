@@ -8,7 +8,7 @@ export const Route = createFileRoute("/playground/")({
       {
         name: "description",
         content:
-          "A complete back office built from resource declarations and running on AdminLayout, react-resource-view's ready-made admin template: users and the CVs hanging off them, the accounts they belong to, a blog that is a page builder and a catalogue — tables, boards, cards and split views, every edit real, every screen a URL.",
+          "A complete back office built from resource declarations and running on AdminLayout, react-resource-view's ready-made admin template: users and the CVs hanging off them, the accounts they belong to, a blog that is a page builder, a catalogue and a full-width task board — tables, boards, cards and split views, every edit real, every screen a URL.",
       },
       // The context lives in the query string and every state is a different
       // URL; none of them is a page worth indexing on its own.
