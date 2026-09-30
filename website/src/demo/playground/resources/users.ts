@@ -93,6 +93,14 @@ export const usersResource = createViewResource<User>(USERS_ID, {
     ],
   },
   views: {
+    // Read is not among the actions a row offers by default — [update, delete]
+    // is — and the account's page lives in `read` below: without it here, a
+    // row's only way in is the edit drawer, and the page is reached by nobody.
+    [ActionList.list]: {
+      behavior: {
+        rowActions: [ActionList.read, ActionList.update, ActionList.delete],
+      },
+    },
     [ActionList.create]: { name: "New user", ...POPUP },
     // An account opens on a page of its own, not on its form: a card saying
     // who it is, a column of figures, and the collections belonging to it laid
