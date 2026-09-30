@@ -30,7 +30,7 @@ import {
   USERS_ID,
   type Company,
 } from "@/demo/playground/adminData"
-import { POPUP } from "@/demo/playground/shared"
+import { FULL_WIDTH, POPUP } from "@/demo/playground/shared"
 
 /**
  * The accounts the roastery supplies: the cafés, hotels and offices its
@@ -90,6 +90,10 @@ export const companiesResource = createViewResource<Company>(COMPANIES_ID, {
     // segment of the URL, so `/update/1/team` lands right back here.
     [ActionList.update]: {
       name: "Edit a company",
+      // The whole page, tabs included: the summary, the tab bar and the team's
+      // table sit side by side, and the column every other form keeps leaves
+      // them cramped. Declared on the action, so the list stays in the column.
+      ...FULL_WIDTH,
       // The summary down the left and the default, scrolling bar beside it —
       // with more tabs than there is room for, so the bar has to scroll within
       // its column rather than push the page wider (posts has the column with
