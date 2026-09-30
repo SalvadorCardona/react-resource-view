@@ -83,7 +83,11 @@ export default function RowWrapperColumnComponent({
   return (
     <div
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-2xl border border-border bg-muted/30 transition-colors",
+        // `min-w-0`: a flex item is never narrower than its widest content, so
+        // a card holding one long unbreakable word (a path, a URL, an id)
+        // widened the whole column as soon as a parent sized it, and pushed it
+        // under its neighbours.
+        "flex w-72 min-w-0 shrink-0 flex-col rounded-2xl border border-border bg-muted/30 transition-colors",
         // While a card is being carried, every column reads as a target; the
         // one under the pointer reads as *the* target.
         isDragging && "border-dashed",

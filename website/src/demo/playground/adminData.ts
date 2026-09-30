@@ -1072,6 +1072,20 @@ function tasks(): Array<Omit<Task, "@id" | "@type">> {
       startsIn: 3,
       dueIn: 5,
     },
+    {
+      // A file name is one word the browser has nowhere to break: this card
+      // is what shows a column of the board keeping its width around it.
+      id: "31",
+      title:
+        "Archive roastery_house_blend_batch_exports_2026_profiles_backup.csv",
+      description: "The old share fills up every month; the new one is backed up.",
+      status: "in_review",
+      priority: "low",
+      assignee: "Barbara Liskov",
+      tags: ["roasting", "logistics"],
+      startsIn: 1,
+      dueIn: 8,
+    },
   ]
 
   return fixtures.map(({ startsIn, dueIn, ...task }) => ({
@@ -1123,16 +1137,15 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
 const SEED_VERSION_ID = "admin_seed_version"
 
 /**
- * Bumped whenever the fixtures gain a field a screen relies on — the CV an
- * account now carries as a field of its own, this time, where it used to be a
- * collection of profiles beside it.
+ * Bumped whenever the fixtures gain a field or a row a screen relies on — the
+ * task whose title is one long file name, this time, which the board shows.
  *
  * Seeding only where nothing is stored is right for a new collection and wrong
  * for an existing one gaining a field: a reader who opened the playground last
  * month would keep posts written before they held blocks, and would edit them
  * on a page builder with nothing in it. The number is how that is noticed.
  */
-const SEED_VERSION = "4"
+const SEED_VERSION = "5"
 
 /**
  * Writes the back office fixtures — only where nothing is stored yet.
