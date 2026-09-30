@@ -5,10 +5,11 @@ import css from "shiki/langs/css.mjs"
 import json from "shiki/langs/json.mjs"
 import tsx from "shiki/langs/tsx.mjs"
 import typescript from "shiki/langs/typescript.mjs"
+import yaml from "shiki/langs/yaml.mjs"
 import vitesseDark from "shiki/themes/vitesse-dark.mjs"
 import vitesseLight from "shiki/themes/vitesse-light.mjs"
 
-export type CodeLanguage = "tsx" | "ts" | "css" | "bash" | "json"
+export type CodeLanguage = "tsx" | "ts" | "css" | "bash" | "json" | "yaml"
 
 /**
  * One highlighter for the whole site, built synchronously.
@@ -18,13 +19,13 @@ export type CodeLanguage = "tsx" | "ts" | "css" | "bash" | "json"
  * block be a plain component rather than a suspending one. The server renders
  * the markup, the client hydrates the identical string.
  *
- * Only the five languages the documentation actually uses are loaded; the full
+ * Only the six languages the documentation actually uses are loaded; the full
  * bundle would carry two hundred grammars for nothing.
  */
 const highlighter = createHighlighterCoreSync({
   engine: createJavaScriptRegexEngine(),
   themes: [vitesseLight, vitesseDark],
-  langs: [tsx, typescript, css, bash, json],
+  langs: [tsx, typescript, css, bash, json, yaml],
 })
 
 const LANG_ALIAS: Record<CodeLanguage, string> = {
@@ -33,6 +34,7 @@ const LANG_ALIAS: Record<CodeLanguage, string> = {
   css: "css",
   bash: "bash",
   json: "json",
+  yaml: "yaml",
 }
 
 /**

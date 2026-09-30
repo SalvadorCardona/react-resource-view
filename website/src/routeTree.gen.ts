@@ -31,6 +31,7 @@ import { Route as DocsFormValidationRouteImport } from './routes/docs/form/valid
 import { Route as DocsResourceViewIndexRouteImport } from './routes/docs/resource-view/index'
 import { Route as DocsResourceViewAdminLayoutRouteImport } from './routes/docs/resource-view/admin-layout'
 import { Route as DocsResourceViewAuthenticationRouteImport } from './routes/docs/resource-view/authentication'
+import { Route as DocsResourceViewAuthenticationJwtRouteImport } from './routes/docs/resource-view/authentication-jwt'
 import { Route as DocsResourceViewBackendsRouteImport } from './routes/docs/resource-view/backends'
 import { Route as DocsResourceViewCalendarRouteImport } from './routes/docs/resource-view/calendar'
 import { Route as DocsResourceViewCustomVariantRouteImport } from './routes/docs/resource-view/custom-variant'
@@ -159,6 +160,12 @@ const DocsResourceViewAuthenticationRoute =
     path: '/resource-view/authentication',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsResourceViewAuthenticationJwtRoute =
+  DocsResourceViewAuthenticationJwtRouteImport.update({
+    id: '/resource-view/authentication-jwt',
+    path: '/resource-view/authentication-jwt',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewBackendsRoute =
   DocsResourceViewBackendsRouteImport.update({
     id: '/resource-view/backends',
@@ -258,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/docs/form/validation': typeof DocsFormValidationRoute
   '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/authentication': typeof DocsResourceViewAuthenticationRoute
+  '/docs/resource-view/authentication-jwt': typeof DocsResourceViewAuthenticationJwtRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -294,6 +302,7 @@ export interface FileRoutesByTo {
   '/docs/form/validation': typeof DocsFormValidationRoute
   '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/authentication': typeof DocsResourceViewAuthenticationRoute
+  '/docs/resource-view/authentication-jwt': typeof DocsResourceViewAuthenticationJwtRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -333,6 +342,7 @@ export interface FileRoutesById {
   '/docs/form/validation': typeof DocsFormValidationRoute
   '/docs/resource-view/admin-layout': typeof DocsResourceViewAdminLayoutRoute
   '/docs/resource-view/authentication': typeof DocsResourceViewAuthenticationRoute
+  '/docs/resource-view/authentication-jwt': typeof DocsResourceViewAuthenticationJwtRoute
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
@@ -373,6 +383,7 @@ export interface FileRouteTypes {
     | '/docs/form/validation'
     | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/authentication'
+    | '/docs/resource-view/authentication-jwt'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -409,6 +420,7 @@ export interface FileRouteTypes {
     | '/docs/form/validation'
     | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/authentication'
+    | '/docs/resource-view/authentication-jwt'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -447,6 +459,7 @@ export interface FileRouteTypes {
     | '/docs/form/validation'
     | '/docs/resource-view/admin-layout'
     | '/docs/resource-view/authentication'
+    | '/docs/resource-view/authentication-jwt'
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/custom-variant'
@@ -627,6 +640,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewAuthenticationRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/authentication-jwt': {
+      id: '/docs/resource-view/authentication-jwt'
+      path: '/resource-view/authentication-jwt'
+      fullPath: '/docs/resource-view/authentication-jwt'
+      preLoaderRoute: typeof DocsResourceViewAuthenticationJwtRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/backends': {
       id: '/docs/resource-view/backends'
       path: '/resource-view/backends'
@@ -744,6 +764,7 @@ interface DocsRouteChildren {
   DocsFormValidationRoute: typeof DocsFormValidationRoute
   DocsResourceViewAdminLayoutRoute: typeof DocsResourceViewAdminLayoutRoute
   DocsResourceViewAuthenticationRoute: typeof DocsResourceViewAuthenticationRoute
+  DocsResourceViewAuthenticationJwtRoute: typeof DocsResourceViewAuthenticationJwtRoute
   DocsResourceViewBackendsRoute: typeof DocsResourceViewBackendsRoute
   DocsResourceViewCalendarRoute: typeof DocsResourceViewCalendarRoute
   DocsResourceViewCustomVariantRoute: typeof DocsResourceViewCustomVariantRoute
@@ -778,6 +799,8 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsFormValidationRoute: DocsFormValidationRoute,
   DocsResourceViewAdminLayoutRoute: DocsResourceViewAdminLayoutRoute,
   DocsResourceViewAuthenticationRoute: DocsResourceViewAuthenticationRoute,
+  DocsResourceViewAuthenticationJwtRoute:
+    DocsResourceViewAuthenticationJwtRoute,
   DocsResourceViewBackendsRoute: DocsResourceViewBackendsRoute,
   DocsResourceViewCalendarRoute: DocsResourceViewCalendarRoute,
   DocsResourceViewCustomVariantRoute: DocsResourceViewCustomVariantRoute,
