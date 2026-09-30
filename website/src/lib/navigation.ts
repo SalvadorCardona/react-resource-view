@@ -15,6 +15,7 @@ import {
   Layers,
   LayoutGrid,
   LayoutTemplate,
+  LockKeyhole,
   Network,
   ListChecks,
   PanelLeft,
@@ -308,6 +309,13 @@ export const VIEW_SECTION: DocSection = {
           summary:
             "Better Auth end to end: an async scope authorization, sign-in, roles and sign-out.",
           icon: ShieldCheck,
+        },
+        {
+          href: "/docs/resource-view/authentication-jwt",
+          title: "Authentication with JWT",
+          summary:
+            "API Platform and LexikJWT with react-jwt-session: a refresh token, protected scopes, roles and sign-out.",
+          icon: LockKeyhole,
         },
         {
           href: "/docs/resource-view/sub-views",

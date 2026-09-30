@@ -207,6 +207,7 @@ function Authentication() {
   return (
     <DocArticle
       toc={[
+        { id: "choose", title: "Better Auth or JWT" },
         { id: "how", title: "How a scope is protected" },
         { id: "client", title: "Better Auth: the client" },
         { id: "scope", title: "Protecting a scope" },
@@ -217,6 +218,28 @@ function Authentication() {
         { id: "other", title: "Other providers" },
       ]}
     >
+      <H2 id="choose">Better Auth or JWT</H2>
+
+      <P>
+        react-resource-view depends on no authentication library: a scope only asks
+        for an answer. Two recipes wire a real session to it, from the back end to
+        signing out — pick the one your API already speaks.
+      </P>
+
+      <Ul>
+        <Li>
+          <strong>Better Auth</strong> — a session managed by{" "}
+          <A href="https://www.better-auth.com">Better Auth</A>, whatever the API
+          behind it. The rest of this page.
+        </Li>
+        <Li>
+          <strong>JWT (API Platform + LexikJWT)</strong> — a Symfony API signing its
+          users in with LexikJWTAuthenticationBundle and a refresh token, held on the
+          front end by react-jwt-session.{" "}
+          <A href="/docs/resource-view/authentication-jwt">Authentication with JWT</A>.
+        </Li>
+      </Ul>
+
       <H2 id="how">How a scope is protected</H2>
 
       <P>
@@ -469,6 +492,12 @@ function Authentication() {
           <C>recheckAuthorization()</C>.
         </Li>
       </Ul>
+
+      <P>
+        With react-jwt-session, all of this — refresh token included — is already
+        written: see{" "}
+        <A href="/docs/resource-view/authentication-jwt">Authentication with JWT</A>.
+      </P>
     </DocArticle>
   )
 }
