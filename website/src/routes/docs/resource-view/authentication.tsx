@@ -260,6 +260,14 @@ function Authentication() {
       </Ul>
 
       <P>
+        The two classes are only a convenience: any error thrown or rejected with{" "}
+        <C>status: 401</C> or <C>status: 403</C> is treated the same way, so an auth
+        library can refuse access without importing <C>react-resource-view</C>, and
+        two copies of it in one bundle still agree. No other status is recognized — a{" "}
+        <C>419</C> or a <C>500</C> goes up to your error boundary.
+      </P>
+
+      <P>
         The check runs again whenever the scope changes, and whenever you ask for it
         with <C>recheckAuthorization</C>. A promise that settles after the reader has
         moved on is ignored, so a slow answer about one scope never decides for the

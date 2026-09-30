@@ -30,6 +30,8 @@ export interface ScopeInterface {
   defaultViewResourceContextParams?: ViewResourceContextParams
   /**
    * Fonction d'autorisation, synchrone ou asynchrone. Renvoyer `false` vaut un 403.
+   * Toute erreur portant `status: 401` ou `status: 403` est reconnue ; les classes
+   * ci-dessous n'en sont qu'une commodité.
    * @throws {UnauthorizedError} 401 - Not signed in
    * @throws {ForbiddenError} 403 - Not allowed
    */

@@ -8,13 +8,9 @@ import {
   useState,
 } from "react"
 import { Trans } from "react-mini-i18n"
+import { getAuthorizationStatus } from "@/scope/getAuthorizationStatus"
 import { setCurrentScope } from "@/scope/scope"
-import {
-  ForbiddenError,
-  ScopeConfig,
-  ScopeInterface,
-  UnauthorizedError,
-} from "@/scope/scopeInterface"
+import { ScopeConfig, ScopeInterface } from "@/scope/scopeInterface"
 import { PageLoader } from "@/ui/Loader"
 
 type Scope = string | undefined
@@ -138,8 +134,9 @@ export const ScopeProvider = ({
       settle(result === false ? "forbidden" : "authorized")
 
     const onError = (e: unknown) => {
-      if (e instanceof UnauthorizedError) return settle("unauthorized")
-      if (e instanceof ForbiddenError) return settle("forbidden")
+      const status = getAuthorizationStatus(e)
+      if (status === 401) return settle("unauthorized")
+      if (status === 403) return settle("forbidden")
       settle("pending", e)
     }
 
