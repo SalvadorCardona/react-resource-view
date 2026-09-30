@@ -47,7 +47,11 @@ export function RecordCard({
         className
       )}
     >
-      <div className="min-w-0">{children ?? <DefaultRowComponent row={row} />}</div>
+      {/* `break-words`: `min-w-0` lets the card be narrower than its content,
+          but nothing let a long unbreakable word wrap — it ran out of the card. */}
+      <div className="min-w-0 break-words">
+        {children ?? <DefaultRowComponent row={row} />}
+      </div>
 
       {withActions && hasActions && (
         // `mt-auto` pins the actions to the bottom edge: the grid stretches
