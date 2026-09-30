@@ -11,7 +11,6 @@ import {
   PlayCircle,
   PlugZap,
   ShieldCheck,
-  Sparkles,
   Terminal,
 } from "lucide-react"
 import {
@@ -79,14 +78,6 @@ function Hero() {
       <HeroBackdrop />
 
       <div className="relative mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
-        <p
-          className="rise mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
-          style={{ animationDelay: "40ms" }}
-        >
-          <Sparkles className="size-3.5 text-primary" />
-          Two packages, one idea: describe it, don’t draw it
-        </p>
-
         <h1
           className="rise mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl"
           style={{ animationDelay: "100ms" }}
