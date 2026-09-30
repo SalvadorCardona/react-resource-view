@@ -28,6 +28,10 @@ import { HomeBuilder } from "@/components/HomeBuilder"
 import { InstallCommand } from "@/components/InstallCommand"
 import { LayoutGallery } from "@/components/LayoutGallery"
 import { Logo } from "@/components/Logo"
+import {
+  FormPackageIllustration,
+  ViewPackageIllustration,
+} from "@/components/PackageIllustrations"
 import { SiteVideo } from "@/components/SiteVideo"
 import {
   FrozenScreenIllustration,
@@ -258,6 +262,7 @@ const PACKAGES = [
   {
     section: FORM_SECTION,
     icon: Braces,
+    Illustration: FormPackageIllustration,
     points: [
       "Forty-odd field controllers, from a text input to a page builder",
       "Groups, steps, sub-forms and repeatable rows",
@@ -268,6 +273,7 @@ const PACKAGES = [
   {
     section: VIEW_SECTION,
     icon: LayoutGrid,
+    Illustration: ViewPackageIllustration,
     points: [
       "Seven layouts over one collection — table, cards, split, calendar…",
       "Filters, pagination and the chosen layout all live in the URL",
@@ -281,7 +287,7 @@ function Packages() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
       <div className="grid gap-6 md:grid-cols-2">
-        {PACKAGES.map(({ section, icon: Icon, points, install }) => {
+        {PACKAGES.map(({ section, icon: Icon, Illustration, points, install }) => {
           const isForm = section.accent === "form"
 
           return (
@@ -295,7 +301,7 @@ function Packages() {
             >
               <span
                 className={cn(
-                  "absolute inset-x-0 top-0 h-1",
+                  "absolute inset-x-0 top-0 z-10 h-1",
                   isForm ? "bg-form" : "bg-view"
                 )}
               />
@@ -310,6 +316,11 @@ function Packages() {
                 )}
                 aria-hidden
               />
+
+              {/* What the package does, drawn edge to edge above its name. */}
+              <div className="relative -mx-6 -mt-6 mb-6 h-40 border-b border-border bg-muted/40 bg-dotted px-4 py-3 sm:h-44">
+                <Illustration />
+              </div>
 
               <div className="relative">
                 <div className="flex items-start justify-between gap-4">
