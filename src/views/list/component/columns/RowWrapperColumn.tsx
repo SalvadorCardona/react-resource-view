@@ -1,6 +1,7 @@
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import React, { useState } from "react"
 import getIdFromObject from "@/internal/id/getIdFromObject"
+import getIdentityFromObject from "@/internal/id/getIdentityFromObject"
 import { ValueOptionInterface } from "react-data-form"
 import { BaseJsonLdItemInterface } from "jsonld-item"
 import { Trans } from "react-mini-i18n"
@@ -26,6 +27,7 @@ export default function RowWrapperColumnComponent({
 }: RowWrapperColumnComponentPropsInterface) {
   const listViewContext = useListViewContext()
   const currentResource = useCurrentViewResourceContext()
+  const resource = currentResource.resource
   // Highlighting every column while one card is in the air said nothing about
   // where it would land. Only the column under the pointer lights up.
   const [isOver, setIsOver] = useState(false)
@@ -37,11 +39,30 @@ export default function RowWrapperColumnComponent({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsOver(false)
-    const id = e.dataTransfer.getData("text")
-    // `id` rather than `@id`: the card carries the identifier its own dialect
-    // addresses it by, and only a JSON-LD API would recognise an IRI here.
-    listViewContext.updateData({ id, [identifierKey]: valueIdentifier.value }, true)
     handleDragging(false)
+    // The card carries the short form its URL takes; the record it stands for
+    // is found again among the rows, so the update carries the whole identity
+    // the dialect knows it by — an `@id` included, which is what the local
+    // repository matches on. The short form alone left it looking for "12"
+    // among records keyed "/tasks/12".
+    const id = e.dataTransfer.getData("text")
+    const row = rows.find(
+      (candidate) =>
+        String(
+          getIdFromObject(candidate.data as BaseJsonLdItemInterface, true, resource)
+        ) === id
+    )
+    if (!row?.data) return
+    // Dropped back where it was: there is nothing to save, nor to announce.
+    if (row.data[identifierKey] === valueIdentifier.value) return
+
+    listViewContext.updateData(
+      {
+        ...getIdentityFromObject(row.data as BaseJsonLdItemInterface, resource),
+        [identifierKey]: valueIdentifier.value,
+      },
+      true
+    )
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -82,7 +103,7 @@ export default function RowWrapperColumnComponent({
       <div className="flex flex-col gap-2 px-2 pb-2">
         {columnRows.map((row) => {
           const data = row.data as BaseJsonLdItemInterface
-          const id = getIdFromObject(data, true, currentResource.resource) as string
+          const id = getIdFromObject(data, true, resource) as string
 
           return (
             <div

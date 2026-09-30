@@ -47,7 +47,7 @@ const List = () => {
   const listView = useListViewContext()
 
   if (currentResource.isLoading && listView.data.length === 0) return <PageLoader />
-  if (currentResource.error) return <Trans>Une erreur est survenue</Trans>
+  if (currentResource.error) return <Trans>An error occurred</Trans>
 
   if (listView.data.length === 0) {
     return <></>
