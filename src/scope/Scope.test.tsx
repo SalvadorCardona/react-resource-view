@@ -152,6 +152,35 @@ describe("ScopeProvider authorization", () => {
     expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
+  it("recognizes a 401 or a 403 carried by any error's status", async () => {
+    const onUnauthorized = vi.fn()
+    await renderScope(
+      [
+        {
+          name: uniqueName("status401"),
+          authorization: async () => {
+            throw Object.assign(new Error("Session expired"), { status: 401 })
+          },
+        },
+      ],
+      { onUnauthorized }
+    )
+
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText("Protected content")).not.toBeInTheDocument()
+
+    await renderScope([
+      {
+        name: uniqueName("status403"),
+        authorization: () => {
+          throw { status: 403 }
+        },
+      },
+    ])
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Access denied")
+  })
+
   it("renders the scope's own forbiddenFallback for a 403", async () => {
     await renderScope([
       {
