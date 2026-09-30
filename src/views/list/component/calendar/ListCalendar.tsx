@@ -283,7 +283,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
   }
 
   if (currentResourceContext.error) {
-    return <Trans>Une erreur est survenue</Trans>
+    return <Trans>An error occurred</Trans>
   }
 
   return (

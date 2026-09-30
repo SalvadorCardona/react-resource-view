@@ -47,7 +47,7 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
       })
       .catch((e) => {
         console.error(e)
-        toast("Une erreur est survenue")
+        toast(translate("An error occurred"))
       })
   }
 

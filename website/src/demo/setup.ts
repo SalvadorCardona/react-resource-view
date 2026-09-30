@@ -44,6 +44,7 @@ export function configureLibraries(): void {
     "Nettoyer la recherche": "Clear the search",
     "Effacer la recherche": "Clear the search",
     "Une erreur est survenue": "Something went wrong",
+    "An error occurred": "Something went wrong",
     "de plus": "more",
     "Date de fin": "End date",
     create: "Create",
