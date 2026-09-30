@@ -403,6 +403,112 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   The videos' play button
+   The halo around it breathes, slowly enough to be noticed and not watched.
+   It only scales: its opacity is left to the hover and focus states.
+   -------------------------------------------------------------------------- */
+
+@layer components {
+  .video-halo {
+    animation: video-halo 2.8s ease-in-out infinite;
+  }
+
+  @keyframes video-halo {
+    0%,
+    100% {
+      transform: scale(0.92);
+    }
+    50% {
+      transform: scale(1.12);
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The package cards' drawings
+   At rest the form waits empty and the collection shows as a table. Over the
+   card, the fields fill in one after another and the collection slides from
+   table to cards to calendar. Without motion, the form is drawn filled and the
+   table stays put.
+   -------------------------------------------------------------------------- */
+
+@layer components {
+  .package-fill {
+    opacity: 0;
+    transition: opacity 250ms ease-out;
+  }
+
+  .package-blank {
+    transition: opacity 200ms ease-out;
+  }
+
+  .group:is(:hover, :focus-visible) .package-fill {
+    opacity: 1;
+    transition-delay: var(--fill-delay, 0ms);
+  }
+
+  .group:is(:hover, :focus-visible) .package-blank {
+    opacity: 0;
+    transition-delay: var(--fill-delay, 0ms);
+  }
+
+  .package-view {
+    opacity: 0;
+  }
+
+  .package-view[data-resting] {
+    opacity: 1;
+  }
+
+  .group:is(:hover, :focus-visible) .package-view {
+    animation: package-view 6s ease-in-out infinite;
+    animation-delay: var(--view-delay, 0s);
+  }
+
+  /* The switcher's tab only lights up: it does not slide with its view. */
+  .group:is(:hover, :focus-visible) .package-tab {
+    animation-name: package-tab;
+  }
+
+  @keyframes package-tab {
+    0%,
+    28% {
+      opacity: 1;
+    }
+    33%,
+    94% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* One third of the loop on stage, the rest off it: in from the right, out
+     to the left. Three views a third apart take turns. */
+  @keyframes package-view {
+    0%,
+    28% {
+      opacity: 1;
+      transform: none;
+    }
+    33% {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+    34%,
+    94% {
+      opacity: 0;
+      transform: translateX(14px);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 /* Shiki renders both themes at once; the unused one is switched off in CSS so
    toggling the site theme costs no re-highlight. */
 .shiki,
@@ -425,8 +531,18 @@
   .aurora,
   .rise,
   .feature-layout-pick,
-  .feature-flow {
+  .feature-flow,
+  .video-halo,
+  .group:is(:hover, :focus-visible) .package-view {
     animation: none;
+  }
+
+  .package-fill {
+    opacity: 1;
+  }
+
+  .package-blank {
+    opacity: 0;
   }
 
   .feature-layout-pick[data-resting] {
