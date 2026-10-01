@@ -166,6 +166,18 @@ mail-tester.com: send to the address it gives, aim for ≥ 9/10, and write down
 every point lost — usually authentication (SPF/DKIM/DMARC of the sender
 domain), a missing `List-Unsubscribe`, or a too-high image/text ratio.
 
+### What has been verified so far
+
+Verified: the vitest constraints, the preview in the playground (headless
+Chrome, desktop and 375px, light and dark site themes), and a send through the
+Mailpit + SpamAssassin sandbox (HTML Check 90 %, Link Check all 200,
+SpamAssassin -0.3, rendering at desktop width and 390px).
+
+Not verified yet: delivery to a real inbox. No Gmail, Outlook.com or
+mail-tester.com check has been run, because no authenticated relay was
+available when this was built. Treat the checklist above as still to do on the
+first project that has `SMTP_URL` or `BREVO_API_KEY`.
+
 ## Pitfalls met while building this
 
 - **Grain makes PNGs huge.** The SVG library has a noise filter; rasterised
