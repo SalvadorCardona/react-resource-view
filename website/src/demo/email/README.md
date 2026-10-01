@@ -122,6 +122,29 @@ URL answers before sending.
 Two passes: first `cid:` (images inside the message, works before deployment),
 then, once the site is deployed, `--assets=production` (the real setting).
 
+### A local sandbox first
+
+Before a real mailbox, a local one: `scripts/mail-sandbox.compose.yml` starts
+Mailpit (SMTP on `:1025`, inbox on http://localhost:8025) with SpamAssassin.
+
+```bash
+docker compose -f scripts/mail-sandbox.compose.yml up -d
+SMTP_URL=smtp://localhost:1025 MAIL_TEST_FROM="Test <test@example.test>" \
+  node --experimental-strip-types scripts/send-test-email.ts
+```
+
+Mailpit shows the message as a client would (desktop, tablet, phone widths),
+its source, its text part and headers, and three checks: **HTML Check**
+(support of each HTML/CSS feature across clients, from caniemail), **Link
+Check** (every link answers, without redirect) and **Spam Analysis**
+(SpamAssassin on the content). The sample scores 90 % / all links 200 / -0.3.
+
+It catches, it does not deliver. Pointing a local SMTP server at Gmail's MX
+from a home connection fails: the ISP blocks port 25 over IPv4, and over IPv6
+Gmail answers `550 5.7.1 … does not meet IPv6 sending guidelines regarding PTR
+records and authentication`. A real inbox needs a relay that authenticates the
+sender (Brevo, or a Gmail app password).
+
 ### Checklist, per send
 
 Gmail web (the account that receives):
@@ -161,5 +184,11 @@ domain), a missing `List-Unsubscribe`, or a too-high image/text ratio.
 - **The iframe inherits the page's colour scheme.** On a dark site the
   message's own dark palette applies — useful, as long as one knows the light
   rendering is one theme switch away.
+- **A redirect behind every link.** `…/playground` answered 301 towards
+  `…/playground/`; Mailpit's Link Check showed it. Links point at the final
+  URL, trailing slash included.
+- **`MAIL_TEST_FROM="Name <address>"`** used to be wrapped once more by the
+  script (`Name <Name <address>>`); the script now accepts both forms.
+- **A local SMTP server cannot reach Gmail** (see "A local sandbox first").
 - **Lines over 998 characters** break SMTP. The renderer emits long lines; the
   script relies on nodemailer's quoted-printable encoding to fold them.

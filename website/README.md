@@ -67,6 +67,7 @@ scripts/
   generate-seo-files.ts    sitemap, robots.txt and llms.txt, after the build
   rasterize-email-media.ts the SVG library of the builder → public/email/*.png
   send-test-email.ts       sends the email builder's output to a real mailbox
+  mail-sandbox.compose.yml Mailpit + SpamAssassin on localhost, to look at a send first
 ```
 
 ### The sidebar is split in two
@@ -99,6 +100,10 @@ node --experimental-strip-types scripts/send-test-email.ts             # the sam
 node --experimental-strip-types scripts/send-test-email.ts mail.html   # an export
 node --experimental-strip-types scripts/send-test-email.ts --dry-run   # a .eml only
 ```
+
+`docker compose -f scripts/mail-sandbox.compose.yml up -d` gives a local inbox
+(Mailpit, http://localhost:8025) to send to first, with `SMTP_URL=smtp://localhost:1025`;
+it receives but never delivers to a real mailbox.
 
 Images go as inline `cid:` attachments until `public/email/` is deployed;
 `--assets=production` points them at the deployed site instead. After changing

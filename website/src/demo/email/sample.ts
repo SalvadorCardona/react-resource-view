@@ -43,7 +43,7 @@ export const SAMPLE_BLOCKS: Block[] = [
     type: "email.text",
     order: 2,
     title: "Roasted on Tuesday, at your door on Thursday",
-    body: "<p>We roasted the first batch this week, in lots of twelve kilos, and it goes out <strong>the day after it leaves the drum</strong>.</p><p>Brew it a little cooler than usual — around 92 °C — and it tastes like the <em>farm</em> rather than like the roaster.</p>",
+    body: "<p>We roasted the first batch this week, in lots of twelve kilos, and it goes out <strong>the day after it leaves the drum</strong>.</p><p>Brew it a little cooler than usual — around 92\u00a0°C — and it tastes like the <em>farm</em> rather than like the roaster.</p>",
   },
   {
     id: "email-4",
@@ -52,11 +52,11 @@ export const SAMPLE_BLOCKS: Block[] = [
     leftImage: "orchard",
     leftTitle: "Orchard, Colombia",
     leftText: "Red apple and panela. The everyday bag.",
-    leftUrl: `${SITE}/playground`,
+    leftUrl: `${SITE}/playground/`,
     rightImage: "night",
     rightTitle: "Night, Sumatra",
     rightText: "Cedar, cocoa, a long dark finish.",
-    rightUrl: `${SITE}/playground`,
+    rightUrl: `${SITE}/playground/`,
     action: "See the bag",
   },
   {
@@ -64,7 +64,7 @@ export const SAMPLE_BLOCKS: Block[] = [
     type: "email.button",
     order: 4,
     label: "Order Sunrise",
-    url: `${SITE}/playground/builder`,
+    url: `${SITE}/playground/builder/`,
     align: "center",
   },
   {
@@ -74,7 +74,7 @@ export const SAMPLE_BLOCKS: Block[] = [
     address: "The Roastery · 12 rue des Torréfacteurs · 69002 Lyon, France",
     reason:
       "You are receiving this because you ordered from the Roastery or signed up on our site.",
-    unsubscribeUrl: `${SITE}/playground?unsubscribe=1`,
+    unsubscribeUrl: `${SITE}/playground/?unsubscribe=1`,
     unsubscribeLabel: "Unsubscribe",
   },
 ]

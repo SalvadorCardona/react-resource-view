@@ -27,6 +27,7 @@ import { SAMPLE_BLOCKS, SAMPLE_ENVELOPE } from "../src/demo/email/sample.ts"
  * Environment — nothing is ever read from a file of the repository:
  *   BREVO_API_KEY     sends through Brevo's transactional API, or
  *   SMTP_URL          smtp(s)://user:password@host:port, used when no Brevo key
+ *                     (smtp://localhost:1025: the Mailpit of mail-sandbox.compose.yml)
  *   MAIL_TEST_FROM    the sender, an address validated with the provider
  *   MAIL_TEST_TO      the recipient(s), comma-separated; default below
  *   EMAIL_ASSET_BASE  where the PNGs are served; default the GitHub Pages site
@@ -49,7 +50,12 @@ const dryRun = Boolean(flag("dry-run"))
 const env = {
   brevoKey: process.env.BREVO_API_KEY?.trim(),
   smtpUrl: process.env.SMTP_URL?.trim(),
-  from: process.env.MAIL_TEST_FROM?.trim(),
+  // "Name <address>" is accepted too: the name then wins over the envelope's.
+  from:
+    /<([^>]+)>/.exec(process.env.MAIL_TEST_FROM ?? "")?.[1]?.trim() ??
+    process.env.MAIL_TEST_FROM?.trim(),
+  fromName:
+    /^\s*"?([^"<]*?)"?\s*</.exec(process.env.MAIL_TEST_FROM ?? "")?.[1] || undefined,
   to: (process.env.MAIL_TEST_TO?.trim() || DEFAULT_TO)
     .split(",")
     .map((address) => address.trim())
@@ -197,7 +203,10 @@ const unsubscribe = /href="(https:[^"]+)"[^>]*>[^<]*Unsubscribe/i.exec(
 )?.[1]
 const from = env.from ?? "test@example.com"
 const fromName =
-  process.env.MAIL_TEST_FROM_NAME?.trim() || message.fromName || "Email builder test"
+  process.env.MAIL_TEST_FROM_NAME?.trim() ||
+  env.fromName ||
+  message.fromName ||
+  "Email builder test"
 
 console.log(`Email builder — test send${dryRun ? " (dry run)" : ""}
   source     ${file ?? "sample newsletter"}
