@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowRight,
   Boxes,
-  Braces,
   Compass,
   Languages,
   LayoutGrid,
@@ -252,7 +251,6 @@ function DemoVideo() {
 const PACKAGES = [
   {
     section: FORM_SECTION,
-    icon: Braces,
     Illustration: FormPackageIllustration,
     points: [
       "Forty-odd field controllers, from a text input to a page builder",
@@ -263,7 +261,6 @@ const PACKAGES = [
   },
   {
     section: VIEW_SECTION,
-    icon: LayoutGrid,
     Illustration: ViewPackageIllustration,
     points: [
       "Seven layouts over one collection — table, cards, split, calendar…",
@@ -278,7 +275,7 @@ function Packages() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
       <div className="grid gap-6 md:grid-cols-2">
-        {PACKAGES.map(({ section, icon: Icon, Illustration, points, install }) => {
+        {PACKAGES.map(({ section, Illustration, points, install }) => {
           const isForm = section.accent === "form"
 
           return (
@@ -314,21 +311,12 @@ function Packages() {
               </div>
 
               <div className="relative">
-                <div className="flex items-start justify-between gap-4">
-                  <div
-                    className={cn(
-                      "flex size-11 items-center justify-center rounded-xl transition duration-300 group-hover:scale-110",
-                      isForm ? "bg-form-soft text-form" : "bg-view-soft text-view"
-                    )}
-                  >
-                    <Icon className="size-5" />
-                  </div>
-                  <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    {section.label}
+                  </h2>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
                 </div>
-
-                <h2 className="mt-5 text-xl font-semibold tracking-tight">
-                  {section.label}
-                </h2>
                 <p
                   className={cn(
                     "mt-1 font-mono text-xs",
