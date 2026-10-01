@@ -21,6 +21,7 @@ import {
   ARTICLE_STATUSES,
   ARTICLES_ID,
   DRAWER_ARTICLES_ID,
+  GALLERY_ARTICLES_ID,
   SESSIONS_ID,
   VARIANT_ARTICLES_ID,
   type Article,
@@ -58,6 +59,34 @@ const articleForm = {
   },
 }
 
+const articleFilter = {
+  inputs: {
+    title: { label: "Search a title" },
+    status: {
+      label: "Status",
+      controller: SelectInputController,
+      valueOptions: ARTICLE_STATUSES,
+    },
+  },
+}
+
+/** The five layouts an article reads in without a date to place it on. */
+function articleViewVariants() {
+  return [
+    tableViewOptionFactory(),
+    // The four layouts below draw a whole record rather than a row of cells,
+    // so they take a row component instead of falling back to the raw dump.
+    cardViewOptionFactory({ grid: 3, rowComponent: ArticleRow }),
+    itemViewOptionFactory({ rowComponent: ArticleRow }),
+    columnViewOptionFactory({
+      rowComponent: ArticleRow,
+      identifierKey: "status",
+      identifierKeyList: ARTICLE_STATUSES,
+    }),
+    splitViewFactory({ rowComponent: ArticleRow, redirectReadToList: true }),
+  ]
+}
+
 export const articlesResource = createViewResource<Article>(ARTICLES_ID, {
   name: "Articles",
   scope: "docs",
@@ -73,29 +102,8 @@ export const articlesResource = createViewResource<Article>(ARTICLES_ID, {
     // per field of this form, which is also the form the create and edit views
     // use. One description, four screens.
     form: articleForm,
-    formFilter: {
-      inputs: {
-        title: { label: "Search a title" },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: ARTICLE_STATUSES,
-        },
-      },
-    },
-    viewVariants: [
-      tableViewOptionFactory(),
-      // The four layouts below draw a whole record rather than a row of cells,
-      // so they take a row component instead of falling back to the raw dump.
-      cardViewOptionFactory({ grid: 3, rowComponent: ArticleRow }),
-      itemViewOptionFactory({ rowComponent: ArticleRow }),
-      columnViewOptionFactory({
-        rowComponent: ArticleRow,
-        identifierKey: "status",
-        identifierKeyList: ARTICLE_STATUSES,
-      }),
-      splitViewFactory({ rowComponent: ArticleRow, redirectReadToList: true }),
-    ],
+    formFilter: articleFilter,
+    viewVariants: articleViewVariants(),
   },
   views: {
     [ActionList.list]: { name: "Articles" },
@@ -171,6 +179,67 @@ export const sessionsResource = createViewResource<Session>(SESSIONS_ID, {
     [ActionList.read]: { behavior: { openIn: "popup" } },
   },
 })
+
+/**
+ * The same articles in all seven layouts, for the home page's gallery.
+ *
+ * The five the articles already have, plus a calendar and a timeline over the
+ * window each article is written in. It is a resource of its own because a
+ * list draws a button for every layout its resource declares: two more on the
+ * shared articles would show up on every documentation page that reads them.
+ */
+export const galleryArticlesResource = createViewResource<Article>(
+  GALLERY_ARTICLES_ID,
+  {
+    name: "Articles",
+    scope: "docs",
+    canRead: true,
+    canCreate: true,
+    canUpdate: true,
+    canDelete: true,
+    view: {
+      name: "Articles",
+      form: articleForm,
+      formFilter: articleFilter,
+      viewVariants: [
+        ...articleViewVariants(),
+        calendarViewOptionFactory({
+          name: "calendar",
+          // A writing window runs over days, which a week's hour grid would
+          // draw as one tall block: a month lays it out on the day it starts.
+          mode: "month",
+          dateKey: "writingStartAt",
+          endDateKey: "writingEndAt",
+          titleKey: "title",
+          colorKey: "categoryColor",
+        }),
+        // Who writes what, when.
+        timelineViewOptionFactory<Article>({
+          name: "timeline",
+          startDateKey: "writingStartAt",
+          endDateKey: "writingEndAt",
+          titleKey: "title",
+          groupKey: "author",
+          groupsLabel: "Authors",
+          statusKey: "status",
+          daysToShow: 14,
+          showUnassigned: false,
+          colorByStatus: {
+            draft: "var(--color-muted-foreground)",
+            review: "var(--color-form)",
+            published: "var(--color-view)",
+          },
+        }),
+      ],
+    },
+    views: {
+      [ActionList.list]: { name: "Articles" },
+      [ActionList.create]: { name: "New article", behavior: { openIn: "popup" } },
+      [ActionList.update]: { behavior: { openIn: "popup" } },
+      [ActionList.read]: { behavior: { openIn: "popup" } },
+    },
+  }
+)
 
 /**
  * The same articles, with an eighth layout the package does not ship.
