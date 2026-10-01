@@ -27,9 +27,10 @@ export function BuilderStudio({
    * Called with the current blocks when the kit's submit button ("Publish",
    * "Export"...) is pressed and the form validates. Without it — the
    * documentation demos, `/playground/builder` — that button validates and
-   * goes nowhere, same as before this prop existed.
+   * goes nowhere, same as before this prop existed. A kit with fields beside
+   * its blocks — the email's envelope — gets them as the second argument.
    */
-  onSave?: (blocks: BuilderBlock[]) => void
+  onSave?: (blocks: BuilderBlock[], fields: Record<string, unknown>) => void
 }) {
   // Remounting is how the sample is restored: the array field keeps its own
   // state, so putting the blocks back means building the form again.
@@ -55,46 +56,72 @@ function Studio({
   kit: BuilderKit
   sample: BuilderBlock[]
   onReset: () => void
-  onSave?: (blocks: BuilderBlock[]) => void
+  onSave?: (blocks: BuilderBlock[], fields: Record<string, unknown>) => void
 }) {
   const [blocks, setBlocks] = useState<BuilderBlock[]>(sample)
+  const [fields, setFields] = useState(kit.fields)
 
   const formContext = useForm({
     form: kit.form,
-    data: { blocks: sample },
+    data: { ...kit.fields, blocks: sample },
     // The second argument is the updated form; its data is the payload as it
     // stands after the keystroke, which is what the preview draws.
-    onChange: (_, form) => setBlocks((form.data?.blocks as BuilderBlock[]) ?? []),
-    onSubmit: onSave && ((data) => onSave((data.blocks as BuilderBlock[]) ?? [])),
+    onChange: (_, form) => {
+      const { blocks: next, ...rest } = form.data ?? {}
+      setBlocks((next as BuilderBlock[]) ?? [])
+      if (kit.fields) setFields(rest)
+    },
+    onSubmit:
+      onSave &&
+      ((data) => {
+        const { blocks: saved, ...rest } = data
+        onSave((saved as BuilderBlock[]) ?? [], rest)
+      }),
   })
+
+  // Called on every render, and the kit never changes under a mounted studio:
+  // the studio is keyed on it.
+  const outputs = (kit.useOutputs ?? noOutputs)(blocks, fields)
 
   return (
     <BuilderShell
       eyebrow={kit.label}
       title={kit.tagline}
       actions={
-        <button
-          type="button"
-          onClick={onReset}
-          className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
-        >
-          <RotateCcw className="size-3.5" />
-          Reset
-        </button>
+        <>
+          {outputs.actions}
+          <button
+            type="button"
+            onClick={onReset}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            <RotateCcw className="size-3.5" />
+            Reset
+          </button>
+        </>
       }
       outline={<FormElement {...formContext} />}
       canvas={
         <BuilderCanvas
           blocks={blocks}
+          fields={fields}
           preview={kit.preview}
           medium={kit.medium}
+          sources={outputs.sources}
+          payload={kit.fields ? { ...fields, blocks } : blocks}
           toolbarEnd={
-            <span className="text-xs text-muted-foreground">
-              {blocks.length} block{blocks.length === 1 ? "" : "s"}
-            </span>
+            outputs.toolbarEnd ?? (
+              <span className="text-xs text-muted-foreground">
+                {blocks.length} block{blocks.length === 1 ? "" : "s"}
+              </span>
+            )
           }
         />
       }
     />
   )
+}
+
+function noOutputs(): ReturnType<NonNullable<BuilderKit["useOutputs"]>> {
+  return {}
 }

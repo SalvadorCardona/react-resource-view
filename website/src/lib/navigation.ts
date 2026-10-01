@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   LayoutTemplate,
   LockKeyhole,
+  Mail,
   Network,
   ListChecks,
   PanelLeft,
@@ -156,6 +157,13 @@ export const FORM_SECTION: DocSection = {
           summary:
             "Page builders and résumés: a form whose shape its own content decides.",
           icon: LayoutTemplate,
+        },
+        {
+          href: "/docs/form/email-builder",
+          title: "Email builder",
+          summary:
+            "The same field, an email palette, and a pure function that renders HTML Gmail and Outlook agree on.",
+          icon: Mail,
         },
       ],
     },

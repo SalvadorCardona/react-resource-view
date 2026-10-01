@@ -21,6 +21,7 @@ import { Route as DocsFormAsymmetricRouteImport } from './routes/docs/form/asymm
 import { Route as DocsFormConfigurationRouteImport } from './routes/docs/form/configuration'
 import { Route as DocsFormControllersRouteImport } from './routes/docs/form/controllers'
 import { Route as DocsFormCustomControllerRouteImport } from './routes/docs/form/custom-controller'
+import { Route as DocsFormEmailBuilderRouteImport } from './routes/docs/form/email-builder'
 import { Route as DocsFormFieldsRouteImport } from './routes/docs/form/fields'
 import { Route as DocsFormGroupsRouteImport } from './routes/docs/form/groups'
 import { Route as DocsFormInstallationRouteImport } from './routes/docs/form/installation'
@@ -109,6 +110,11 @@ const DocsFormCustomControllerRoute =
     path: '/form/custom-controller',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsFormEmailBuilderRoute = DocsFormEmailBuilderRouteImport.update({
+  id: '/form/email-builder',
+  path: '/form/email-builder',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsFormFieldsRoute = DocsFormFieldsRouteImport.update({
   id: '/form/fields',
   path: '/form/fields',
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
+  '/docs/form/email-builder': typeof DocsFormEmailBuilderRoute
   '/docs/form/fields': typeof DocsFormFieldsRoute
   '/docs/form/groups': typeof DocsFormGroupsRoute
   '/docs/form/installation': typeof DocsFormInstallationRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
+  '/docs/form/email-builder': typeof DocsFormEmailBuilderRoute
   '/docs/form/fields': typeof DocsFormFieldsRoute
   '/docs/form/groups': typeof DocsFormGroupsRoute
   '/docs/form/installation': typeof DocsFormInstallationRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/docs/form/configuration': typeof DocsFormConfigurationRoute
   '/docs/form/controllers': typeof DocsFormControllersRoute
   '/docs/form/custom-controller': typeof DocsFormCustomControllerRoute
+  '/docs/form/email-builder': typeof DocsFormEmailBuilderRoute
   '/docs/form/fields': typeof DocsFormFieldsRoute
   '/docs/form/groups': typeof DocsFormGroupsRoute
   '/docs/form/installation': typeof DocsFormInstallationRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
+    | '/docs/form/email-builder'
     | '/docs/form/fields'
     | '/docs/form/groups'
     | '/docs/form/installation'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
+    | '/docs/form/email-builder'
     | '/docs/form/fields'
     | '/docs/form/groups'
     | '/docs/form/installation'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/docs/form/configuration'
     | '/docs/form/controllers'
     | '/docs/form/custom-controller'
+    | '/docs/form/email-builder'
     | '/docs/form/fields'
     | '/docs/form/groups'
     | '/docs/form/installation'
@@ -581,6 +593,13 @@ declare module '@tanstack/react-router' {
       path: '/form/custom-controller'
       fullPath: '/docs/form/custom-controller'
       preLoaderRoute: typeof DocsFormCustomControllerRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/form/email-builder': {
+      id: '/docs/form/email-builder'
+      path: '/form/email-builder'
+      fullPath: '/docs/form/email-builder'
+      preLoaderRoute: typeof DocsFormEmailBuilderRouteImport
       parentRoute: typeof DocsRoute
     }
     '/docs/form/fields': {
@@ -775,6 +794,7 @@ interface DocsRouteChildren {
   DocsFormConfigurationRoute: typeof DocsFormConfigurationRoute
   DocsFormControllersRoute: typeof DocsFormControllersRoute
   DocsFormCustomControllerRoute: typeof DocsFormCustomControllerRoute
+  DocsFormEmailBuilderRoute: typeof DocsFormEmailBuilderRoute
   DocsFormFieldsRoute: typeof DocsFormFieldsRoute
   DocsFormGroupsRoute: typeof DocsFormGroupsRoute
   DocsFormInstallationRoute: typeof DocsFormInstallationRoute
@@ -811,6 +831,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsFormConfigurationRoute: DocsFormConfigurationRoute,
   DocsFormControllersRoute: DocsFormControllersRoute,
   DocsFormCustomControllerRoute: DocsFormCustomControllerRoute,
+  DocsFormEmailBuilderRoute: DocsFormEmailBuilderRoute,
   DocsFormFieldsRoute: DocsFormFieldsRoute,
   DocsFormGroupsRoute: DocsFormGroupsRoute,
   DocsFormInstallationRoute: DocsFormInstallationRoute,

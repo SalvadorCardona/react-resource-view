@@ -3,6 +3,7 @@ import type { RowComponentPropsInterface } from "react-resource-view"
 import type {
   Comment,
   Company,
+  Newsletter,
   Post,
   Product,
   Task,
@@ -182,6 +183,55 @@ export function PostRow({ row }: RowComponentPropsInterface) {
         {post.publishedAt && <span>{post.publishedAt}</span>}
         <span aria-hidden>·</span>
         <span>{post.views} views</span>
+      </p>
+    </div>
+  )
+}
+
+const NEWSLETTER_TONES: Record<Newsletter["status"], Tone> = {
+  draft: "neutral",
+  scheduled: "warn",
+  sent: "info",
+}
+
+const NEWSLETTER_LABELS: Record<Newsletter["status"], string> = {
+  draft: "Draft",
+  scheduled: "Scheduled",
+  sent: "Sent",
+}
+
+/** A newsletter as the inbox would list it: the subject, then the preheader. */
+export function NewsletterRow({ row }: RowComponentPropsInterface) {
+  const newsletter = row?.data as Newsletter | undefined
+  if (!newsletter) return null
+
+  const status = newsletter.status ?? "draft"
+
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 font-medium leading-snug">{newsletter.subject}</p>
+        <Badge tone={NEWSLETTER_TONES[status] ?? "neutral"}>
+          {NEWSLETTER_LABELS[status] ?? status}
+        </Badge>
+      </div>
+
+      {newsletter.preheader && (
+        <p className="line-clamp-2 text-sm text-muted-foreground">
+          {newsletter.preheader}
+        </p>
+      )}
+
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <span>{newsletter.fromName}</span>
+        {newsletter.sendAt && (
+          <>
+            <span aria-hidden>·</span>
+            <span>{newsletter.sendAt}</span>
+          </>
+        )}
+        <span aria-hidden>·</span>
+        <span>{newsletter.blocks?.length ?? 0} blocks</span>
       </p>
     </div>
   )

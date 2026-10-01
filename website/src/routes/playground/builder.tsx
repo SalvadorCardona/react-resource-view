@@ -11,7 +11,11 @@ import {
 } from "@/demo/playground/deriveTitle"
 // Through the barrel rather than the two files: importing it is also what
 // seeds the collections this screen writes into.
-import { postsResource, usersResource } from "@/demo/playground/resources"
+import {
+  newslettersResource,
+  postsResource,
+  usersResource,
+} from "@/demo/playground/resources"
 import { readAdminRows, USERS_ID, type User } from "@/demo/playground/adminData"
 import { cn } from "@/lib/cn"
 
@@ -22,7 +26,7 @@ export const Route = createFileRoute("/playground/builder")({
       {
         name: "description",
         content:
-          "One form whose fields the reader decides: assemble a page out of blocks, or a CV, and publish it — it is saved to the back office, as a post or as the CV of an account.",
+          "One form whose fields the reader decides: assemble a page out of blocks, a CV or an email, and save it — it lands in the back office, as a post, as the CV of an account or as a newsletter.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -33,14 +37,37 @@ export const Route = createFileRoute("/playground/builder")({
 /**
  * The builder, with its submit button wired to something: publishing a page
  * saves it as a post, saving a CV writes it onto the account whose name is on
- * it — through the same repository a form of that resource would call. Those
+ * it, saving an email files it among the newsletters — through the same repository a form of that resource would call. Those
  * resources' own storage is what the back office reads, so the record shows up
  * there the moment this screen writes it.
  */
 function PlaygroundBuilderRoute() {
   const [kit, setKit] = useState<BuilderKit>(BUILDER_KITS[0])
 
-  const handleSave = async (blocks: BuilderBlock[]) => {
+  const handleSave = async (
+    blocks: BuilderBlock[],
+    fields: Record<string, unknown>
+  ) => {
+    // An email is named by its subject, which is a field rather than a block.
+    if (kit.id === "email") {
+      const subject = String(fields.subject ?? "").trim() || "Untitled newsletter"
+
+      await newslettersResource.createItem({
+        subject,
+        preheader: String(fields.preheader ?? ""),
+        fromName: String(fields.fromName ?? ""),
+        brandColor: String(fields.brandColor ?? ""),
+        status: "draft",
+        sendAt: "",
+        blocks,
+      })
+
+      toast.success(`"${subject}" saved`, {
+        description: "Open it from Newsletters — it is a draft until it is scheduled.",
+      })
+      return
+    }
+
     const title = deriveDocumentTitle(kit.id, blocks)
 
     // One account, one CV: a CV exported from here is the CV of the person it
@@ -108,12 +135,12 @@ function PlaygroundBuilderRoute() {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">Page builder</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Assemble a page or a CV, then save it — a page is saved as a post, a
-          CV onto the account it names.
+          Assemble a page, a CV or an email, then save it — a page is saved as a
+          post, a CV onto the account it names, an email as a newsletter.
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:max-w-3xl">
+      <div className="grid gap-3 sm:grid-cols-3 lg:max-w-5xl">
         {BUILDER_KITS.map((option) => (
           <button
             key={option.id}

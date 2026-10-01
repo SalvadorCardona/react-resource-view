@@ -50,17 +50,23 @@ src/
     index.tsx              landing page
     playground.tsx         the shell the two playgrounds share
     playground/index.tsx   a complete back office, built from two scopes
-    playground/builder.tsx a page builder, and the same field as a résumé
+    playground/builder.tsx a page builder, and the same field as a résumé and as an email
     docs.tsx               the docs shell: header + split sidebar
-    docs/form/*            react-data-form           (13 pages)
+    docs/form/*            react-data-form           (14 pages)
     docs/resource-view/*   react-resource-view       (15 pages)
   components/              DocArticle, CodeBlock, Demo, FormDemo, ResourceDemo…
   demo/                    fixtures, the two demo resources, library setup
   demo/playground/         the playground's administration: scopes, shell, overview
   demo/playground/resources/  one file per resource — what the "Declaration" button shows
-  demo/builder/            the block types, the two previews, the studio around them
+  demo/builder/            the block types, the three previews, the studio around them
+  demo/email/              renderEmail — blocks to email HTML, pure, copyable (see its README)
   lib/navigation.ts        the sidebar model — the source of truth for pages
   styles/app.css           the theme, and the shadcn variables both libraries read
+public/email/              the media library as PNG, for emails — generated, committed
+scripts/
+  generate-seo-files.ts    sitemap, robots.txt and llms.txt, after the build
+  rasterize-email-media.ts the SVG library of the builder → public/email/*.png
+  send-test-email.ts       sends the email builder's output to a real mailbox
 ```
 
 ### The sidebar is split in two
@@ -78,6 +84,27 @@ entry pointing at a page that does not exist fails to compile.
 
 The title, summary, section badge and prev/next pager are all read from the
 navigation model, so the page file only holds its own content.
+
+## Sending a test email
+
+The playground's email builder renders real email HTML (`src/demo/email/`), but
+the site never sends anything: it is static and public, and a form that mailed
+what it was given would be a relay for spam. A test goes out from a
+developer's machine, with credentials read from the environment:
+
+```bash
+export SMTP_URL="smtp://login:key@smtp-relay.brevo.com:587"  # or BREVO_API_KEY=…
+export MAIL_TEST_FROM="sender@a-validated-domain"           # MAIL_TEST_TO optional
+node --experimental-strip-types scripts/send-test-email.ts             # the sample
+node --experimental-strip-types scripts/send-test-email.ts mail.html   # an export
+node --experimental-strip-types scripts/send-test-email.ts --dry-run   # a .eml only
+```
+
+Images go as inline `cid:` attachments until `public/email/` is deployed;
+`--assets=production` points them at the deployed site instead. After changing
+a drawing in `media.ts`, run `scripts/rasterize-email-media.ts` (it needs a
+local Chrome) and commit the PNGs. The full procedure and the verification
+checklist are in [`src/demo/email/README.md`](src/demo/email/README.md).
 
 ## Deploying
 
