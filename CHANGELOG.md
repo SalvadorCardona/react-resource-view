@@ -1,5 +1,57 @@
 # react-resource-view
 
+## 0.13.0
+
+### Minor Changes
+
+- 1a4b81b: Recognize a 401 or a 403 thrown by a scope's `authorization` from its `status`,
+  not only from `UnauthorizedError` and `ForbiddenError`. Any error carrying
+  `status: 401` calls `onUnauthorized`, any error carrying `status: 403` renders
+  the `forbiddenFallback`: an auth library no longer has to import the classes,
+  and two copies of `react-resource-view` in one bundle still agree. No other
+  status is recognized, and errors recognized today behave as before.
+
+### Patch Changes
+
+- 6cd82c4: Save a card moved to another column of a board kept in the local repository,
+  instead of answering "Une erreur est survenue" and putting the card back.
+
+  The drop sent only the short identifier of the record (`12`), which the local
+  repository compared to the `@id` it keys records on (`/tasks/12`) and never
+  found. It now finds the dropped row again and sends the whole identity the
+  dialect reads it by — `@id` and `id` for JSON-LD, `documentId` for Strapi, the
+  primary key for Supabase — so every repository addresses the record as before.
+  A card dropped back into its own column sends nothing.
+
+  The error a failed update shows is now the translatable key `An error occurred`,
+  also used when a list or a calendar fails to load, rather than a French sentence.
+  Applications translating `Une erreur est survenue` should add the new key.
+
+- 1d323a6: Keep a column of the columns view at its width when one of its cards holds a
+  long unbreakable word (a path, a URL, an identifier). As a flex item, the
+  column was never narrower than its widest content: once a parent sized the
+  columns, it grew around the word and slid under its neighbours. The column is
+  now `min-w-0` and the content of a record card `break-words`, so the word wraps
+  inside the card instead.
+- 29e5142: Keep the horizontal sub-view bar inside the page and level with the side column when `subViewResource` has one, instead of pushing the page sideways and starting 4rem below the column.
+
+  The sub-view track was a bare `1fr`, which is never narrower than what it holds —
+  and the bar is as wide as all its tabs, a table in a tab as wide as its columns.
+  The track is now `minmax(0, 1fr)` and the tabs container `min-w-0`, so the bar
+  scrolls inside the width left beside the column, as it already did without one.
+
+  The bar was also meant to stay pinned under the top bar while a long sub-view
+  scrolls, but the scroll area's root sets `position: relative` inline, which beat
+  its `sticky` class: the bar never stuck, and its `top` offset moved it down
+  instead. The bar is now pinned from a wrapper of its own.
+
+- 47c7df9: Keep the horizontal sub-view tab bar within its column when
+  `subViewResource.viewComponent` draws a left column beside it. The tabs' grid
+  track grew to the width of the whole row of tabs, so the bar never scrolled:
+  the last tabs were cut off and the page itself overflowed to the right. The bar
+  now scrolls sideways as it does without a left column; the vertical menu and
+  records without a left column render as before.
+
 ## 0.12.0
 
 ### Minor Changes
