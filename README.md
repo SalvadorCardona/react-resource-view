@@ -202,6 +202,36 @@ A dialect is one object — `buildRequest`, `readCollection`, `readItem`,
 exported to implement it. A resource that brings its own `getCollection`,
 `getItem` and the rest still bypasses all of this, as it always could.
 
+### Typing resources from OpenAPI
+
+Rather than copying the API's types into hand-written interfaces, export the
+OpenAPI schema your API publishes (`/api/docs.jsonopenapi` on API Platform),
+commit it as `openapi.json`, and generate the types with
+[openapi-typescript](https://openapi-ts.dev):
+
+```bash
+npx openapi-typescript openapi.json --output api-schema.ts
+```
+
+`paths` types the client, `components["schemas"]` types the resources:
+
+```ts
+import type { components } from "./api-schema"
+
+// API Platform's JSON-LD schema carries the "@id" an item needs; on another
+// backend, intersect the schema with { "@id": string }.
+type Article = components["schemas"]["Article.jsonld"]
+
+const articles = createViewResource<Article>("articles", {
+  path: "/api/articles",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})
+```
+
+The whole recipe — a download-clean-generate script, the per-backend
+specifics for API Platform, Strapi and Supabase, and when to regenerate — is on
+[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
+
 ## Installation
 
 ```bash

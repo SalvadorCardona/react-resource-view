@@ -8,6 +8,7 @@ import {
   Columns3,
   Compass,
   Filter,
+  FileCodeCorner,
   Fingerprint,
   FolderTree,
   Group,
@@ -227,6 +228,13 @@ export const VIEW_SECTION: DocSection = {
           summary:
             "One declaration against API Platform, Strapi or Supabase — and how to add a fourth.",
           icon: Network,
+        },
+        {
+          href: "/docs/resource-view/openapi-types",
+          title: "Types from OpenAPI",
+          summary:
+            "Export the schema your API publishes, and type the client and every resource from it.",
+          icon: FileCodeCorner,
         },
       ],
     },

@@ -187,7 +187,8 @@ function Installation() {
 
       <P>
         The JSON-LD dialect is the default, and it goes through the client of{" "}
-        <C>jsonld-api-client</C> — middleware, scope header and typed paths included.
+        <C>jsonld-api-client</C> — middleware, scope header and{" "}
+        <A href="/docs/resource-view/openapi-types">typed paths</A> included.
         Configuring that client is enough; <C>configureApi</C> falls back to its
         settings when it is given none of its own.
       </P>
