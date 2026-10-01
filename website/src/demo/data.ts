@@ -19,6 +19,14 @@ export interface Article {
   status: "draft" | "review" | "published"
   readingTime: number
   publishedAt: string
+  /**
+   * When the article was being written — only the home page's gallery copy
+   * carries it, for the calendar and the timeline to place the article on.
+   */
+  writingStartAt?: string
+  writingEndAt?: string
+  /** The colour of its category, which the gallery's calendar paints it in. */
+  categoryColor?: string
 }
 
 export interface Session {
@@ -62,6 +70,15 @@ export const VARIANT_ARTICLES_ID = "variant_articles"
  * demos should show.
  */
 export const DRAWER_ARTICLES_ID = "drawer_articles"
+
+/**
+ * The articles the home page lays out in all seven layouts.
+ *
+ * Its copy carries a writing window and a publication date relative to the
+ * current week — a calendar and a timeline both open on today — which the
+ * documentation pages, reading the fixed dates, should not change for.
+ */
+export const GALLERY_ARTICLES_ID = "gallery_articles"
 
 const ARTICLES: Article[] = [
   {
@@ -255,6 +272,60 @@ function buildSessions(): Session[] {
   }))
 }
 
+/**
+ * An editorial calendar: when each article is written, and when it goes out.
+ *
+ * Every window starts between Monday and Friday of the current week, so the
+ * calendar shows them all on opening whichever day the week starts on, and the
+ * timeline's two weeks hold every one of them. Writing always ends before the
+ * article is published, and an author never writes two articles at once.
+ */
+const WRITING_SEEDS: Record<
+  string,
+  { start: [number, number]; end: [number, number]; publishDay: number }
+> = {
+  "1": { start: [0, 9], end: [2, 17], publishDay: 3 },
+  "2": { start: [0, 14], end: [1, 18], publishDay: 2 },
+  "3": { start: [1, 9], end: [4, 17], publishDay: 7 },
+  "4": { start: [3, 9], end: [8, 17], publishDay: 10 },
+  "5": { start: [2, 10], end: [3, 18], publishDay: 7 },
+  "6": { start: [4, 9], end: [10, 17], publishDay: 11 },
+  "7": { start: [2, 9], end: [3, 12], publishDay: 4 },
+}
+
+/** Hex rather than a theme variable: the calendar tints a cell by appending an alpha. */
+const CATEGORY_COLORS: Record<string, string> = {
+  Forms: "#f59e0b",
+  Views: "#3b82f6",
+  Routing: "#10b981",
+  "JSON-LD": "#8b5cf6",
+  Architecture: "#f43f5e",
+}
+
+/** A calendar day, written the way the date picker writes `publishedAt`. */
+function dayOf(dayOffset: number): string {
+  const date = mondayOfThisWeek()
+  date.setDate(date.getDate() + dayOffset)
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function buildGalleryArticles(): Article[] {
+  return ARTICLES.map((article) => {
+    const { start, end, publishDay } = WRITING_SEEDS[article.id]
+    return {
+      ...article,
+      "@id": `/${GALLERY_ARTICLES_ID}/${article.id}`,
+      "@type": GALLERY_ARTICLES_ID,
+      publishedAt: dayOf(publishDay),
+      writingStartAt: at(...start),
+      writingEndAt: at(...end),
+      categoryColor: CATEGORY_COLORS[article.category],
+    }
+  })
+}
+
 function collection<T>(id: string, member: T[]) {
   return {
     "@id": id,
@@ -300,6 +371,10 @@ export function seedDemoData(): void {
         "@type": VARIANT_ARTICLES_ID,
       }))
     )
+  )
+  setInStorage(
+    GALLERY_ARTICLES_ID,
+    collection(GALLERY_ARTICLES_ID, buildGalleryArticles())
   )
   setInStorage(
     DRAWER_ARTICLES_ID,

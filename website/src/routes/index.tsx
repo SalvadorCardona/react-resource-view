@@ -1,8 +1,11 @@
+import { useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowRight,
   Boxes,
+  Check,
   Compass,
+  Copy,
   Languages,
   LayoutGrid,
   Link2,
@@ -478,28 +481,76 @@ function Layouts() {
       </div>
 
       {/* The eighth layout is the reader's, and the command that writes it is
-          the shortest sentence on this page. */}
-      <Link
-        to="/docs/resource-view/custom-variant"
-        className="group mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card p-5 no-underline transition hover:-translate-y-0.5 hover:border-view/50 hover:shadow-lg"
-      >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-view-soft text-view">
-          <Terminal className="size-4" />
-        </span>
-        <span className="min-w-0">
-          <span className="block font-medium">Create your own view variant</span>
-          <span className="block text-sm text-muted-foreground">
-            An eighth layout is one file — three components and a factory. One
-            command writes it where you want it.
-          </span>
-        </span>
-        <code className="ml-auto hidden overflow-x-auto whitespace-nowrap rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[11px] text-muted-foreground lg:block">
-          <span className="text-primary">$</span> npx react-resource-view
-          create-view-variant
-        </code>
-        <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
-      </Link>
+          the shortest sentence on this page. It sits right under the gallery,
+          read as the next one along — and the link is the button, not the
+          card, so copying the command does not navigate away. */}
+      <div className="mt-4 rounded-2xl border border-view/50 bg-gradient-to-br from-view-soft to-card p-5 shadow-sm sm:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-8">
+          <div className="flex min-w-0 gap-4">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-view text-background">
+              <Terminal className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-xl font-semibold tracking-tight">
+                The eighth layout is yours
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Create your own view variant: one file — three components and a
+                factory. One command writes it where you want it.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:ml-auto lg:shrink-0">
+            <CopyCommand command="npx react-resource-view create-view-variant" />
+            <Link
+              to="/docs/resource-view/custom-variant"
+              className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-view px-4 py-2.5 text-sm font-medium text-background no-underline transition hover:opacity-90"
+            >
+              Read the guide
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
     </section>
+  )
+}
+
+/**
+ * A shell command and the button that copies it.
+ *
+ * `InstallCommand` copies an install line in the reader's package manager; this
+ * one is a command run as it is, so it only keeps the copying.
+ */
+function CopyCommand({ command }: { command: string }) {
+  const [copied, setCopied] = useState(false)
+
+  function copy() {
+    void navigator.clipboard.writeText(command).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    })
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
+      <code className="min-w-0 font-mono text-xs text-foreground sm:overflow-x-auto sm:whitespace-nowrap">
+        <span className="text-view">$</span> {command}
+      </code>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label="Copy the command"
+        className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition hover:text-foreground"
+      >
+        {copied ? (
+          <Check className="size-3.5 text-view" />
+        ) : (
+          <Copy className="size-3.5" />
+        )}
+      </button>
+    </div>
   )
 }
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { ClientOnly } from "@tanstack/react-router"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { articlesResource, sessionsResource } from "@/demo/resources"
+import { galleryArticlesResource } from "@/demo/resources"
 
 /**
  * Seven layouts over one collection, switched by the reader.
@@ -12,33 +12,27 @@ import { articlesResource, sessionsResource } from "@/demo/resources"
  * Picking a layout below is the very call an application makes when it lets its
  * users pick.
  *
- * Five of the seven read the articles; a calendar and a timeline need records
- * with a start and an end, so they read the conference schedule instead. That
- * split is the honest one: a layout is declared by the resource whose data it
- * can draw.
+ * All seven read the same articles. A calendar and a timeline need a start and
+ * an end, which an article gets from its editorial calendar: the window it is
+ * written in. The calendar places each article on the day its writing starts,
+ * the timeline bands the windows by author — who writes what, when.
  */
 export function LayoutGallery() {
   return (
-    <div className="space-y-6">
-      <GalleryFrame>
-        <ResourceDemo resource={articlesResource} variant="table" />
-      </GalleryFrame>
-
-      <p className="text-sm text-muted-foreground">
-        A calendar and a timeline place a record between a start and an end, which
-        an article has not got — so the two below read a conference schedule.
-      </p>
-
-      <GalleryFrame>
-        <ResourceDemo resource={sessionsResource} variant="calendar" />
-      </GalleryFrame>
-    </div>
+    <GalleryFrame>
+      <ResourceDemo resource={galleryArticlesResource} variant="table" />
+    </GalleryFrame>
   )
 }
 
+/**
+ * The switcher's seven buttons are wider than a phone; the list does not wrap
+ * them, and the frame clips what overflows. They scroll sideways instead, so
+ * none is cut off.
+ */
 function GalleryFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm [&_[data-slot=tabs]]:max-w-full [&_[data-slot=tabs]]:overflow-x-auto">
       <ClientOnly fallback={<GallerySkeleton />}>{children}</ClientOnly>
     </div>
   )
