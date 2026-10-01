@@ -90,6 +90,7 @@ if (!transport && !dryRun) {
   fail(`Nothing to send with. Set one of:
   BREVO_API_KEY   a Brevo API key (Brevo › SMTP & API › API keys), or
   SMTP_URL        smtp://user:password@host:587 (smtps:// for port 465)
+                  a Gmail box: smtps://you%40gmail.com:<app password>@smtp.gmail.com:465
 and:
   MAIL_TEST_FROM  a sender address validated with that provider
 optionally:

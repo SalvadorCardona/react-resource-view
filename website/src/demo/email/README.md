@@ -96,7 +96,7 @@ The site is static: it never sends. A test is sent from a developer's machine.
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `BREVO_API_KEY` | one of the two | Brevo transactional API key. Images must then be online (`--assets=production`): the API has no inline attachments. |
-| `SMTP_URL` | one of the two | `smtp://user:pass@host:587` (STARTTLS) or `smtps://…:465`. Brevo's relay works: `smtp://<login>:<smtp key>@smtp-relay.brevo.com:587`. |
+| `SMTP_URL` | one of the two | `smtp://user:pass@host:587` (STARTTLS) or `smtps://…:465`. Brevo's relay works: `smtp://<login>:<smtp key>@smtp-relay.brevo.com:587`. So does a Gmail account, with an app password (Google account › Security › App passwords, 2-step verification on): `smtps://you%40gmail.com:<app password>@smtp.gmail.com:465`, with `MAIL_TEST_FROM` set to that same address. |
 | `MAIL_TEST_FROM` | yes | A sender validated with the provider (domain with SPF/DKIM, ideally DMARC). |
 | `MAIL_TEST_TO` | no | Recipient(s), comma-separated. Default `cardona.salvador2022@gmail.com`. |
 | `MAIL_TEST_FROM_NAME` | no | Display name; default the envelope's `fromName`. |
