@@ -202,6 +202,32 @@ export const PORTRAIT_LIBRARY: Artwork[] = [
   }),
 ]
 
+/**
+ * The marks an email header can carry in front of the brand name.
+ *
+ * Each one is drawn on a ground of its own rather than on transparency: a
+ * client in dark mode paints its own background behind a transparent logo, and
+ * a dark mark on a dark mailbox is no mark at all.
+ */
+function mark(
+  id: string,
+  label: string,
+  { ground, figure }: Record<"ground" | "figure", string>
+): Artwork {
+  const source = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+<rect width="96" height="96" rx="22" fill="${ground}"/>
+<ellipse cx="48" cy="48" rx="22" ry="30" transform="rotate(32 48 48)" fill="${figure}"/>
+<path d="M36 26 C 52 40 44 56 60 70" fill="none" stroke="${ground}" stroke-width="5" stroke-linecap="round"/>
+</svg>`
+
+  return { id, label, src: `data:image/svg+xml,${encodeURIComponent(source)}` }
+}
+
+export const LOGO_LIBRARY: Artwork[] = [
+  mark("bean-light", "Bean, light", { ground: "#fdf6ec", figure: "#7c2d12" }),
+  mark("bean-dark", "Bean, dark", { ground: "#2b1a12", figure: "#f3b27a" }),
+]
+
 /** The library as a picker's options — label on screen, id in the payload. */
 export const MEDIA_OPTIONS = MEDIA_LIBRARY.map((item) => ({
   label: item.label,
@@ -213,17 +239,22 @@ export const PORTRAIT_OPTIONS = PORTRAIT_LIBRARY.map((item) => ({
   value: item.id,
 }))
 
+export const LOGO_OPTIONS = LOGO_LIBRARY.map((item) => ({
+  label: item.label,
+  value: item.id,
+}))
+
 /**
  * The `src` a stored value points at.
  *
- * A value is either an id from one of the two libraries or, when the reader
+ * A value is either an id from one of the libraries or, when the reader
  * uploaded a file of their own, the data URI `FileInputController` produced —
  * which is already a `src`, and is returned as it stands.
  */
 export function artworkSrc(value?: string | null): string | undefined {
   if (!value) return undefined
 
-  const found = [...MEDIA_LIBRARY, ...PORTRAIT_LIBRARY].find(
+  const found = [...MEDIA_LIBRARY, ...PORTRAIT_LIBRARY, ...LOGO_LIBRARY].find(
     (item) => item.id === value
   )
 

@@ -18,6 +18,7 @@ seedAdminData()
 
 export { commentsResource } from "@/demo/playground/resources/comments"
 export { companiesResource } from "@/demo/playground/resources/companies"
+export { newslettersResource } from "@/demo/playground/resources/newsletters"
 export { ordersResource } from "@/demo/playground/resources/orders"
 export { overviewResource } from "@/demo/playground/resources/overview"
 export { postsResource } from "@/demo/playground/resources/posts"

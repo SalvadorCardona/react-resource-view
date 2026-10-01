@@ -1,9 +1,9 @@
-import { type FormInterface } from "react-data-form"
-import { FileUser, LayoutTemplate, type LucideIcon } from "lucide-react"
-import type { FC } from "react"
+import { SelectButtonInputController, type FormInterface } from "react-data-form"
+import { FileUser, LayoutTemplate, Mail, type LucideIcon } from "lucide-react"
+import type { FC, ReactNode } from "react"
 import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
 import { BUILDER_FORM_COMPONENTS } from "@/demo/builder/BuilderForm"
-import type { CanvasMedium } from "@/demo/builder/BuilderCanvas"
+import type { CanvasMedium, CanvasSource } from "@/demo/builder/BuilderCanvas"
 import {
   PAGE_BLOCK,
   PAGE_CTA,
@@ -18,20 +18,27 @@ import {
   RESUME_SKILLS,
   type BuilderBlock,
 } from "@/demo/builder/blocks"
+import { BRAND_COLORS, EMAIL_BLOCK } from "@/demo/builder/emailBlocks"
+import { EmailPreview } from "@/demo/builder/EmailPreview"
+import { useEmailOutputs } from "@/demo/builder/EmailOutputs"
 import { PagePreview } from "@/demo/builder/PagePreview"
 import { ResumePreview } from "@/demo/builder/ResumePreview"
+import { SAMPLE_BLOCKS, SAMPLE_ENVELOPE } from "@/demo/email/sample"
 
 /**
- * The two documents the builder can assemble.
+ * The documents the builder can assemble.
  *
- * They exist as a pair on purpose. A page builder is the example everybody
+ * The first two exist as a pair on purpose. A page builder is the example everybody
  * pictures, and it is easy to mistake for a feature of its own; putting a
  * résumé next to it, built out of the same field with a different palette,
  * shows what is actually general — a form whose fields are decided by the
- * content rather than by the description.
+ * content rather than by the description. The third, the email, is the same
+ * field once more, with two differences worth having: the document has fields
+ * of its own beside its blocks — an envelope — and what it compiles to is a
+ * string of HTML rather than a component tree.
  */
 export interface BuilderKit {
-  id: "page" | "resume"
+  id: "page" | "resume" | "email"
   label: string
   /** One line, under the picker. */
   tagline: string
@@ -40,9 +47,27 @@ export interface BuilderKit {
   form: FormInterface
   /** What the studio opens on. */
   sample: BuilderBlock[]
-  preview: FC<{ blocks: BuilderBlock[] }>
-  /** How the preview is framed: a web page stretches, a CV is a sheet of A4. */
+  /**
+   * The values of the form's other fields, beside `blocks` — an email's
+   * subject, preheader, sender and colour. A kit without any has only blocks,
+   * and its payload is the array alone, as it always was.
+   */
+  fields?: Record<string, unknown>
+  preview: FC<{ blocks: BuilderBlock[]; fields?: Record<string, unknown> }>
+  /**
+   * How the preview is framed: a web page stretches, a CV is a sheet of A4, an
+   * email sits in a mail client.
+   */
   medium: CanvasMedium
+  /**
+   * What the canvas shows beyond the result — source tabs, a status beside the
+   * toolbar, buttons beside "Reset". A hook: it is called on every render of
+   * the studio, which is mounted once per kit.
+   */
+  useOutputs?: (
+    blocks: BuilderBlock[],
+    fields?: Record<string, unknown>
+  ) => { sources?: CanvasSource[]; toolbarEnd?: ReactNode; actions?: ReactNode }
 }
 
 export const pageForm: FormInterface = {
@@ -67,6 +92,36 @@ export const resumeForm: FormInterface = {
       forms: [RESUME_BLOCK],
       addLabel: "Add a first section",
       appendLabel: "Add a section",
+    }),
+  },
+}
+
+/**
+ * The email: an envelope described as fields of the form, beside the blocks.
+ * `BuilderFormInputs` folds them into the "Settings" panel above the content,
+ * the way a post's title and author are.
+ */
+export const emailForm: FormInterface = {
+  label: { submit: "Save the newsletter" },
+  components: BUILDER_FORM_COMPONENTS,
+  inputs: {
+    subject: { label: "Subject", required: true },
+    preheader: {
+      label: "Preheader",
+      description:
+        "The grey line after the subject in the inbox. Around 90 characters.",
+    },
+    fromName: { label: "Sender name" },
+    brandColor: {
+      label: "Brand colour",
+      controller: SelectButtonInputController,
+      valueOptions: BRAND_COLORS,
+      defaultValue: BRAND_COLORS[0].value,
+    },
+    blocks: createBlockBuilderInput({
+      label: "Content",
+      forms: [EMAIL_BLOCK],
+      addLabel: "Add a first block",
     }),
   },
 }
@@ -186,5 +241,17 @@ export const BUILDER_KITS: BuilderKit[] = [
     sample: RESUME_SAMPLE,
     preview: ResumePreview,
     medium: "sheet",
+  },
+  {
+    id: "email",
+    label: "Email",
+    tagline: "A newsletter, in the HTML a mailbox actually receives.",
+    icon: Mail,
+    form: emailForm,
+    sample: SAMPLE_BLOCKS,
+    fields: SAMPLE_ENVELOPE,
+    preview: EmailPreview,
+    medium: "email",
+    useOutputs: useEmailOutputs,
   },
 ]

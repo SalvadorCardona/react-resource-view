@@ -14,6 +14,16 @@ import {
   type BuilderBlock,
 } from "@/demo/builder/blocks"
 import { artworkSrc } from "@/demo/builder/media"
+import {
+  EMAIL_BUTTON,
+  EMAIL_COLUMNS,
+  EMAIL_FOOTER,
+  EMAIL_HEADER,
+  EMAIL_HERO,
+  EMAIL_IMAGE,
+  EMAIL_SEPARATOR,
+  EMAIL_TEXT,
+} from "@/demo/email/renderEmail"
 
 /**
  * What a block looks like in the outline, before it is opened.
@@ -95,6 +105,49 @@ const SUMMARIES: Record<string, Summariser> = {
   [PAGE_CTA]: (block) => ({
     title: text(block.title) || "Call to action",
     detail: ["Call to action", text(block.action)].filter(Boolean).join(" · "),
+  }),
+  [EMAIL_HEADER]: (block) => ({
+    title: text(block.brand) || "Header",
+    detail: "Header",
+    thumbnail: artworkSrc(text(block.logo)),
+  }),
+  [EMAIL_HERO]: (block) => ({
+    title: text(block.title) || "Untitled hero",
+    detail: "Hero",
+    thumbnail: artworkSrc(text(block.image)),
+  }),
+  [EMAIL_TEXT]: (block) => {
+    const body = plainText(block.body)
+    const words = body ? body.split(" ").length : 0
+
+    return {
+      title: text(block.title) || excerpt(body) || "Empty paragraph",
+      detail: words ? `Text · ${counted(words, "word", "words")}` : "Text",
+    }
+  },
+  [EMAIL_BUTTON]: (block) => ({
+    title: text(block.label) || "Button",
+    detail: ["Button", text(block.url)].filter(Boolean).join(" · "),
+  }),
+  [EMAIL_IMAGE]: (block) => ({
+    title: text(block.caption) || "Image",
+    detail: "Image",
+    thumbnail: artworkSrc(text(block.image)),
+  }),
+  [EMAIL_COLUMNS]: (block) => ({
+    title:
+      [text(block.leftTitle), text(block.rightTitle)].filter(Boolean).join(" · ") ||
+      "Two columns",
+    detail: "Two columns",
+    thumbnail: artworkSrc(text(block.leftImage)),
+  }),
+  [EMAIL_SEPARATOR]: (block) => ({
+    title: block.kind === "space" ? "Spacer" : "Divider",
+    detail: `Divider · ${block.kind === "space" ? "space" : "line"} · ${text(block.size) || "medium"}`,
+  }),
+  [EMAIL_FOOTER]: (block) => ({
+    title: excerpt(text(block.address)) || "Footer",
+    detail: text(block.unsubscribeUrl) ? "Footer · unsubscribe link" : "Footer · no unsubscribe link",
   }),
   [RESUME_HEADER]: (block) => ({
     title: text(block.name) || "Your name",

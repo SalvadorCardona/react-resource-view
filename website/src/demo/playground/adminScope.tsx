@@ -9,6 +9,7 @@ import {
 import {
   commentsResource,
   companiesResource,
+  newslettersResource,
   ordersResource,
   overviewResource,
   postsResource,
@@ -19,7 +20,7 @@ import {
 
 /**
  * The one thing `AdminLayout` alone cannot offer: a way to the standalone
- * builder — the same two kits, on sample data, for whoever wants to try one
+ * builder — the same three kits, on sample data, for whoever wants to try one
  * without opening a record. Rendered in the top bar via `createAdminLayout`'s
  * `topBarEnd`, so it survives every screen of the scope.
  *
@@ -69,7 +70,7 @@ const HELP_FOOTER = {
 }
 
 /**
- * The back office of the playground: one area, eight resources, one menu.
+ * The back office of the playground: one area, nine resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
  * anywhere: the lists and their layouts, the filter bars, the forms and the
@@ -92,6 +93,7 @@ export const adminScope: ScopeInterface = {
       companiesResource,
     postsResource,
     commentsResource,
+    newslettersResource,
     productsResource,
     ordersResource,
     tasksResource,
@@ -119,6 +121,8 @@ export const adminScope: ScopeInterface = {
       items: [
         createItemMenuWithResource({ resource: postsResource }),
         createItemMenuWithResource({ resource: commentsResource }),
+        // The other thing the roastery writes: the email builder's records.
+        createItemMenuWithResource({ resource: newslettersResource }),
       ],
     },
     {

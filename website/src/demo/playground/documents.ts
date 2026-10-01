@@ -10,7 +10,8 @@ import {
   RESUME_SKILLS,
   type BuilderBlock,
 } from "@/demo/builder/blocks"
-import type { Post } from "@/demo/playground/adminData"
+import type { Newsletter, Post } from "@/demo/playground/adminData"
+import { SAMPLE_BLOCKS, SAMPLE_ENVELOPE } from "@/demo/email/sample"
 
 /**
  * The records of the back office that are documents rather than fields: the
@@ -29,6 +30,92 @@ import type { Post } from "@/demo/playground/adminData"
  * The types come from `adminData`, which reads these back in turn — only ever
  * as types, so nothing is imported in both directions at runtime.
  */
+
+/**
+ * The newsletters of the roastery: the one the email builder opens on, being
+ * scheduled, the one before it, sent, and the next one, still a draft.
+ *
+ * Block ids are prefixed per newsletter — they only have to be unique inside
+ * one message, but a reader comparing two payloads should not be misled.
+ */
+const SITE = "https://cardona.digital/react-resource-view"
+
+function renumbered(prefix: string, blocks: BuilderBlock[]): BuilderBlock[] {
+  return blocks.map((block, order) => ({ ...block, id: `${prefix}-${order + 1}`, order }))
+}
+
+const FOOTER = SAMPLE_BLOCKS.find((block) => block.type === "email.footer")!
+
+export const NEWSLETTERS: Array<Omit<Newsletter, "@id" | "@type">> = [
+  {
+    id: "1",
+    ...SAMPLE_ENVELOPE,
+    status: "scheduled",
+    sendAt: "2026-10-06",
+    blocks: renumbered("oct", SAMPLE_BLOCKS),
+  },
+  {
+    id: "2",
+    subject: "Harvest notes from Huila",
+    preheader: "Three weeks on a Colombian farm, and the lot we came back with.",
+    fromName: "The Roastery",
+    brandColor: "#14532d",
+    status: "sent",
+    sendAt: "2026-09-08",
+    blocks: renumbered("sep", [
+      { type: "email.header", brand: "The Roastery", logo: "bean-light" },
+      {
+        type: "email.hero",
+        image: "orchard",
+        title: "Harvest notes from Huila",
+        subtitle: "Three weeks with the Muñoz family, and the twelve sacks we bought.",
+      },
+      {
+        type: "email.text",
+        body: "<p>The cherries are picked ripe, one pass every ten days, and dried on raised beds under the eaves. It is slow, and it is <strong>why the cup tastes of red apple</strong>.</p><ul><li>Variety: Caturra and Castillo</li><li>Altitude: 1,750 m</li><li>Process: washed</li></ul>",
+      },
+      { type: "email.separator", kind: "line", size: "medium" },
+      {
+        type: "email.image",
+        image: "studio",
+        caption: "The first roast of the lot, on our drum in Lyon.",
+        url: `${SITE}/playground`,
+      },
+      {
+        type: "email.button",
+        label: "Read the whole story",
+        url: `${SITE}/playground`,
+        align: "center",
+      },
+      FOOTER,
+    ]),
+  },
+  {
+    id: "3",
+    subject: "Gift boxes are back",
+    preheader: "Three bags, a card in your own words, shipped on the day you pick.",
+    fromName: "The Roastery",
+    brandColor: "#581c87",
+    status: "draft",
+    sendAt: "",
+    blocks: renumbered("nov", [
+      { type: "email.header", brand: "The Roastery", logo: "bean-dark" },
+      {
+        type: "email.hero",
+        image: "dusk",
+        title: "Gift boxes are back",
+        subtitle: "Three single origins and a card, wrapped in the roastery.",
+      },
+      {
+        type: "email.button",
+        label: "Build a box",
+        url: `${SITE}/playground/builder`,
+        align: "center",
+      },
+      FOOTER,
+    ]),
+  },
+]
 
 /**
  * The pages of the site, stored as posts.

@@ -1,0 +1,29 @@
+# A mailbox on localhost for the email builder's test sends — it receives, it
+# never delivers. Mailpit catches whatever arrives on :1025 and shows it on
+# http://localhost:8025, with an HTML compatibility check (caniemail), a link
+# check and a SpamAssassin score of the content.
+#
+#   docker compose -f scripts/mail-sandbox.compose.yml up -d
+#   SMTP_URL=smtp://localhost:1025 MAIL_TEST_FROM="Test <test@example.test>" \
+#     node --experimental-strip-types scripts/send-test-email.ts
+#   docker compose -f scripts/mail-sandbox.compose.yml down
+#
+# It cannot stand in for a real mailbox: delivering to Gmail from a home
+# connection fails (port 25 blocked by the ISP, or refused for lack of PTR,
+# SPF and DKIM). For that, send through a relay — see src/demo/email/README.md.
+
+name: email-sandbox
+
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_ENABLE_SPAMASSASSIN: spamassassin:783
+    depends_on:
+      - spamassassin
+
+  spamassassin:
+    image: instantlinux/spamassassin:latest

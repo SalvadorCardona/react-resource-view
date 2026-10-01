@@ -1,7 +1,12 @@
 import { addDays, format } from "date-fns"
 import { getInStorage, setInStorage } from "ssr-safe-storage"
 import { PAGE_HERO, PAGE_TEXT, type BuilderBlock } from "@/demo/builder/blocks"
-import { PAGES, RESUMES, starterResume } from "@/demo/playground/documents"
+import {
+  NEWSLETTERS,
+  PAGES,
+  RESUMES,
+  starterResume,
+} from "@/demo/playground/documents"
 
 /**
  * The fixtures the playground's back office runs on.
@@ -77,6 +82,25 @@ export interface Post {
   blocks: BuilderBlock[]
 }
 
+/**
+ * A newsletter: an envelope — what the inbox shows before it is opened — and
+ * the blocks of the message, assembled in the email builder and rendered by
+ * `renderEmail` into the HTML a mailbox receives.
+ */
+export interface Newsletter {
+  "@id": string
+  "@type": string
+  id: string
+  subject: string
+  preheader: string
+  fromName: string
+  brandColor: string
+  status: "draft" | "scheduled" | "sent"
+  /** The day it goes out, or went out; empty while it is a draft. */
+  sendAt: string
+  blocks: BuilderBlock[]
+}
+
 export interface Comment {
   "@id": string
   "@type": string
@@ -133,6 +157,7 @@ export const COMPANIES_ID = "admin_companies"
 export const USERS_ID = "admin_users"
 export const POSTS_ID = "admin_posts"
 export const COMMENTS_ID = "admin_comments"
+export const NEWSLETTERS_ID = "admin_newsletters"
 export const PRODUCTS_ID = "admin_products"
 export const ORDERS_ID = "admin_orders"
 export const TASKS_ID = "admin_tasks"
@@ -165,6 +190,12 @@ export const POST_STATUSES = [
   { label: "Draft", value: "draft" },
   { label: "Scheduled", value: "scheduled" },
   { label: "Published", value: "published" },
+]
+
+export const NEWSLETTER_STATUSES = [
+  { label: "Draft", value: "draft" },
+  { label: "Scheduled", value: "scheduled" },
+  { label: "Sent", value: "sent" },
 ]
 
 export const POST_CATEGORIES = [
@@ -1128,6 +1159,7 @@ function fixtures(): Array<[string, Array<{ id: string }>]> {
     [USERS_ID, withResumes(USERS)],
     [POSTS_ID, POSTS],
     [COMMENTS_ID, COMMENTS],
+    [NEWSLETTERS_ID, NEWSLETTERS],
     [PRODUCTS_ID, PRODUCTS],
     [ORDERS_ID, ORDERS],
     [TASKS_ID, tasks()],
