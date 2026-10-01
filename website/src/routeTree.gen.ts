@@ -39,6 +39,7 @@ import { Route as DocsResourceViewFiltersRouteImport } from './routes/docs/resou
 import { Route as DocsResourceViewFormsRouteImport } from './routes/docs/resource-view/forms'
 import { Route as DocsResourceViewInstallationRouteImport } from './routes/docs/resource-view/installation'
 import { Route as DocsResourceViewLayoutsRouteImport } from './routes/docs/resource-view/layouts'
+import { Route as DocsResourceViewOpenapiTypesRouteImport } from './routes/docs/resource-view/openapi-types'
 import { Route as DocsResourceViewPermissionsRouteImport } from './routes/docs/resource-view/permissions'
 import { Route as DocsResourceViewResourcesRouteImport } from './routes/docs/resource-view/resources'
 import { Route as DocsResourceViewRoutingRouteImport } from './routes/docs/resource-view/routing'
@@ -205,6 +206,12 @@ const DocsResourceViewLayoutsRoute = DocsResourceViewLayoutsRouteImport.update({
   path: '/resource-view/layouts',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsResourceViewOpenapiTypesRoute =
+  DocsResourceViewOpenapiTypesRouteImport.update({
+    id: '/resource-view/openapi-types',
+    path: '/resource-view/openapi-types',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewPermissionsRoute =
   DocsResourceViewPermissionsRouteImport.update({
     id: '/resource-view/permissions',
@@ -273,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
+  '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -310,6 +318,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
+  '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
   '/docs/resource-view/installation': typeof DocsResourceViewInstallationRoute
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
+  '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
+    | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
+    | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -467,6 +479,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/forms'
     | '/docs/resource-view/installation'
     | '/docs/resource-view/layouts'
+    | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewLayoutsRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/openapi-types': {
+      id: '/docs/resource-view/openapi-types'
+      path: '/resource-view/openapi-types'
+      fullPath: '/docs/resource-view/openapi-types'
+      preLoaderRoute: typeof DocsResourceViewOpenapiTypesRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/permissions': {
       id: '/docs/resource-view/permissions'
       path: '/resource-view/permissions'
@@ -772,6 +792,7 @@ interface DocsRouteChildren {
   DocsResourceViewFormsRoute: typeof DocsResourceViewFormsRoute
   DocsResourceViewInstallationRoute: typeof DocsResourceViewInstallationRoute
   DocsResourceViewLayoutsRoute: typeof DocsResourceViewLayoutsRoute
+  DocsResourceViewOpenapiTypesRoute: typeof DocsResourceViewOpenapiTypesRoute
   DocsResourceViewPermissionsRoute: typeof DocsResourceViewPermissionsRoute
   DocsResourceViewResourcesRoute: typeof DocsResourceViewResourcesRoute
   DocsResourceViewRoutingRoute: typeof DocsResourceViewRoutingRoute
@@ -808,6 +829,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewFormsRoute: DocsResourceViewFormsRoute,
   DocsResourceViewInstallationRoute: DocsResourceViewInstallationRoute,
   DocsResourceViewLayoutsRoute: DocsResourceViewLayoutsRoute,
+  DocsResourceViewOpenapiTypesRoute: DocsResourceViewOpenapiTypesRoute,
   DocsResourceViewPermissionsRoute: DocsResourceViewPermissionsRoute,
   DocsResourceViewResourcesRoute: DocsResourceViewResourcesRoute,
   DocsResourceViewRoutingRoute: DocsResourceViewRoutingRoute,

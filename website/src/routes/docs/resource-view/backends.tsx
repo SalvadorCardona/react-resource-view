@@ -160,9 +160,10 @@ function Backends() {
       <Callout kind="note" title="An API Platform application changes nothing">
         <P>
           JSON-LD is the default, and it still goes through the client configured
-          with <C>configureClient</C> — middleware, scope header and typed paths
-          included. <C>configureApi</C> falls back to that client's settings when it
-          is given none of its own, so nothing has to move.
+          with <C>configureClient</C> — middleware, scope header and{" "}
+          <A href="/docs/resource-view/openapi-types">typed paths</A> included.{" "}
+          <C>configureApi</C> falls back to that client's settings when it is given
+          none of its own, so nothing has to move.
         </P>
       </Callout>
 

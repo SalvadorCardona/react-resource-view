@@ -102,7 +102,9 @@ function FormIntroduction() {
       <P>
         A form written as JSX can only be read by React. A form written as data can
         be stored in a database, merged with another one, filtered by permission, or
-        generated from an OpenAPI schema — and only then handed to React.
+        generated from an{" "}
+        <A href="/docs/resource-view/openapi-types">OpenAPI schema</A> — and only
+        then handed to React.
       </P>
 
       <CodeBlock>{NOT_JSX}</CodeBlock>
