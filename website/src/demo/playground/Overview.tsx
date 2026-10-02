@@ -1,5 +1,5 @@
 import { Link as RouterLink } from "@tanstack/react-router"
-import { ArrowRight, Blocks, Building2 } from "lucide-react"
+import { ArrowRight, Blocks, Building2, Mail } from "lucide-react"
 import { ActionList } from "react-data-form"
 import {
   generateLink,
@@ -229,13 +229,25 @@ function BlockRecords() {
           </p>
         </div>
 
-        <RouterLink
-          to="/playground/builder"
-          className="flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5 sm:self-auto"
-        >
-          Open the builder demo
-          <ArrowRight className="size-3.5" />
-        </RouterLink>
+        <div className="flex shrink-0 flex-col gap-2 self-start sm:self-auto">
+          <RouterLink
+            to="/playground/builder"
+            className="flex items-center gap-1.5 rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5"
+          >
+            Open the builder demo
+            <ArrowRight className="size-3.5" />
+          </RouterLink>
+          {/* The third kit, one click away: an email is the kit nobody expects
+              to find behind "page builder". */}
+          <RouterLink
+            to="/playground/builder"
+            search={{ kit: "email" }}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:-translate-y-0.5 hover:text-foreground"
+          >
+            <Mail className="size-3.5" />
+            Build an email
+          </RouterLink>
+        </div>
       </div>
     </section>
   )
