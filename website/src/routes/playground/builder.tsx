@@ -1,5 +1,10 @@
-import { useState } from "react"
-import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router"
+import {
+  ClientOnly,
+  createFileRoute,
+  Link,
+  useHydrated,
+  useNavigate,
+} from "@tanstack/react-router"
 import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { BuilderStudio } from "@/demo/builder/BuilderStudio"
@@ -20,6 +25,10 @@ import { readAdminRows, USERS_ID, type User } from "@/demo/playground/adminData"
 import { cn } from "@/lib/cn"
 
 export const Route = createFileRoute("/playground/builder")({
+  // ?kit=email — a link straight to one kit. Anything else opens the first.
+  validateSearch: (search: Record<string, unknown>): { kit?: BuilderKit["id"] } => ({
+    kit: BUILDER_KITS.find((option) => option.id === search.kit)?.id,
+  }),
   head: () => ({
     meta: [
       { title: "Page builder — Playground" },
@@ -42,7 +51,15 @@ export const Route = createFileRoute("/playground/builder")({
  * there the moment this screen writes it.
  */
 function PlaygroundBuilderRoute() {
-  const [kit, setKit] = useState<BuilderKit>(BUILDER_KITS[0])
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  // The page is prerendered without a query string, so the first render has to
+  // be the first kit whatever the URL says — the one in the URL takes over
+  // once hydrated, instead of an HTML the client would disagree with.
+  const hydrated = useHydrated()
+  const kit =
+    (hydrated && BUILDER_KITS.find((option) => option.id === search.kit)) ||
+    BUILDER_KITS[0]
 
   const handleSave = async (
     blocks: BuilderBlock[],
@@ -145,7 +162,13 @@ function PlaygroundBuilderRoute() {
           <button
             key={option.id}
             type="button"
-            onClick={() => setKit(option)}
+            onClick={() =>
+              navigate({
+                search: { kit: option.id },
+                replace: true,
+                resetScroll: false,
+              })
+            }
             className={cn(
               "flex items-start gap-3 rounded-xl border p-4 text-left transition",
               option.id === kit.id

@@ -140,7 +140,7 @@ function EmailBuilder() {
       </Demo>
 
       <P>
-        The <A href="/playground/builder">playground</A> runs it at full size and
+        The <A href="/playground/builder?kit=email">playground</A> runs it at full size and
         saves into a Newsletters resource of its back office, edited there with the
         same builder.
       </P>

@@ -15,6 +15,7 @@ import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
 import { BUILDER_FORM_COMPONENTS } from "@/demo/builder/BuilderForm"
 import { BRAND_COLORS, EMAIL_BLOCK } from "@/demo/builder/emailBlocks"
 import { NewsletterBuilder } from "@/demo/playground/NewsletterBuilder"
+import { NewsletterBuilderLink } from "@/demo/playground/NewsletterBuilderLink"
 import { NewsletterRow } from "@/demo/playground/adminRows"
 import {
   NEWSLETTER_STATUSES,
@@ -108,6 +109,8 @@ export const newslettersResource = createViewResource<Newsletter>(NEWSLETTERS_ID
     ],
   },
   views: {
+    // On the list alone: a `components` on `view` would reach every action.
+    [ActionList.list]: { components: { top: NewsletterBuilderLink } },
     [ActionList.create]: { name: "New newsletter", ...DRAWER },
     // Editing a newsletter is the email builder, on this record.
     [ActionList.update]: {
