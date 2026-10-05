@@ -5,10 +5,11 @@ import ResourceViewProvider from "@/provider/ResourceViewProvider"
 import { configureApi, resetApiConfig } from "@/api/apiConfig"
 import { strapiDialect } from "@/api/dialect/strapiDialect"
 import { supabaseDialect } from "@/api/dialect/supabaseDialect"
+import { fastapiDialect } from "@/api/dialect/fastapiDialect"
 import tableViewOptionFactory from "@/views/list/component/table/tableViewOptionFactory"
 
 /**
- * The same declared resource, rendered against two backends that agree on
+ * The same declared resource, rendered against backends that agree on
  * nothing: not the URL of a page, not the envelope of a collection, not the
  * name of an identifier. What the reader sees must be the same list.
  */
@@ -123,5 +124,87 @@ describe("a resource declared once, rendered against Supabase", () => {
     expect(requests[0]).toContain("limit=25")
     // The count arrived in Content-Range and survived into the envelope.
     expect(screen.getAllByText("84").length).toBeGreaterThan(0)
+  })
+})
+
+describe("a resource declared once, rendered against FastAPI", () => {
+  it("lists a fastapi-pagination page, and counts it from its total", async () => {
+    configureApi({
+      baseUrl: "https://api.example.com",
+      fetch: respondWith({
+        items: [
+          { id: 1, title: "Hello from FastAPI" },
+          { id: 2, title: "Second item" },
+        ],
+        total: 84,
+        page: 1,
+        size: 25,
+        pages: 4,
+      }),
+    })
+
+    const articles = createViewResource("fastapi_articles", {
+      path: "articles",
+      name: "Articles",
+      scope: "fastapi",
+      dialect: fastapiDialect({ pagination: "page-size" }),
+      view,
+    })
+
+    render(
+      <ResourceViewProvider
+        viewResourceContextParams={{
+          scope: "fastapi",
+          resourceId: "fastapi_articles",
+        }}
+        configuration={{ resources: [articles], defaultScope: "fastapi" }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText("Hello from FastAPI")).toBeInTheDocument()
+    })
+    expect(screen.getByText("Second item")).toBeInTheDocument()
+
+    expect(requests[0]).toContain("https://api.example.com/articles?")
+    expect(requests[0]).toContain("size=25")
+    // The total fastapi-pagination reported drives the pagination.
+    expect(screen.getAllByText("84").length).toBeGreaterThan(0)
+  })
+
+  it("lists the bare array of the tutorial, paged by skip and limit", async () => {
+    configureApi({
+      baseUrl: "https://api.example.com",
+      fetch: respondWith([
+        { id: 1, title: "Hello from FastAPI" },
+        { id: 2, title: "Second item" },
+      ]),
+    })
+
+    const articles = createViewResource("fastapi_plain_articles", {
+      path: "articles",
+      name: "Articles",
+      scope: "fastapi_plain",
+      dialect: fastapiDialect(),
+      view,
+    })
+
+    render(
+      <ResourceViewProvider
+        viewResourceContextParams={{
+          scope: "fastapi_plain",
+          resourceId: "fastapi_plain_articles",
+        }}
+        configuration={{ resources: [articles], defaultScope: "fastapi_plain" }}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText("Hello from FastAPI")).toBeInTheDocument()
+    })
+    expect(screen.getByText("Second item")).toBeInTheDocument()
+
+    expect(requests[0]).toContain("skip=0")
+    expect(requests[0]).toContain("limit=25")
   })
 })

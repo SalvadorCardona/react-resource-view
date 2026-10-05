@@ -76,7 +76,8 @@ export function configureDemoRouting(basePath: string): void {
   configurePorts({
     routing: { mode: "query", param: "view", basePath },
     appName: "react-resource-view",
-    description: "CRUD views for REST APIs — API Platform, Strapi, Supabase.",
+    description:
+      "CRUD views for REST APIs — API Platform, Strapi, Supabase, FastAPI.",
   })
 }
 

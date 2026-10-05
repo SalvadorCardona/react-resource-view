@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/openapi-types")({
       {
         name: "description",
         content:
-          "Export the OpenAPI schema your API publishes, turn it into TypeScript with openapi-typescript, and type the client and every resource from it — API Platform, Strapi, Supabase or any other API.",
+          "Export the OpenAPI schema your API publishes, turn it into TypeScript with openapi-typescript, and type the client and every resource from it — API Platform, Strapi, Supabase, FastAPI or any other API.",
       },
     ],
   }),
@@ -248,6 +248,18 @@ type Article = Tables<"articles"> & { "@id": string }
 const articles = createViewResource<Article>("articles", {
   path: "articles",
   dialect: supabaseDialect({ apiKey }),
+})`
+
+const FASTAPI = `npx openapi-typescript http://localhost:8000/openapi.json --output src/api-schema/api-schema.ts`
+
+const FASTAPI_RESOURCE = `import type { components } from "./api-schema"
+
+// One Pydantic model, one schema — named after the class.
+type Item = components["schemas"]["Item"] & { "@id": string }
+
+const items = createViewResource<Item>("items", {
+  path: "items",
+  dialect: fastapiDialect(),
 })`
 
 const MAKEFILE = `api-schema:
@@ -607,10 +619,39 @@ function OpenApiTypes() {
         </P>
       </Callout>
 
+      <H3 id="fastapi">FastAPI</H3>
+
+      <P>
+        FastAPI publishes an OpenAPI 3.1 document at <C>/openapi.json</C>, generated
+        from the routes and their Pydantic models — point <C>SCHEMA_URL</C> at it, or
+        generate straight from the running server:
+      </P>
+
+      <CodeBlock lang="bash">{FASTAPI}</CodeBlock>
+
+      <P>
+        Every Pydantic model becomes an entry of <C>components["schemas"]</C>, named
+        after its class — <C>Item</C>, <C>ItemCreate</C>, <C>ItemUpdate</C>. The
+        records carry no <C>@id</C>, so intersect the schema with one:
+      </P>
+
+      <CodeBlock>{FASTAPI_RESOURCE}</CodeBlock>
+
+      <Callout kind="note" title="Item-Input and Item-Output">
+        <P>
+          When one model reads differently than it writes — a computed field, a
+          default — Pydantic 2 publishes it twice, as <C>Item-Input</C> and{" "}
+          <C>Item-Output</C>. Type the resource with the output one: it is what the
+          list and the detail receive. The document only exists while{" "}
+          <C>openapi_url</C> is left on; an application that turns it off in
+          production can still generate from a local server.
+        </P>
+      </Callout>
+
       <H3 id="other">Any other OpenAPI API</H3>
 
       <P>
-        NestJS, FastAPI, Laravel, Spring, a hand-written spec: if it serves an
+        NestJS, Laravel, Spring, a hand-written spec: if it serves an
         OpenAPI 3.0 or 3.1 document, change <C>SCHEMA_URL</C> and nothing else. Keep
         the cleaning step if some content type turns responses into unions, drop it
         otherwise.
