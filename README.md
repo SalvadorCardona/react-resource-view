@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://cardona.digital/react-resource-view/playground">
-    <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi or Supabase and to the URL" width="100%">
+    <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi, Supabase or FastAPI and to the URL" width="100%">
   </a>
 </p>
 
@@ -14,10 +14,10 @@
 
 # react-resource-view
 
-CRUD views for REST APIs — API Platform, Strapi, Supabase. You declare a
-resource — its path, its form, its layout — and the package renders the list,
-the detail, the create and edit forms, and the delete confirmation, wired to
-the API and to the URL.
+CRUD views for REST APIs — API Platform, Strapi, Supabase, FastAPI. You
+declare a resource — its path, its form, its layout — and the package renders
+the list, the detail, the create and edit forms, and the delete confirmation,
+wired to the API and to the URL.
 
 ```tsx
 import { createViewResource, ResourceView } from "react-resource-view"
@@ -102,11 +102,12 @@ configureApi({
 })
 ```
 
-| Dialect             | Backend             | What it knows                                                                                                |
-| ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `jsonLdDialect()`   | API Platform, Hydra | `member` / `totalItems`, IRIs, `page` and `itemsPerPage`, Hydra `violations`, Mercure, CSV export            |
-| `strapiDialect()`   | Strapi v4 and v5    | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`          |
-| `supabaseDialect()` | Supabase, PostgREST | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation` |
+| Dialect             | Backend             | What it knows                                                                                                 |
+| ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `jsonLdDialect()`   | API Platform, Hydra | `member` / `totalItems`, IRIs, `page` and `itemsPerPage`, Hydra `violations`, Mercure, CSV export             |
+| `strapiDialect()`   | Strapi v4 and v5    | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`           |
+| `supabaseDialect()` | Supabase, PostgREST | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation`  |
+| `fastapiDialect()`  | FastAPI             | `skip` / `limit` or `page` / `size`, plain query filters, `order_by=-field`, `{ items, total }`, 422 `detail` |
 
 JSON-LD is the default, so an application already talking to API Platform needs
 none of this — and keeps going through the client it configured with
@@ -167,6 +168,73 @@ const articles = createViewResource("articles", {
 `select` (default `*`; `"*,author(*)"` embeds a relation), `schema`,
 `defaultTextOperator` and `restPath`.
 
+### FastAPI
+
+```ts
+import {
+  configureApi,
+  fastapiDialect,
+  createViewResource,
+} from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://api.example.com",
+  getAuthToken: () => getAccessToken(),
+  dialect: fastapiDialect(),
+})
+
+const items = createViewResource("items", {
+  path: "items", // → /items, /items/{id}
+  name: "Items",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})
+```
+
+`fastapiDialect` takes `primaryKey` (default `id`), `pagination`
+(`"skip-limit"`, the default, or `"page-size"` for
+[fastapi-pagination](https://github.com/uriyyo/fastapi-pagination)),
+`defaultItemsPerPage` (default `30`), `orderParam` (default `order_by`, sent as
+`-created_at,title`) and `trailingSlash` (default `false`; set it when the
+collection route is declared as `/items/`, or FastAPI answers with a 307
+redirect). A 422 lands under the field its `loc` names —
+`["body", "address", "city"]` on the `address.city` input; a `detail` spelled
+as a sentence becomes the error's explanation.
+
+A route the dialect reads as it stands, as in the FastAPI tutorial — a bare
+array carries no total, so the pagination hides itself:
+
+```python
+@app.get("/items", response_model=list[Item])
+def list_items(skip: int = 0, limit: int = 30, order_by: str | None = None):
+    return repository.list(offset=skip, limit=limit, order_by=order_by)
+
+@app.get("/items/{item_id}", response_model=Item)
+def read_item(item_id: int): ...
+
+@app.post("/items", response_model=Item)
+def create_item(item: ItemCreate): ...
+
+@app.patch("/items/{item_id}", response_model=Item)
+def update_item(item_id: int, item: ItemUpdate): ...
+
+@app.delete("/items/{item_id}", status_code=204)
+def delete_item(item_id: int): ...
+```
+
+With fastapi-pagination the list answers `{ items, total, page, size, pages }`,
+and the pagination counts its pages from `total` — pass
+`fastapiDialect({ pagination: "page-size" })`:
+
+```python
+from fastapi_pagination import Page, add_pagination, paginate
+
+@app.get("/items", response_model=Page[Item])
+def list_items():
+    return paginate(repository.all())
+
+add_pagination(app)
+```
+
 ### Two backends at once
 
 A resource may carry a dialect of its own, which wins over the configured one:
@@ -183,13 +251,13 @@ const invoices = createViewResource("invoices", {
 They are written once, in the package's own vocabulary, and the dialect
 translates them:
 
-| Key                 | Means              | Strapi                 | Supabase          |
-| ------------------- | ------------------ | ---------------------- | ----------------- |
-| `page`              | 1-based page       | `pagination[page]`     | `offset`          |
-| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           |
-| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` |
-| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  |
-| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` |
+| Key                 | Means              | Strapi                 | Supabase          | FastAPI                     |
+| ------------------- | ------------------ | ---------------------- | ----------------- | --------------------------- |
+| `page`              | 1-based page       | `pagination[page]`     | `offset`          | `skip` (or `page`)          |
+| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           | `limit` (or `size`)         |
+| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` | `order_by=title` (`-title`) |
+| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  | `title=hello`               |
+| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` | `status=a&status=b`         |
 
 A value spelled as an object carries its own operator through untouched —
 `{ title: { $containsi: "hell" } }` on Strapi, `{ createdAt: { gte: "2024-01-01" } }`
@@ -205,8 +273,9 @@ exported to implement it. A resource that brings its own `getCollection`,
 ### Typing resources from OpenAPI
 
 Rather than copying the API's types into hand-written interfaces, export the
-OpenAPI schema your API publishes (`/api/docs.jsonopenapi` on API Platform),
-commit it as `openapi.json`, and generate the types with
+OpenAPI schema your API publishes (`/api/docs.jsonopenapi` on API Platform,
+`/openapi.json` on FastAPI, where the Pydantic models become
+`components["schemas"]`), commit it as `openapi.json`, and generate the types with
 [openapi-typescript](https://openapi-ts.dev):
 
 ```bash
@@ -229,7 +298,7 @@ const articles = createViewResource<Article>("articles", {
 ```
 
 The whole recipe — a download-clean-generate script, the per-backend
-specifics for API Platform, Strapi and Supabase, and when to regenerate — is on
+specifics for API Platform, Strapi, Supabase and FastAPI, and when to regenerate — is on
 [the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
 
 ## Installation

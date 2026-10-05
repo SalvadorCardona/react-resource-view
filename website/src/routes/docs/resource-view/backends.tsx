@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/backends")({
       {
         name: "description",
         content:
-          "One declared resource, three backends: API Platform, Strapi and Supabase. What a dialect knows, and how to write a fourth.",
+          "One declared resource, four backends: API Platform, Strapi, Supabase and FastAPI. What a dialect knows, and how to write a fifth.",
       },
     ],
   }),
@@ -58,6 +58,52 @@ const articles = createViewResource("articles", {
   view: { form: { inputs: { title: { label: "Title" } } } },
 })`
 
+const FASTAPI = `import { configureApi, createViewResource, fastapiDialect } from "react-resource-view"
+
+configureApi({
+  baseUrl: "https://api.example.com",
+  getAuthToken: () => getAccessToken(),
+  dialect: fastapiDialect(),
+})
+
+const items = createViewResource("items", {
+  path: "items", // → /items, /items/{id}
+  name: "Items",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})`
+
+const FASTAPI_ROUTES = `@app.get("/items", response_model=list[Item])
+def list_items(skip: int = 0, limit: int = 30, order_by: str | None = None):
+    return repository.list(offset=skip, limit=limit, order_by=order_by)
+
+@app.get("/items/{item_id}", response_model=Item)
+def read_item(item_id: int): ...
+
+@app.post("/items", response_model=Item)
+def create_item(item: ItemCreate): ...
+
+@app.patch("/items/{item_id}", response_model=Item)
+def update_item(item_id: int, item: ItemUpdate): ...
+
+@app.delete("/items/{item_id}", status_code=204)
+def delete_item(item_id: int): ...`
+
+const FASTAPI_PAGINATION = `from fastapi_pagination import Page, add_pagination, paginate
+
+@app.get("/items", response_model=Page[Item])
+def list_items():
+    return paginate(repository.all())
+
+add_pagination(app)
+
+# and on the React side:
+# dialect: fastapiDialect({ pagination: "page-size" })`
+
+const FASTAPI_ERROR = `// What FastAPI answers with a 422…
+{ "detail": [{ "loc": ["body", "address", "city"], "msg": "Field required" }] }
+
+// …lands under the input named "address.city".`
+
 const PER_RESOURCE = `// Most of the application is on Strapi…
 configureApi({ baseUrl, dialect: strapiDialect() })
 
@@ -99,6 +145,7 @@ function Backends() {
         { id: "dialects", title: "What a dialect knows" },
         { id: "strapi", title: "Strapi" },
         { id: "supabase", title: "Supabase" },
+        { id: "fastapi", title: "FastAPI" },
         { id: "several", title: "Two backends at once" },
         { id: "filters", title: "Filters, pages and sorts" },
         { id: "custom", title: "Another API entirely" },
@@ -151,6 +198,19 @@ function Backends() {
                 <C>limit</C> / <C>offset</C>, <C>field=eq.value</C>, <C>order</C>, the
                 count read from <C>Content-Range</C>, rows addressed by their primary
                 key.
+              </>
+            ),
+          },
+          {
+            name: "fastapiDialect()",
+            type: "ApiDialectInterface",
+            default: "—",
+            description: (
+              <>
+                <A href="https://fastapi.tiangolo.com">FastAPI</A>. <C>skip</C> /{" "}
+                <C>limit</C> or <C>page</C> / <C>size</C>, plain query filters,{" "}
+                <C>order_by=-field</C>, a bare array or <C>{`{ items, total }`}</C>,
+                422 <C>detail</C> pinned on its field.
               </>
             ),
           },
@@ -307,6 +367,94 @@ function Backends() {
         </P>
       </Callout>
 
+      <H2 id="fastapi">FastAPI</H2>
+
+      <CodeBlock filename="setup.ts">{FASTAPI}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "primaryKey",
+            type: "string",
+            default: `"id"`,
+            description: (
+              <>
+                The field a record is addressed by in <C>/items/{"{id}"}</C>. It is
+                left out of the body of a write, since it travels in the URL.
+              </>
+            ),
+          },
+          {
+            name: "pagination",
+            type: `"skip-limit" | "page-size"`,
+            default: `"skip-limit"`,
+            description: (
+              <>
+                <C>?skip=20&amp;limit=10</C>, as in the FastAPI tutorial, or{" "}
+                <C>?page=3&amp;size=10</C>, as{" "}
+                <A href="https://github.com/uriyyo/fastapi-pagination">
+                  fastapi-pagination
+                </A>{" "}
+                reads it.
+              </>
+            ),
+          },
+          {
+            name: "defaultItemsPerPage",
+            type: "number",
+            default: "30",
+            description: "Rows per page when a list asks for none.",
+          },
+          {
+            name: "orderParam",
+            type: "string",
+            default: `"order_by"`,
+            description: (
+              <>
+                The query parameter the sort travels in, as{" "}
+                <C>-created_at,title</C>: a <C>-</C> in front of a descending field,
+                several fields separated by commas.
+              </>
+            ),
+          },
+          {
+            name: "trailingSlash",
+            type: "boolean",
+            default: "false",
+            description: (
+              <>
+                Ends the collection route with a slash — <C>/items/</C> — when the API
+                declares it so. FastAPI answers the other spelling with a 307 redirect.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <P>A CRUD router written as in the FastAPI tutorial needs nothing more:</P>
+
+      <CodeBlock filename="main.py">{FASTAPI_ROUTES}</CodeBlock>
+
+      <Callout kind="note" title="A bare array carries no total">
+        <P>
+          The tutorial's list answers a plain array, so the dialect knows the rows but
+          not how many there are: the pagination hides itself rather than inventing a
+          page count. Answer a <C>{`{ items, total }`}</C> page — what
+          fastapi-pagination returns — and it counts its pages from <C>total</C>.
+        </P>
+      </Callout>
+
+      <CodeBlock filename="main.py">{FASTAPI_PAGINATION}</CodeBlock>
+
+      <P>
+        A 422 lands under the field its <C>loc</C> names, the leading <C>body</C>,{" "}
+        <C>query</C> or <C>path</C> dropped and the rest joined with dots. A{" "}
+        <C>detail</C> spelled as a sentence — <C>raise HTTPException(404, "Item not
+        found")</C> — becomes the explanation of the error.
+      </P>
+
+      <CodeBlock>{FASTAPI_ERROR}</CodeBlock>
+
       <H2 id="several">Two backends at once</H2>
 
       <P>
@@ -343,7 +491,8 @@ function Backends() {
             description: (
               <>
                 1-based page. <C>pagination[page]</C> on Strapi, an <C>offset</C> on
-                Supabase, <C>page</C> on API Platform.
+                Supabase, <C>skip</C> (or <C>page</C>) on FastAPI, <C>page</C> on API
+                Platform.
               </>
             ),
           },
@@ -354,7 +503,7 @@ function Backends() {
             description: (
               <>
                 Rows per page. <C>pagination[pageSize]</C> on Strapi, <C>limit</C> on
-                Supabase. The page size a view declares travels with the request, so
+                Supabase, <C>limit</C> (or <C>size</C>) on FastAPI. The page size a view declares travels with the request, so
                 the pagination counts the rows the API actually returned.
               </>
             ),
@@ -366,7 +515,8 @@ function Backends() {
             description: (
               <>
                 The sort, field by field. <C>sort[0]=title:asc</C> on Strapi,{" "}
-                <C>order=title.asc</C> on Supabase.
+                <C>order=title.asc</C> on Supabase, <C>order_by=title</C> (<C>-title</C>{" "}
+                descending) on FastAPI.
               </>
             ),
           },
@@ -377,13 +527,18 @@ function Backends() {
 
       <Ul>
         <Li>
-          a scalar is an equality — <C>filters[title][$eq]</C>, <C>title=eq.hello</C>;
+          a scalar is an equality — <C>filters[title][$eq]</C>, <C>title=eq.hello</C>,{" "}
+          <C>title=hello</C>;
         </Li>
         <Li>
           an array is “any of” — <C>filters[status][$in]</C>,{" "}
-          <C>status=in.(draft,published)</C>;
+          <C>status=in.(draft,published)</C>, <C>status=draft&amp;status=published</C>;
         </Li>
-        <Li>an object carries its own operator through untouched.</Li>
+        <Li>
+          an object carries its own operator through untouched — on Strapi and
+          Supabase; FastAPI reads flat query parameters, so its filters stay scalars
+          and arrays.
+        </Li>
       </Ul>
 
       <CodeBlock>{OPERATORS}</CodeBlock>
@@ -398,7 +553,8 @@ function Backends() {
 
       <P>
         Whatever the backend called it — Hydra <C>violations</C>, a Strapi{" "}
-        <C>error.details.errors</C>, a PostgREST message — the dialect reads it into
+        <C>error.details.errors</C>, a PostgREST message, a FastAPI 422{" "}
+        <C>detail</C> — the dialect reads it into
         one shape, and the form pins each message on the field that caused it. A
         failure with no field to blame, such as a unique constraint, becomes the
         toast's description instead. See{" "}

@@ -7,10 +7,11 @@ import { RecordOfAny } from "@/internal/type/RecordOfAny"
  * nothing of the shape a given backend gives those. A dialect holds that
  * knowledge — the URL an item lives at, the query string a filter becomes, the
  * envelope a collection comes back in, where the validation errors hide — so
- * the same declared resource renders against API Platform, Strapi or Supabase.
+ * the same declared resource renders against API Platform, Strapi, Supabase or
+ * FastAPI.
  *
- * Three ship with the package:
- * {@link jsonLdDialect}, {@link strapiDialect} and {@link supabaseDialect}.
+ * Four ship with the package: {@link jsonLdDialect}, {@link strapiDialect},
+ * {@link supabaseDialect} and {@link fastapiDialect}.
  * Anything else is one object away.
  */
 
