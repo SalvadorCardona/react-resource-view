@@ -275,17 +275,33 @@ exported to implement it. A resource that brings its own `getCollection`,
 Rather than copying the API's types into hand-written interfaces, export the
 OpenAPI schema your API publishes (`/api/docs.jsonopenapi` on API Platform,
 `/openapi.json` on FastAPI, where the Pydantic models become
-`components["schemas"]`), commit it as `openapi.json`, and generate the types with
-[openapi-typescript](https://openapi-ts.dev):
+`components["schemas"]`), and generate the types with
+[api-dumper](https://github.com/SalvadorCardona/api-dumper):
 
 ```bash
-npx openapi-typescript openapi.json --output api-schema.ts
+pnpm add -D api-dumper typescript
 ```
+
+```ts
+// api-dumper.config.ts
+import { defineConfig } from "api-dumper"
+
+export default defineConfig({
+  source: "http://localhost/api/docs.jsonopenapi",
+  outDir: "src/api-schema",
+  preset: "api-platform", // only on API Platform
+  strip: { contentTypes: ["text/csv"] },
+})
+```
+
+`npx api-dumper` writes `openapi.json`, `api-schema.ts` and one file per enum under
+`enums/`, all to commit; `npx api-dumper --check` fails the CI when they are out of
+date.
 
 `paths` types the client, `components["schemas"]` types the resources:
 
 ```ts
-import type { components } from "./api-schema"
+import type { components } from "./src/api-schema/api-schema"
 
 // API Platform's JSON-LD schema carries the "@id" an item needs; on another
 // backend, intersect the schema with { "@id": string }.
@@ -297,7 +313,7 @@ const articles = createViewResource<Article>("articles", {
 })
 ```
 
-The whole recipe — a download-clean-generate script, the per-backend
+The whole recipe — the config, the enums, the per-backend
 specifics for API Platform, Strapi, Supabase and FastAPI, and when to regenerate — is on
 [the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
 

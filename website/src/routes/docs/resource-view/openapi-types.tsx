@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, Ol, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/openapi-types")({
   head: () => ({
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/openapi-types")({
       {
         name: "description",
         content:
-          "Export the OpenAPI schema your API publishes, turn it into TypeScript with openapi-typescript, and type the client and every resource from it — API Platform, Strapi, Supabase, FastAPI or any other API.",
+          "Export the OpenAPI schema your API publishes, turn it into TypeScript with api-dumper, and type the client and every resource from it — API Platform, Strapi, Supabase, FastAPI or any other API.",
       },
     ],
   }),
@@ -29,7 +29,27 @@ interface Article {
 
 const articles = createViewResource<Article>("articles", { … })`
 
-const DOWNLOAD = `curl -o src/api-schema/openapi.json https://api.example.com/api/docs.jsonopenapi`
+const INSTALL = `pnpm add -D api-dumper typescript`
+
+const CONFIG = `import { defineConfig } from "api-dumper"
+
+export default defineConfig({
+  // Where the API publishes its schema — URL or file, JSON or YAML.
+  source: "http://localhost/api/docs.jsonopenapi",
+  outDir: "src/api-schema",
+})`
+
+const PACKAGE_JSON = `{
+  "scripts": {
+    "api-schema": "api-dumper"
+  }
+}`
+
+const TREE = `src/api-schema/
+├── openapi.json    # the schema, as it was read (and cleaned)
+├── api-schema.ts   # the types: paths, components, operations
+└── enums/          # one file per enum of the schema
+    └── Gender.ts`
 
 const UNION = `// The collection answers application/ld+json *or* text/csv…
 const { data } = await client.GET("/api/articles")
@@ -37,71 +57,12 @@ const { data } = await client.GET("/api/articles")
 // …so data is a union, and this no longer type-checks.
 data?.member`
 
-const GENERATE = `npx openapi-typescript src/api-schema/openapi.json --output src/api-schema/api-schema.ts`
-
-const SCRIPT = `import { execFileSync } from "node:child_process"
-import { mkdir, writeFile } from "node:fs/promises"
-import path from "node:path"
-
-// Where the API publishes its schema — the only line that changes per backend.
-const SCHEMA_URL = "http://localhost/api/docs.jsonopenapi"
-const OUTPUT_DIR = path.resolve(import.meta.dirname, "../src/api-schema")
-
-/**
- * Removes a secondary content type from every request and response. Left in,
- * each response becomes a union with it, and reading a field stops compiling.
- */
-function stripContentType(node: unknown, contentType: string): void {
-  if (Array.isArray(node)) {
-    node.forEach((child) => stripContentType(child, contentType))
-
-    return
-  }
-
-  if (node === null || typeof node !== "object") return
-
-  const record = node as Record<string, unknown>
-
-  if (record.content && typeof record.content === "object") {
-    delete (record.content as Record<string, unknown>)[contentType]
-  }
-
-  Object.values(record).forEach((child) => stripContentType(child, contentType))
-}
-
-async function main() {
-  console.info("Downloading the OpenAPI schema…")
-  const response = await fetch(SCHEMA_URL)
-  if (!response.ok) throw new Error(\`\${SCHEMA_URL} answered \${response.status}\`)
-  const schema: unknown = await response.json()
-
-  stripContentType(schema, "text/csv")
-
-  await mkdir(OUTPUT_DIR, { recursive: true })
-  const openapiJson = path.join(OUTPUT_DIR, "openapi.json")
-  await writeFile(openapiJson, JSON.stringify(schema, null, 2), "utf-8")
-  console.info("Schema saved:", openapiJson)
-
-  console.info("Generating TypeScript types…")
-  const apiSchemaTs = path.join(OUTPUT_DIR, "api-schema.ts")
-  execFileSync("npx", ["openapi-typescript", openapiJson, "--output", apiSchemaTs], {
-    stdio: "inherit",
-  })
-  console.info("Types generated:", apiSchemaTs)
-}
-
-main().catch((error) => {
-  console.error(error)
-  process.exit(1)
+const STRIP = `export default defineConfig({
+  source: "http://localhost/api/docs.jsonopenapi",
+  outDir: "src/api-schema",
+  // Removed from every request and response before the types are generated.
+  strip: { contentTypes: ["text/csv"] },
 })`
-
-const INSTALL_TOOLS = `pnpm add -D openapi-typescript tsx`
-
-const PACKAGE_JSON = `{
-  "scripts": {
-    "api-schema": "tsx ./scripts/api-schema.ts"
-  }
-}`
 
 const CLIENT = `import createClient from "openapi-fetch"
 import type { paths } from "@/api-schema/api-schema"
@@ -154,6 +115,15 @@ import type { paths } from "@/api-schema/api-schema"
 // Typed against your schema, and the instance the JSON-LD dialect sends through.
 export const client = createGenericClient<paths>({ baseUrl: "https://api.example.com" })`
 
+const API_PLATFORM_CONFIG = `import { defineConfig } from "api-dumper"
+
+export default defineConfig({
+  source: "http://localhost/api/docs.jsonopenapi",
+  outDir: "src/api-schema",
+  preset: "api-platform",
+  strip: { contentTypes: ["text/csv"] },
+})`
+
 const API_PLATFORM_RESOURCE = `import type { components } from "@/api-schema/api-schema"
 
 // The JSON-LD representation: the fields, plus @id and @type — nothing to add.
@@ -168,59 +138,36 @@ enum Gender: string
     case FEMALE = 'FEMALE';
 }`
 
-const ENUM_SCRIPT = `import { mkdir, writeFile } from "node:fs/promises"
-import path from "node:path"
-import { getIdFromIri } from "jsonld-item"
-import type { paths } from "../src/api-schema/api-schema"
+const ENUM_STANDARD = `# Any OpenAPI 3 document — a named schema with the standard enum keyword
+components:
+  schemas:
+    ArticleStatus:
+      type: string
+      enum: [draft, published]`
 
-const HOST = "http://localhost"
-const OUTPUT_DIR = path.resolve(import.meta.dirname, "../src/api-schema/types")
+const ENUM_X_IRIS = `{
+  "Gender": {
+    "type": "string",
+    "enum": ["MALE", "FEMALE"],
+    "x-enum-name": "Gender",
+    "x-enum-iris": { "MALE": "/api/genders/MALE", "FEMALE": "/api/genders/FEMALE" }
+  }
+}`
 
-// The collections that list an enum's cases — checked against the schema.
-const ENUM_PATHS: (keyof paths)[] = ["/api/genders", "/api/article_statuses"]
-
-interface EnumCase {
-  "@id": string
-  value: string
-}
-
-async function exportEnum(url: string) {
-  const response = await fetch(HOST + url)
-  const data = await response.json()
-  // "/api/contexts/Gender" → "Gender"
-  const name = getIdFromIri(data["@context"])
-  const cases: EnumCase[] = data.member ?? []
-
-  const values = Object.fromEntries(cases.map((item) => [item.value, item.value]))
-  const iris = Object.fromEntries(cases.map((item) => [item.value, item["@id"]]))
-
-  const source = \`// Generated — do not edit.
-
-export const \${name} = \${JSON.stringify(cases, null, 2)}
-
-export const \${name}Enum = \${JSON.stringify(values, null, 2)}
-
-export const \${name}ApiEnum = \${JSON.stringify(iris, null, 2)}
-
-export type \${name}Values = keyof typeof \${name}Enum
-\`
-
-  await writeFile(path.join(OUTPUT_DIR, \`\${name}.ts\`), source, "utf-8")
-}
-
-async function main() {
-  await mkdir(OUTPUT_DIR, { recursive: true })
-  await Promise.all(ENUM_PATHS.map(exportEnum))
-}
-
-main().catch((error) => {
-  console.error(error)
-  process.exit(1)
+const ENUM_COLLECTIONS = `export default defineConfig({
+  source: "http://localhost/api/docs.jsonopenapi",
+  outDir: "src/api-schema",
+  preset: "api-platform",
+  apiPlatform: {
+    // The collections that list an enum's cases, fetched at generation time.
+    collections: { paths: ["/api/genders", "/api/article_statuses"] },
+  },
 })`
 
-const ENUM_OUTPUT = `// src/api-schema/types/Gender.ts — generated
-export const GenderEnum = { MALE: "MALE", FEMALE: "FEMALE" }
-export const GenderApiEnum = { MALE: "/api/genders/MALE", FEMALE: "/api/genders/FEMALE" }
+const ENUM_OUTPUT = `// src/api-schema/enums/Gender.ts — generated
+export const Gender = ["MALE", "FEMALE"] as const
+export const GenderEnum = { MALE: "MALE", FEMALE: "FEMALE" } as const
+export const GenderApiEnum = { MALE: "/api/genders/MALE", FEMALE: "/api/genders/FEMALE" } as const
 export type GenderValues = keyof typeof GenderEnum
 
 // In the application
@@ -250,7 +197,10 @@ const articles = createViewResource<Article>("articles", {
   dialect: supabaseDialect({ apiKey }),
 })`
 
-const FASTAPI = `npx openapi-typescript http://localhost:8000/openapi.json --output src/api-schema/api-schema.ts`
+const FASTAPI = `export default defineConfig({
+  source: "http://localhost:8000/openapi.json",
+  outDir: "src/api-schema",
+})`
 
 const FASTAPI_RESOURCE = `import type { components } from "./api-schema"
 
@@ -264,6 +214,9 @@ const items = createViewResource<Item>("items", {
 
 const MAKEFILE = `api-schema:
 	pnpm run api-schema`
+
+const CHECK = `# Writes nothing; exits 1 when the committed files are out of date.
+pnpm exec api-dumper --check`
 
 function OpenApiTypes() {
   return (
@@ -291,8 +244,9 @@ function OpenApiTypes() {
         Any API that publishes an <A href="https://www.openapis.org">OpenAPI</A>{" "}
         schema already describes those types, field by field. The back describes the
         API; the front derives its types from that description, with{" "}
-        <A href="https://openapi-ts.dev">openapi-typescript</A>, and a field renamed on
-        the back becomes a compile error on the front.
+        <A href="https://github.com/SalvadorCardona/api-dumper">api-dumper</A> — which
+        runs <A href="https://openapi-ts.dev">openapi-typescript</A> under the hood —
+        and a field renamed on the back becomes a compile error on the front.
       </P>
 
       <P>
@@ -303,29 +257,36 @@ function OpenApiTypes() {
 
       <H2 id="pipeline">From schema to types</H2>
 
-      <P>Three steps, each one a file committed to the repository:</P>
+      <P>
+        One dev dependency, one config file, one command. api-dumper downloads the
+        schema, cleans it if asked, and generates the types and the enums from it:
+      </P>
 
-      <Ol>
-        <Li>
-          download the schema and save it as <C>openapi.json</C>;
-        </Li>
-        <Li>clean it, if the API describes something the client never reads;</Li>
-        <Li>
-          generate <C>api-schema.ts</C> from it.
-        </Li>
-      </Ol>
+      <CodeBlock lang="bash">{INSTALL}</CodeBlock>
 
-      <H3 id="download">1. Download the schema</H3>
+      <CodeBlock lang="ts" filename="api-dumper.config.ts">
+        {CONFIG}
+      </CodeBlock>
 
-      <CodeBlock lang="bash">{DOWNLOAD}</CodeBlock>
+      <CodeBlock lang="json" filename="package.json">
+        {PACKAGE_JSON}
+      </CodeBlock>
+
+      <P>
+        <C>pnpm run api-schema</C> then leaves this behind, all of it to commit:
+      </P>
+
+      <CodeBlock lang="bash">{TREE}</CodeBlock>
 
       <P>
         Commit <C>openapi.json</C> alongside the generated types. It is what the
         types were built from, a pull request that changes the API shows up as a diff
-        in it, and the front builds without the API running.
+        in it, and the front builds without the API running. A file whose content
+        has not changed is not rewritten, so a run against an unchanged API leaves
+        the working tree clean.
       </P>
 
-      <H3 id="clean">2. Clean it, if needed</H3>
+      <H3 id="clean">Clean it, if needed</H3>
 
       <P>
         A schema describes every representation an operation can answer with — and
@@ -341,13 +302,15 @@ function OpenApiTypes() {
         If the CSV is downloaded by a plain <C>fetch</C> rather than through the
         typed client — which is what react-resource-view's export button does — that
         content type is noise. Deleting it from the schema, before generating, keeps
-        every response a single shape. The script below walks the schema and removes
-        one content type wherever it appears.
+        every response a single shape. <C>strip.contentTypes</C> removes it wherever
+        it appears:
       </P>
 
-      <H3 id="generate">3. Generate the types</H3>
+      <CodeBlock lang="ts" filename="api-dumper.config.ts">
+        {STRIP}
+      </CodeBlock>
 
-      <CodeBlock lang="bash">{GENERATE}</CodeBlock>
+      <H3 id="generate">What api-schema.ts exports</H3>
 
       <P>
         <C>api-schema.ts</C> exports three interfaces you will use:
@@ -386,32 +349,10 @@ function OpenApiTypes() {
 
       <Callout kind="warning" title="OpenAPI 3.0 or 3.1">
         <P>
-          openapi-typescript 7 reads OpenAPI 3.0 and 3.1. A Swagger 2.0 document is
-          only supported by its version 5 and earlier.
+          api-dumper reads OpenAPI 3.0 and 3.1, and refuses a Swagger 2.0 document
+          with an explicit error rather than generating broken types.
         </P>
       </Callout>
-
-      <H3 id="script">The whole thing as a script</H3>
-
-      <P>
-        Three commands become one script, run with <C>tsx</C>, so that nobody has to
-        remember the order:
-      </P>
-
-      <CodeBlock lang="bash">{INSTALL_TOOLS}</CodeBlock>
-
-      <CodeBlock lang="ts" filename="scripts/api-schema.ts">
-        {SCRIPT}
-      </CodeBlock>
-
-      <CodeBlock lang="json" filename="package.json">
-        {PACKAGE_JSON}
-      </CodeBlock>
-
-      <P>
-        <C>pnpm run api-schema</C> then leaves <C>src/api-schema/openapi.json</C> and{" "}
-        <C>src/api-schema/api-schema.ts</C> behind, both to commit.
-      </P>
 
       <H2 id="wiring">Wiring the types in</H2>
 
@@ -472,7 +413,18 @@ function OpenApiTypes() {
 
       <P>
         API Platform publishes an OpenAPI 3 document at{" "}
-        <C>/api/docs.jsonopenapi</C> — the URL the script above already points at.
+        <C>/api/docs.jsonopenapi</C> — the <C>source</C> the config above already
+        points at. Add the <C>api-platform</C> preset:
+      </P>
+
+      <CodeBlock lang="ts" filename="api-dumper.config.ts">
+        {API_PLATFORM_CONFIG}
+      </CodeBlock>
+
+      <P>
+        On top of the content type, the preset removes the schemas API Platform
+        derives per format: stripping <C>text/csv</C> also drops <C>Article.csv</C>,{" "}
+        <C>Article.csv-read</C>… which nothing references any more.
       </P>
 
       <Ul>
@@ -499,7 +451,7 @@ function OpenApiTypes() {
 
       <CodeBlock>{API_PLATFORM_RESOURCE}</CodeBlock>
 
-      <H3 id="enums">Bonus, API Platform only: exporting enums</H3>
+      <H3 id="enums">Exporting enums</H3>
 
       <P>
         OpenAPI types a field as an IRI string, but not the list of values it may
@@ -512,16 +464,36 @@ function OpenApiTypes() {
       </CodeBlock>
 
       <P>
-        A second script reads those collections — <C>member</C> for the cases,{" "}
-        <C>@context</C> for the name, <C>@id</C> for each case's IRI — and writes
-        one file per enum, next to the generated types:
+        The document does not carry those values: a relation to an enum is a plain{" "}
+        <C>iri-reference</C>. Two ways to hand them to api-dumper:
       </P>
 
-      <CodeBlock lang="ts" filename="scripts/api-enums.ts">
-        {ENUM_SCRIPT}
+      <P>
+        <strong>1. From the document — recommended.</strong> Decorate API Platform's{" "}
+        <C>OpenApiFactory</C> so that it adds, for each backed enum, a schema with{" "}
+        <C>enum</C>, <C>x-enum-name</C> and <C>x-enum-iris</C>. Generation then works
+        offline, from the exported file:
+      </P>
+
+      <CodeBlock lang="json" filename="components.schemas">
+        {ENUM_X_IRIS}
       </CodeBlock>
 
-      <P>Each file exports the cases, and three ways to name them:</P>
+      <P>
+        <strong>2. From the Hydra collections</strong>, fetched at generation time —{" "}
+        <C>member</C> for the cases, <C>@context</C> for the name, <C>@id</C> for each
+        case's IRI:
+      </P>
+
+      <CodeBlock lang="ts" filename="api-dumper.config.ts">
+        {ENUM_COLLECTIONS}
+      </CodeBlock>
+
+      <P>
+        Either way, each enum lands in its own file, under{" "}
+        <C>src/api-schema/enums/</C>, and exports the cases, and three ways to name
+        them:
+      </P>
 
       <PropsTable
         rows={[
@@ -546,12 +518,14 @@ function OpenApiTypes() {
 
       <CodeBlock>{ENUM_OUTPUT}</CodeBlock>
 
-      <Callout kind="note" title="This part is specific to API Platform">
+      <Callout kind="note" title="Only the IRIs are specific to API Platform">
         <P>
-          It reads JSON-LD collections — <C>member</C>, <C>@context</C>,{" "}
-          <C>@id</C> — from enums exposed as resources. Nothing about it applies to
-          another backend, and the rest of this page does not depend on it.
+          A named schema carrying the standard <C>enum</C> keyword becomes a file
+          the same way, whatever the API — <C>XEnum</C> and <C>XValues</C> included.
+          Only <C>XApiEnum</C> needs IRIs, from <C>x-enum-iris</C> or from the Hydra
+          collections:
         </P>
+        <CodeBlock lang="yaml">{ENUM_STANDARD}</CodeBlock>
       </Callout>
 
       <H3 id="strapi">Strapi</H3>
@@ -564,8 +538,9 @@ function OpenApiTypes() {
       <CodeBlock lang="bash">{STRAPI}</CodeBlock>
 
       <P>
-        Strapi does not serve it over HTTP by default. To let the script above
-        download it, opt in, and the document answers at <C>/api/openapi.json</C>:
+        Point <C>source</C> at that file, or let api-dumper download it: Strapi does
+        not serve it over HTTP by default, so opt in, and the document answers at{" "}
+        <C>/api/openapi.json</C>:
       </P>
 
       <CodeBlock filename="config/server.js">{STRAPI_HTTP}</CodeBlock>
@@ -623,11 +598,13 @@ function OpenApiTypes() {
 
       <P>
         FastAPI publishes an OpenAPI 3.1 document at <C>/openapi.json</C>, generated
-        from the routes and their Pydantic models — point <C>SCHEMA_URL</C> at it, or
-        generate straight from the running server:
+        from the routes and their Pydantic models — point <C>source</C> at it, on the
+        running server or on a copy of the file:
       </P>
 
-      <CodeBlock lang="bash">{FASTAPI}</CodeBlock>
+      <CodeBlock lang="ts" filename="api-dumper.config.ts">
+        {FASTAPI}
+      </CodeBlock>
 
       <P>
         Every Pydantic model becomes an entry of <C>components["schemas"]</C>, named
@@ -652,9 +629,9 @@ function OpenApiTypes() {
 
       <P>
         NestJS, Laravel, Spring, a hand-written spec: if it serves an
-        OpenAPI 3.0 or 3.1 document, change <C>SCHEMA_URL</C> and nothing else. Keep
-        the cleaning step if some content type turns responses into unions, drop it
-        otherwise.
+        OpenAPI 3.0 or 3.1 document, change <C>source</C> and nothing else. Keep{" "}
+        <C>strip</C> if some content type turns responses into unions, drop it
+        otherwise; the enums the schema declares come out without a preset.
       </P>
 
       <H2 id="when">When to regenerate</H2>
@@ -671,14 +648,30 @@ function OpenApiTypes() {
       <Ul>
         <Li>run it against an API that has the change;</Li>
         <Li>
-          commit <C>openapi.json</C> and <C>api-schema.ts</C> with the change that
-          needed them;
+          commit <C>openapi.json</C>, <C>api-schema.ts</C> and <C>enums/</C> with the
+          change that needed them;
         </Li>
         <Li>
           read the diff in review — it is the API's change, spelled out, and the
           compile errors it causes are the places the front has to follow.
         </Li>
       </Ul>
+
+      <P>
+        And let the CI catch the regeneration someone forgot. <C>--check</C> writes
+        nothing and exits with 1 when a generated file differs from what is
+        committed:
+      </P>
+
+      <CodeBlock lang="bash">{CHECK}</CodeBlock>
+
+      <P>
+        It reads <C>source</C> like any run, so point the CI at a schema it can
+        reach — a file exported by the back and committed, with{" "}
+        <C>bin/console api:openapi:export</C> on API Platform, or an API started in
+        the job. Enums taken from the Hydra collections need that API too; enums
+        carried by <C>x-enum-iris</C> do not.
+      </P>
 
       <Callout kind="warning" title="A stale cache exports a stale schema">
         <P>
