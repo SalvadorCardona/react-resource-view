@@ -1,4 +1,5 @@
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import capitalizeFirst from "@/utils/capitalizeFirst"
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs"
 
 export default function ChangeViewOptionComponent() {
@@ -28,10 +29,10 @@ export default function ChangeViewOptionComponent() {
               {viewOption.icon ? (
                 <div className={"flex justify-center items-center gap-2"}>
                   <viewOption.icon className={"text-xl"} />
-                  <span className={"fc"}>{viewOption["name"]}</span>
+                  <span className={"fc"}>{capitalizeFirst(viewOption["name"] ?? "")}</span>
                 </div>
               ) : (
-                <>{viewOption["name"]}</>
+                <>{capitalizeFirst(viewOption["name"] ?? "")}</>
               )}
             </TabsTrigger>
           ))}
