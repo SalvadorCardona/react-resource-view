@@ -1,5 +1,27 @@
 # react-resource-view
 
+## 0.14.0
+
+### Minor Changes
+
+- 642aac2: Add a FastAPI dialect: `fastapiDialect()` lists, reads, creates, updates and
+  deletes against a standard FastAPI CRUD router, instead of showing empty lists
+  under the JSON-LD default.
+
+  A page is `skip` / `limit`, as in the FastAPI tutorial, or `page` / `size` with
+  `pagination: "page-size"` for fastapi-pagination, whose `{ items, total }`
+  drives the page count; a bare array hides the pagination. A sort is
+  `order_by=-created_at,title`, an array filter repeats its parameter, and a 422
+  lands under the field its `loc` names — `["body", "address", "city"]` on
+  `address.city`. Options: `primaryKey`, `pagination`, `defaultItemsPerPage`,
+  `orderParam` and `trailingSlash`.
+
+### Patch Changes
+
+- ef36d4e: Capitalise the first letter of each view name in the view switcher, so a
+  `board` or `vue d'ensemble` tab reads `Board` and `Vue d'ensemble`, custom and
+  translated names included — the rest of the label is left as written.
+
 ## 0.13.0
 
 ### Minor Changes
