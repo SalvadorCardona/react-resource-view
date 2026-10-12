@@ -856,7 +856,7 @@ function Features() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         <Link
-          to="/docs/resource-view/concepts"
+          to="/docs/resource-view/concepts/"
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
         >
           Resource, dialect, port, scope — the concepts and how they fit together
