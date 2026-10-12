@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/backends")({
       {
         name: "description",
         content:
-          "One declared resource, four backends: API Platform, Strapi, Supabase and FastAPI. What a dialect knows, and how to write a fifth.",
+          "One declared resource, five backends: API Platform, Spring Boot, Supabase, Strapi and FastAPI, or any REST API. What a dialect knows, and how to write your own.",
       },
     ],
   }),

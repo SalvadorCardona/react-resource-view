@@ -15,7 +15,7 @@ export const Route = createFileRoute("/docs/resource-view/")({
       {
         name: "description",
         content:
-          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to your API — API Platform, Strapi or Supabase — and to the URL.",
+          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to your API — API Platform, Spring Boot, Supabase, Strapi, FastAPI or any REST API — and to the URL.",
       },
     ],
   }),
@@ -65,7 +65,8 @@ function ViewIntroduction() {
         <C>react-resource-view</C> renders the CRUD surface of a resource: the list
         and its layouts, the detail page, the create and edit forms, the delete
         confirmation, the filter bar and the pagination. You describe the resource;
-        it writes the screens.
+        it writes the screens. Those are its five views — list, detail, create,
+        edit and delete — and the list alone comes in seven layouts.
       </P>
 
       <P>
@@ -139,14 +140,18 @@ function ViewIntroduction() {
         <Li>
           <strong>It knows no API in particular.</strong> Which backend answers, and
           how it spells a page or a filter, is a{" "}
-          <A href="/docs/resource-view/backends">dialect</A> — API Platform, Strapi
-          and Supabase ship with the package — configured separately through{" "}
+          <A href="/docs/resource-view/backends">dialect</A> — API Platform, Spring
+          Boot, Supabase, Strapi and FastAPI ship with the package, and any other
+          REST API works without one — configured separately through{" "}
           <C>configureApi</C>.
         </Li>
         <Li>
-          <strong>It is not an admin panel.</strong> There is no generated dashboard
-          and no scaffolding step: it is a set of components you render where you
-          want them.
+          <strong>It is not an admin panel.</strong> The library itself is a set of
+          components you render where you want them, with no generated dashboard.
+          The <A href="/docs/resource-view/starter">starter</A> command writes a
+          back office on your API for you, and{" "}
+          <A href="/docs/resource-view/admin-layout">AdminLayout</A> is an optional
+          shell for it — neither is required.
         </Li>
         <Li>
           <strong>It does not own your layout.</strong> A view is a component, not a

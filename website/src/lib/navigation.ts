@@ -123,7 +123,7 @@ export const FORM_SECTION: DocSection = {
         {
           href: "/docs/form/controllers",
           title: "Field controllers",
-          summary: "The full catalogue — forty-odd controllers, each one running.",
+          summary: "The full catalogue — 34 controllers, each one running.",
           icon: Blocks,
         },
         {
@@ -209,7 +209,8 @@ export const VIEW_SECTION: DocSection = {
         {
           href: "/docs/resource-view",
           title: "Introduction",
-          summary: "One declaration, five views, and a URL that carries the state.",
+          summary:
+            "One declaration, five views — list, detail, create, edit, delete — and a URL that carries the state.",
           icon: Compass,
         },
         {
