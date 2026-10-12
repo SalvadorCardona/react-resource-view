@@ -34,6 +34,7 @@ import {
   Table2,
   Terminal,
   Wand2,
+  Zap,
 } from "lucide-react"
 
 /** A single documentation page. */
@@ -81,7 +82,7 @@ export const FORM_SECTION: DocSection = {
   id: "form",
   pkg: "react-data-form",
   label: "Forms",
-  tagline: "Describe a form as data, let the library render it.",
+  tagline: "The form building block, usable on its own.",
   accent: "form",
   repository: "https://github.com/SalvadorCardona/react-data-form",
   groups: [
@@ -206,6 +207,13 @@ export const VIEW_SECTION: DocSection = {
     {
       label: "Getting started",
       pages: [
+        {
+          href: "/docs/resource-view/quickstart",
+          title: "Quickstart",
+          summary:
+            "Five minutes from zero to a list on your API, then a filter and a second layout.",
+          icon: Zap,
+        },
         {
           href: "/docs/resource-view",
           title: "Introduction",
@@ -353,7 +361,7 @@ export const VIEW_SECTION: DocSection = {
   ],
 }
 
-export const SECTIONS: DocSection[] = [FORM_SECTION, VIEW_SECTION]
+export const SECTIONS: DocSection[] = [VIEW_SECTION, FORM_SECTION]
 
 /** Every page, in sidebar order — the order prev/next walks. */
 export const ALL_PAGES: DocPage[] = SECTIONS.flatMap((section) =>
