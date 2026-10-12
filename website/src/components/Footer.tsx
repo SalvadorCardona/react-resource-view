@@ -2,6 +2,32 @@ import { Github } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 
+const NPM = "https://www.npmjs.com/package/react-resource-view"
+
+/** Live badges: they read npm and GitHub when the page loads, so they never go stale. */
+const BADGES = [
+  {
+    label: "npm version",
+    href: NPM,
+    src: "https://img.shields.io/npm/v/react-resource-view?label=npm&color=informational",
+  },
+  {
+    label: "npm downloads per month",
+    href: NPM,
+    src: "https://img.shields.io/npm/dm/react-resource-view?label=downloads",
+  },
+  {
+    label: "MIT license",
+    href: `${VIEW_SECTION.repository}/blob/main/LICENSE`,
+    src: "https://img.shields.io/npm/l/react-resource-view?label=license",
+  },
+  {
+    label: "GitHub stars",
+    href: VIEW_SECTION.repository,
+    src: "https://img.shields.io/github/stars/SalvadorCardona/react-resource-view?style=flat&label=stars",
+  },
+]
+
 /**
  * The footer of every page.
  *
@@ -11,7 +37,22 @@ import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 export function Footer() {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between lg:px-8">
+      <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pt-8 lg:px-8">
+        {BADGES.map((badge) => (
+          <li key={badge.label}>
+            <a href={badge.href} target="_blank" rel="noreferrer">
+              <img
+                src={badge.src}
+                alt={badge.label}
+                height={20}
+                loading="lazy"
+                className="h-5"
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <p className="flex items-center gap-2">
           <Logo className="size-5" />
           <span>

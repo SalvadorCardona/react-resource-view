@@ -12,6 +12,7 @@ import {
   Fingerprint,
   FolderTree,
   Group,
+  History,
   KeyRound,
   Layers,
   LayoutGrid,
@@ -347,6 +348,17 @@ export const VIEW_SECTION: DocSection = {
           title: "Sub-views & tabs",
           summary: "Nesting a resource inside another one's detail page.",
           icon: Wand2,
+        },
+      ],
+    },
+    {
+      label: "Releases",
+      pages: [
+        {
+          href: "/docs/resource-view/changelog",
+          title: "Changelog",
+          summary: "What each release of react-resource-view added, fixed and changed.",
+          icon: History,
         },
       ],
     },

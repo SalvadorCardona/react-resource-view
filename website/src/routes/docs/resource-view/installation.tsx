@@ -5,6 +5,7 @@ import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { A, C, H2, H3, Li, Ol, P, Ul } from "@/components/prose"
 import { INSTALL_COMMAND } from "@/lib/install"
+import { LATEST_VERSION } from "@/lib/changelog"
 
 export const Route = createFileRoute("/docs/resource-view/installation")({
   head: () => ({
@@ -71,6 +72,7 @@ function Installation() {
     <DocArticle
       toc={[
         { id: "install", title: "Install" },
+        { id: "versions", title: "Supported versions" },
         { id: "styles", title: "Styles" },
         { id: "router", title: "Connect a router" },
         { id: "api", title: "Point it at your API" },
@@ -96,6 +98,32 @@ function Installation() {
           installs nothing extra.
         </P>
       </Callout>
+
+      <H2 id="versions">Supported versions</H2>
+
+      <P>
+        The latest release is <C>{LATEST_VERSION}</C> — see{" "}
+        <A href="/docs/resource-view/changelog">the changelog</A>. These are the ranges
+        the package declares:
+      </P>
+
+      <Ul>
+        <Li>
+          <strong>React</strong> — 18.3 and 19 (<C>^18.3.0 || ^19.0.0</C>).
+        </Li>
+        <Li>
+          <strong>TypeScript</strong> — written in strict mode and tested on 6.0; the
+          types ship with the package.
+        </Li>
+        <Li>
+          <strong>Tailwind CSS</strong> — 4 (<C>^4.0.0</C>), optional: it is only
+          needed to generate the classes the components use.
+        </Li>
+        <Li>
+          <strong>TanStack Router</strong> — 1.170 and later (<C>^1.170.0</C>),
+          optional: only for <C>react-resource-view/tanstack</C>.
+        </Li>
+      </Ul>
 
       <H2 id="styles">Styles</H2>
 
