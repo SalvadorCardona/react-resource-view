@@ -37,7 +37,7 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
             {SECTIONS.map((section) => (
               <Link
                 key={section.id}
-                to={`/docs/${section.id}`}
+                to={`/docs/${section.id}/`}
                 className="group rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 activeProps={{ className: "bg-muted text-foreground" }}
               >
@@ -59,7 +59,7 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
               two accent dots, and comes last: a reader reads before they play.
             */}
             <Link
-              to="/playground"
+              to="/playground/"
               className="group rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
               activeProps={{ className: "bg-muted text-foreground" }}
             >

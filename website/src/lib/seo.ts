@@ -12,11 +12,12 @@ const AUTHOR = { "@type": "Person", name: "Salvador Cardona", url: SITE_ORIGIN }
  * `import.meta.env.BASE_URL` already carries the `/<repository>/` prefix
  * GitHub Pages serves a project site under (see vite.config.ts), so building
  * the canonical from it is what keeps it correct in both dev and production
- * without a second constant to fall out of sync.
+ * without a second constant to fall out of sync. It ends with a slash, like
+ * the URL GitHub Pages serves the page at.
  */
 export function canonicalUrl(pathname: string): string {
   const path = stripTrailingSlash(pathname)
-  const suffix = path === "/" ? "" : path.slice(1)
+  const suffix = path === "/" ? "" : `${path.slice(1)}/`
   return `${SITE_ORIGIN}${import.meta.env.BASE_URL}${suffix}`
 }
 

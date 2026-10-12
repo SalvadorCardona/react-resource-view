@@ -152,14 +152,14 @@ function Hero() {
           style={{ animationDelay: "250ms" }}
         >
           <Link
-            to="/docs/resource-view/quickstart"
+            to="/docs/resource-view/quickstart/"
             className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
             <BookOpen className="size-4" />
             Documentation
           </Link>
           <Link
-            to="/playground"
+            to="/playground/"
             className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
             <Compass className="size-4" />
@@ -269,7 +269,7 @@ function GetStarted() {
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <Link
-          to="/docs/resource-view/quickstart"
+          to="/docs/resource-view/quickstart/"
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
         >
           The 5-minute quickstart — from the command to a running list
@@ -279,7 +279,7 @@ function GetStarted() {
 
       <p className="mt-2 text-center text-sm text-muted-foreground">
         <Link
-          to="/docs/resource-view/starter"
+          to="/docs/resource-view/starter/"
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
         >
           The full starter page — every flag, every file it writes
@@ -501,7 +501,7 @@ function DemoVideo() {
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <Link
-          to="/playground/builder"
+          to="/playground/builder/"
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-primary"
         >
           Open the page builder yourself
@@ -547,7 +547,7 @@ function Packages() {
           return (
             <Link
               key={section.id}
-              to={`/docs/${section.id}`}
+              to={`/docs/${section.id}/`}
               className={cn(
                 "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl",
                 isForm ? "hover:border-form/50" : "hover:border-view/50"
@@ -766,7 +766,7 @@ function Layouts() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:ml-auto lg:shrink-0">
             <CopyCommand command="npx react-resource-view create-view-variant" />
             <Link
-              to="/docs/resource-view/custom-variant"
+              to="/docs/resource-view/custom-variant/"
               className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-view px-4 py-2.5 text-sm font-medium text-background no-underline transition hover:opacity-90"
             >
               Read the guide
@@ -884,13 +884,13 @@ function Closing() {
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link
-            to="/docs/resource-view/quickstart"
+            to="/docs/resource-view/quickstart/"
             className="rounded-lg bg-view px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
           >
             react-resource-view
           </Link>
           <Link
-            to="/docs/form"
+            to="/docs/form/"
             className="rounded-lg bg-form px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
           >
             react-data-form

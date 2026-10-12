@@ -65,15 +65,22 @@ export function C({ children }: { children: ReactNode }) {
   return <code>{children}</code>
 }
 
+function withTrailingSlash(href: string): string {
+  const [path, rest = ""] = href.split(/(?=[?#])/)
+  const slashed = /\.[a-z0-9]+$/i.test(path) || path.endsWith("/") ? path : `${path}/`
+  return `${import.meta.env.BASE_URL}${slashed.slice(1)}${rest}`
+}
+
 /**
  * Pages are written with site-absolute paths (`/docs/form`). The site is served
  * under `/<repository>/` on GitHub Pages, so those paths get the base prefix
- * here — once — instead of resolving against the domain root.
+ * here — once — instead of resolving against the domain root. A page path also
+ * gets its trailing slash: without it GitHub Pages redirects to its own host.
  */
 export function A({ href, children }: { href: string; children: ReactNode }) {
   const external = href.startsWith("http")
   const internal = href.startsWith("/")
-  const resolved = internal ? `${import.meta.env.BASE_URL}${href.slice(1)}` : href
+  const resolved = internal ? withTrailingSlash(href) : href
 
   return (
     <a

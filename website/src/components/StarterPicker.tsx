@@ -69,7 +69,7 @@ export function StarterPicker() {
 
       <p className="mt-6 border-t border-border pt-5 text-sm">
         <Link
-          to="/docs/resource-view/starter"
+          to="/docs/resource-view/starter/"
           hash={starterSection(picked)}
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
         >

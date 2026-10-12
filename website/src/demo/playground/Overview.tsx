@@ -232,7 +232,7 @@ function BlockRecords() {
 
         <div className="flex shrink-0 flex-col gap-2 self-start sm:self-auto">
           <RouterLink
-            to="/playground/builder"
+            to="/playground/builder/"
             className="flex items-center gap-1.5 rounded-lg border border-form/50 bg-form-soft px-3 py-1.5 text-sm font-medium text-form transition hover:-translate-y-0.5"
           >
             Open the builder demo
@@ -241,7 +241,7 @@ function BlockRecords() {
           {/* The third kit, one click away: an email is the kit nobody expects
               to find behind "page builder". */}
           <RouterLink
-            to="/playground/builder"
+            to="/playground/builder/"
             search={{ kit: "email" }}
             className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:-translate-y-0.5 hover:text-foreground"
           >
