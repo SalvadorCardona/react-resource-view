@@ -74,7 +74,7 @@ function LandingPage() {
 
 const STATS = [
   { value: "2", label: "packages" },
-  { value: "40+", label: "field controllers" },
+  { value: "34", label: "field controllers" },
   { value: "7", label: "layouts" },
   { value: "0", label: "column definitions" },
 ]
@@ -363,7 +363,7 @@ const PACKAGES = [
     section: FORM_SECTION,
     Illustration: FormPackageIllustration,
     points: [
-      "Forty-odd field controllers, from a text input to a page builder",
+      "34 field controllers, from a text input to a page builder",
       "Groups, steps, sub-forms and repeatable rows",
       "API Platform violations mapped straight back onto the fields",
     ],
@@ -642,7 +642,7 @@ const FEATURES = [
   {
     icon: Boxes,
     illustration: BackendsIllustration,
-    title: "Five backends, or any REST API",
+    title: "Five backends, plus any REST API",
     body: `A dialect holds what each backend spells differently — pages, filters, envelopes, errors — so one declared resource renders against ${namedBackends()}, any REST API that publishes OpenAPI, or a dialect you write.`,
   },
   {

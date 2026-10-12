@@ -117,7 +117,7 @@ function FormIntroduction() {
 
       <Callout kind="tip" title="One field, one controller">
         Every field is rendered by a <em>controller</em> — a component receiving{" "}
-        <C>{"{ formInput, onChange }"}</C> and nothing else. Forty-odd ship with the
+        <C>{"{ formInput, onChange }"}</C> and nothing else. 34 ship with the
         package, and writing your own takes about ten lines.
       </Callout>
 
