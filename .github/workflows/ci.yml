@@ -24,3 +24,28 @@ jobs:
 
       # Check the published package actually holds what it advertises
       - run: pnpm pack --pack-destination /tmp
+
+  # The documentation site is a standalone project: build it the way Pages does
+  # and crawl the static output, so a broken internal link fails the pull
+  # request rather than the reader.
+  website-links:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+        env:
+          DOCS_BASE: /react-resource-view/
+      - run: pnpm run check-links
+        env:
+          DOCS_BASE: /react-resource-view/

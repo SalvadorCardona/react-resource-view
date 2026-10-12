@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build && node --experimental-strip-types scripts/generate-seo-files.ts",
+    "check-links": "node --experimental-strip-types scripts/check-links.ts",
     "start": "node server.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

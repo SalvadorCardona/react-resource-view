@@ -54,6 +54,11 @@ jobs:
         env:
           DOCS_BASE: /react-resource-view/
 
+      # A link that leads to a 404 on Pages must not reach Pages.
+      - run: pnpm run check-links
+        env:
+          DOCS_BASE: /react-resource-view/
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
