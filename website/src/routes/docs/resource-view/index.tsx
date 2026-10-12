@@ -22,7 +22,31 @@ export const Route = createFileRoute("/docs/resource-view/")({
   component: ViewIntroduction,
 })
 
-const DECLARATION = `import { createViewResource, tableViewOptionFactory } from "react-resource-view"
+const DECLARATION = `import {
+  ActionList,
+  DatePickerInputController,
+  NumberInputController,
+  SelectInputController,
+} from "react-data-form"
+import {
+  cardViewOptionFactory,
+  createViewResource,
+  tableViewOptionFactory,
+} from "react-resource-view"
+
+const CATEGORIES = [
+  { label: "Forms", value: "Forms" },
+  { label: "Views", value: "Views" },
+  { label: "Routing", value: "Routing" },
+  { label: "JSON-LD", value: "JSON-LD" },
+  { label: "Architecture", value: "Architecture" },
+]
+
+const STATUSES = [
+  { label: "Draft", value: "draft" },
+  { label: "In review", value: "review" },
+  { label: "Published", value: "published" },
+]
 
 export const articles = createViewResource("articles", {
   name: "Articles",
@@ -33,11 +57,34 @@ export const articles = createViewResource("articles", {
       inputs: {
         title: { label: "Title", required: true },
         author: { label: "Author" },
-        status: { label: "Status", controller: SelectInputController, valueOptions: STATUSES },
+        category: {
+          label: "Category",
+          controller: SelectInputController,
+          valueOptions: CATEGORIES,
+        },
+        status: {
+          label: "Status",
+          controller: SelectInputController,
+          valueOptions: STATUSES,
+        },
+        readingTime: { label: "Minutes", controller: NumberInputController },
+        publishedAt: { label: "Published on", controller: DatePickerInputController },
       },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
+    formFilter: {
+      inputs: {
+        title: { label: "Search a title" },
+        status: {
+          label: "Status",
+          controller: SelectInputController,
+          valueOptions: STATUSES,
+        },
+      },
+    },
     viewVariants: [tableViewOptionFactory(), cardViewOptionFactory({ grid: 3 })],
+  },
+  views: {
+    [ActionList.list]: { name: "Articles" },
   },
 })`
 
