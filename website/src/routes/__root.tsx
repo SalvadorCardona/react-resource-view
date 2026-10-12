@@ -23,9 +23,9 @@ import appCss from "@/styles/app.css?url"
 // as in the browser.
 configureLibraries()
 
-const TITLE = "Resource & Form — React forms and CRUD views for REST APIs"
+const TITLE = "react-resource-view — The back office of your REST API, generated from a declaration"
 const DESCRIPTION =
-  "Documentation for react-data-form and react-resource-view: describe a form as data, declare a resource, and get the list, the detail and the CRUD forms wired to your API."
+  "Documentation for react-resource-view, the back office of your REST API generated from a declaration, and for react-data-form, the form engine it is built on."
 
 export const Route = createRootRoute({
   // Every match down to the leaf page is available here, so the canonical URL

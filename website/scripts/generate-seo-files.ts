@@ -42,9 +42,9 @@ Allow: /
 Sitemap: ${SITE_ORIGIN}${BASE}sitemap.xml
 `
 
-const llms = `# Resource & Form
+const llms = `# react-resource-view
 
-> Documentation for react-data-form and react-resource-view: describe a form as data, declare a resource, and get the list, the detail and the CRUD forms wired to your API.
+> The back office of your REST API, generated from a declaration: lists, detail pages, forms and filters. Documentation for react-resource-view and for react-data-form, the form engine it is built on.
 
 ${SECTIONS.map(
   (section) => `## ${section.pkg}
