@@ -1,4 +1,4 @@
-# Resource & Form — documentation site
+# react-resource-view — documentation site
 
 The public documentation for
 [`react-data-form`](https://github.com/SalvadorCardona/react-data-form) and

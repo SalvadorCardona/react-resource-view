@@ -88,7 +88,7 @@ export function configureLibraries(): void {
     // demos embedded in the documentation open their forms over the page and
     // never navigate there.
     routing: { mode: "query", param: "view", basePath: PLAYGROUND_PATH },
-    appName: "Resource & Form",
+    appName: "react-resource-view",
     description:
       "Documentation for react-data-form and react-resource-view: data-driven React forms and CRUD views for REST APIs — API Platform, Strapi, Supabase.",
     // The site's router owns the document head; letting the views write it too

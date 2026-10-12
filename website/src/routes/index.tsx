@@ -3,11 +3,13 @@ import {
   ArrowRight,
   BookOpen,
   Boxes,
+  Check,
   Compass,
   Languages,
   LayoutGrid,
   Link2,
   MousePointerClick,
+  X,
   PlayCircle,
   PlugZap,
   Rocket,
@@ -23,6 +25,7 @@ import {
   ValidationIllustration,
 } from "@/components/FeatureIllustrations"
 import { BackendLogo } from "@/components/BackendLogo"
+import { CodeBlock } from "@/components/CodeBlock"
 import { CopyCommand } from "@/components/CopyCommand"
 import { Header } from "@/components/Header"
 import { HeroBackdrop } from "@/components/HeroBackdrop"
@@ -58,13 +61,15 @@ function LandingPage() {
         <Hero />
         <WorksWith />
         <GetStarted />
+        <BeforeAfter />
+        <WhenToUse />
         <TourVideo />
         <Packages />
         <OneDescription />
-        <Story />
         <Layouts />
         <DemoVideo />
         <Features />
+        <Story />
         <Closing />
       </main>
     </div>
@@ -90,25 +95,33 @@ function Hero() {
           className="rise mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl"
           style={{ animationDelay: "100ms" }}
         >
-          Forms and CRUD views that come out of a{" "}
+          The back office of your REST API, generated from a{" "}
           <span className="bg-gradient-to-r from-form to-view bg-clip-text text-transparent">
-            description
+            declaration
           </span>
-          , not a template
+          : lists, detail pages, forms, filters
         </h1>
 
         <p
           className="rise mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
           style={{ animationDelay: "160ms" }}
         >
-          <strong className="font-medium text-foreground">react-data-form</strong>{" "}
-          turns an object into a form that holds its own state, validates, and
-          reports what your API sends back.{" "}
+          For teams with an API — API Platform, Spring, Strapi, Supabase or any REST
+          API that publishes OpenAPI — who have to ship an admin interface and would
+          rather not hand-write every table, form and filter.
+        </p>
+
+        <p
+          className="rise mx-auto mt-4 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground"
+          style={{ animationDelay: "190ms" }}
+        >
           <strong className="font-medium text-foreground">
             react-resource-view
           </strong>{" "}
-          takes one resource declaration and renders its list, detail, create, edit
-          and delete screens — wired to your API and to the URL.
+          is the product: install it and you have the back office.{" "}
+          <strong className="font-medium text-foreground">react-data-form</strong>{" "}
+          is the form engine it is built on — a building block you can also use on
+          its own, without any view.
         </p>
 
         {/* One way in that stands out — a project on your own API, in one
@@ -273,6 +286,138 @@ function GetStarted() {
           <ArrowRight className="size-4" />
         </Link>
       </p>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+const BEFORE = [
+  "A table component: columns, sorting, pagination",
+  "A form component per screen, create and edit",
+  "Filters wired to the query string",
+  "Validation, and the API's 422 mapped back onto the fields",
+  "Routes, permissions, loading and empty states — for every resource",
+]
+
+const DECLARATION = `import { createViewResource } from "react-resource-view"
+
+export const articles = createViewResource<Article>("/api/articles", {
+  name: "Articles",
+  canRead: true,
+  canCreate: true,
+  canUpdate: true,
+  canDelete: true,
+  view: {
+    form: {
+      inputs: {
+        title: { label: "Title", required: true },
+        author: { label: "Author" },
+        status: { label: "Status", controller: SelectInputController },
+      },
+    },
+    formFilter: { inputs: { title: { label: "Search a title" } } },
+    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory()],
+  },
+})`
+
+/**
+ * What the library saves, said as a comparison: the same screens, written by
+ * hand on one side and declared on the other.
+ */
+function BeforeAfter() {
+  return (
+    <section className="mx-auto max-w-6xl px-4 pt-20 lg:px-8">
+      <header className="max-w-2xl">
+        <p className="text-xs font-medium uppercase tracking-wider text-view">
+          Before and after
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          Hundreds of lines of components, or one declaration
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          A back office is the same work for every resource of your API. Write it
+          by hand and each one costs a table, a form and its filters; declare it and
+          each one costs about twenty lines.
+        </p>
+      </header>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-muted/25 p-6">
+          <h3 className="font-semibold tracking-tight">By hand, per resource</h3>
+          <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+            {BEFORE.map((item) => (
+              <li key={item} className="flex gap-2.5">
+                <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/70" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-sm font-medium">Typically a few hundred lines.</p>
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="mb-3 font-semibold tracking-tight">
+            With react-resource-view
+          </h3>
+          <CodeBlock filename="resources/articles.ts">{DECLARATION}</CodeBlock>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+const USE_IT = [
+  "A back office or an admin interface for your API",
+  "An internal tool",
+  "Business CRUD: records to list, filter, read and edit",
+]
+
+const SKIP_IT = [
+  "A marketing or showcase site",
+  "A very custom UI where every screen is designed one by one",
+]
+
+/** Who the library is for, and who it is not for — said before the detail. */
+function WhenToUse() {
+  return (
+    <section className="mx-auto max-w-6xl px-4 pt-20 lg:px-8">
+      <header className="max-w-2xl">
+        <p className="text-xs font-medium uppercase tracking-wider text-primary">
+          Is it for you?
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          When to use it, and when not to
+        </h2>
+      </header>
+
+      <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-view/40 bg-view-soft/30 p-6">
+          <h3 className="font-semibold tracking-tight">Use it for</h3>
+          <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+            {USE_IT.map((item) => (
+              <li key={item} className="flex gap-2.5">
+                <Check className="mt-0.5 size-4 shrink-0 text-view" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-border p-6">
+          <h3 className="font-semibold tracking-tight">Look elsewhere for</h3>
+          <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+            {SKIP_IT.map((item) => (
+              <li key={item} className="flex gap-2.5">
+                <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/70" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </section>
   )
 }
@@ -531,9 +676,8 @@ const STEPS = [
 /**
  * Where the library comes from — the Notion comparison, told in three pictures.
  *
- * It sits between the description the reader has just taken apart and the seven
- * layouts below: the story ends on "let the reader switch views", and the next
- * section is that sentence, running.
+ * It sits near the end, after the argument: it is a good story, but told before
+ * the reader knows what the library is for, it would interrupt the pitch.
  */
 function Story() {
   return (

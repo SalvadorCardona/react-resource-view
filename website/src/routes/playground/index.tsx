@@ -4,7 +4,7 @@ import { parseLink, ResourceViewProvider } from "react-resource-view"
 export const Route = createFileRoute("/playground/")({
   head: () => ({
     meta: [
-      { title: "Playground — Resource & Form" },
+      { title: "Playground — react-resource-view" },
       {
         name: "description",
         content:
