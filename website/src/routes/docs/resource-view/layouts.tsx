@@ -13,7 +13,7 @@ import { CodeBlock } from "@/components/CodeBlock"
 import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { articlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/layouts")({
@@ -147,8 +147,8 @@ function Layouts() {
       <P>
         A collection is not one screen. The same articles are a table when you are
         comparing them, a board when you are moving them along, and a calendar when
-        you are scheduling them. All three are the same resource with a different{" "}
-        <C>listComponent</C>.
+        you are scheduling them. All three are the same{" "}
+        <Term id="resource">resource</Term> with a different <C>listComponent</C>.
       </P>
 
       <H2 id="seven">The seven factories</H2>
@@ -178,9 +178,9 @@ function Layouts() {
       <H2 id="declaring">Declaring several</H2>
 
       <P>
-        <C>viewVariants</C> is a list. Declare more than one and the view renders a
-        switcher; the reader's choice is written into the URL, so it survives a
-        reload and travels in a shared link.
+        <C>viewVariants</C> is a list. Declare more than one and the{" "}
+        <Term id="view">view</Term> renders a switcher; the reader's choice is
+        written into the URL, so it survives a reload and travels in a shared link.
       </P>
 
       <CodeBlock>{VARIANTS}</CodeBlock>
@@ -191,9 +191,9 @@ function Layouts() {
 
       <Callout kind="note" title="The first one wins">
         <P>
-          With no variant in the URL, the first of the list is used. Ordering them is
-          how you choose the default, and a variant id that no longer exists falls
-          back to it rather than rendering nothing.
+          With no <Term id="view-variant">variant</Term> in the URL, the first of the
+          list is used. Ordering them is how you choose the default, and a variant id
+          that no longer exists falls back to it rather than rendering nothing.
         </P>
       </Callout>
 

@@ -5,7 +5,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/sub-views")({
   head: () => ({
@@ -127,8 +127,9 @@ function SubViews() {
       </P>
 
       <P>
-        A sub-view is a full view context nested inside another: it fetches, it
-        filters, it paginates, it writes. It is not a read-only panel.
+        A <Term id="sub-view">sub-view</Term> is a full <Term id="view">view</Term>{" "}
+        context nested inside another: it fetches, it filters, it paginates, it
+        writes. It is not a read-only panel.
       </P>
 
       <LiveExample />
@@ -137,7 +138,8 @@ function SubViews() {
 
       <P>
         <C>subViewResource.list</C> is the tabs of a detail page. An entry takes one
-        of two shapes — a nested resource, or a component of your own.
+        of two shapes — a nested <Term id="resource">resource</Term>, or a component
+        of your own.
       </P>
 
       <CodeBlock>{SUB}</CodeBlock>

@@ -6,7 +6,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 import { articlesResource, drawerArticlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/resources")({
@@ -137,17 +137,18 @@ function Resources() {
       <H2 id="basic">The smallest declaration</H2>
 
       <P>
-        An identifier, a path and a form. That is enough for a list, a detail page, a
-        create form, an edit form and a delete confirmation.
+        An identifier, a path and a <Term id="form">form</Term>. That is enough for a
+        list, a detail page, a create form, an edit form and a delete confirmation.
       </P>
 
       <CodeBlock filename="articles.ts">{BASIC}</CodeBlock>
 
       <Callout kind="warning" title="Declare resources at module scope">
         <P>
-          <C>createViewResource</C> registers the resource in the shared registry.
-          Calling it inside a component would register it again on every render —
-          declare it once, in a module, and import it.
+          <C>createViewResource</C> registers the <Term id="resource">resource</Term>{" "}
+          in the shared <Term id="registry">registry</Term>. Calling it inside a
+          component would register it again on every render — declare it once, in a
+          module, and import it.
         </P>
       </Callout>
 
@@ -220,10 +221,11 @@ function Resources() {
       <H2 id="open-in">Where an action opens</H2>
 
       <P>
-        An action is a screen, a dialog or a drawer — the same view either way,
-        drawn in a different frame. <C>behavior.openIn</C> is the whole decision,
-        and it is taken per action: a list is read full page, and the form that
-        edits one of its rows does not have to be.
+        An action is a screen, a dialog or a drawer — the same{" "}
+        <Term id="view">view</Term> either way, drawn in a different frame.{" "}
+        <C>behavior.openIn</C> is the whole decision, and it is taken per action: a
+        list is read full page, and the form that edits one of its rows does not have
+        to be.
       </P>
 
       <CodeBlock>{OPEN_IN}</CodeBlock>
@@ -302,11 +304,12 @@ function Resources() {
       <CodeBlock>{FULL_WIDTH}</CodeBlock>
 
       <P>
-        It is read at three levels, and the most specific one wins: a list variant,
-        then the action&apos;s entry in <C>views</C>, then the resource&apos;s{" "}
-        <C>view</C>. So a resource declared full width keeps its forms narrow with a{" "}
-        <C>fullWidth: false</C> on those actions, and a board can be the one wide
-        layout of a list whose table stays in the column.
+        It is read at three levels, and the most specific one wins: a list{" "}
+        <Term id="view-variant">variant</Term>, then the action&apos;s entry in{" "}
+        <C>views</C>, then the resource&apos;s <C>view</C>. So a resource declared
+        full width keeps its forms narrow with a <C>fullWidth: false</C> on those
+        actions, and a board can be the one wide layout of a list whose table stays
+        in the column.
       </P>
 
       <PropsTable
@@ -425,8 +428,8 @@ function Resources() {
       <H2 id="repository">Where the data comes from</H2>
 
       <P>
-        <C>createViewResource</C> picks a repository from one thing: whether the
-        resource has a <C>path</C>.
+        <C>createViewResource</C> picks a <Term id="repository">repository</Term>{" "}
+        from one thing: whether the resource has a <C>path</C>.
       </P>
 
       <Ul>
@@ -465,7 +468,8 @@ function Resources() {
       <P>
         Three hooks sit between the views and the repository. Each receives the
         current context, so a value can be derived from the surrounding view — the
-        parent item of a sub-view, the active filter, the current scope.
+        parent item of a <Term id="sub-view">sub-view</Term>, the active filter, the
+        current <Term id="scope">scope</Term>.
       </P>
 
       <CodeBlock>{HOOKS}</CodeBlock>

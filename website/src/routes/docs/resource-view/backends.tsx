@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/backends")({
   head: () => ({
@@ -181,10 +181,11 @@ function Backends() {
       <H2 id="dialects">What a dialect knows</H2>
 
       <P>
-        The views know a resource has rows, pages and filters. How a given backend
-        spells those — the URL an item lives at, the query string a filter becomes,
-        the envelope a collection arrives in, where the validation errors hide — is a{" "}
-        <strong>dialect</strong>, set once at startup.
+        The <Term id="view">views</Term> know a <Term id="resource">resource</Term>{" "}
+        has rows, pages and filters. How a given backend spells those — the URL an
+        item lives at, the query string a filter becomes, the envelope a collection
+        arrives in, where the validation errors hide — is a{" "}
+        <Term id="dialect">dialect</Term>, set once at startup.
       </P>
 
       <CodeBlock filename="setup.ts">{CONFIGURE}</CodeBlock>
@@ -560,9 +561,10 @@ function Backends() {
 
       <Callout kind="warning" title="The dialect is read when the resource is built">
         <P>
-          <C>createViewResource</C> builds the resource's repository as it runs, so{" "}
-          <C>configureApi</C> has to come first — in a file your entry point imports
-          before it declares any resource.
+          <C>createViewResource</C> builds the resource's{" "}
+          <Term id="repository">repository</Term> as it runs, so <C>configureApi</C>{" "}
+          has to come first — in a file your entry point imports before it declares
+          any resource.
         </P>
       </Callout>
 
@@ -648,8 +650,8 @@ function Backends() {
       <P>
         Whatever the backend called it — Hydra <C>violations</C>, a Strapi{" "}
         <C>error.details.errors</C>, a PostgREST message, a FastAPI 422{" "}
-        <C>detail</C> — the dialect reads it into
-        one shape, and the form pins each message on the field that caused it. A
+        <C>detail</C> — the dialect reads it into one shape, and the{" "}
+        <Term id="form">form</Term> pins each message on the field that caused it. A
         failure with no field to blame, such as a unique constraint, becomes the
         toast's description instead. See{" "}
         <A href="/docs/form/validation">validation &amp; API errors</A>.

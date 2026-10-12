@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/scopes")({
   head: () => ({
@@ -95,10 +95,11 @@ function Scopes() {
       <H2 id="what">What a scope is</H2>
 
       <P>
-        An area of the application: its set of resources, its menu, its landing page,
-        and whether the reader is allowed in it at all. The scope name is the first
-        segment of every URL the views build, which is what makes it a genuine
-        boundary rather than a folder.
+        An area of the application: its set of <Term id="resource">resources</Term>,
+        its menu, its landing page, and whether the reader is allowed in it at all.
+        The <Term id="scope">scope</Term> name is the first segment of every URL the{" "}
+        <Term id="view">views</Term> build, which is what makes it a genuine boundary
+        rather than a folder.
       </P>
 
       <Ul>
@@ -354,7 +355,8 @@ function Scopes() {
 
       <P>
         The same API collection often needs two different treatments. Declare it
-        twice, once per scope, with different permissions, filters and layouts:
+        twice, once per scope, with different permissions, filters and{" "}
+        <Term id="view-variant">layouts</Term>:
       </P>
 
       <CodeBlock>{SAME_PATH}</CodeBlock>

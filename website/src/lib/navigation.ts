@@ -35,6 +35,7 @@ import {
   Table2,
   Terminal,
   Wand2,
+  Waypoints,
   Zap,
 } from "lucide-react"
 
@@ -221,6 +222,13 @@ export const VIEW_SECTION: DocSection = {
           summary:
             "One declaration, five views — list, detail, create, edit, delete — and a URL that carries the state.",
           icon: Compass,
+        },
+        {
+          href: "/docs/resource-view/concepts",
+          title: "Concepts",
+          summary:
+            "The vocabulary in one page — resource, view, dialect, port, scope… — and how the pieces fit together.",
+          icon: Waypoints,
         },
         {
           href: "/docs/resource-view/installation",

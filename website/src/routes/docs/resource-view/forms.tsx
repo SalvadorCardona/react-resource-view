@@ -6,7 +6,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 import { drawerArticlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/forms")({
@@ -127,9 +127,10 @@ function Forms() {
       ]}
     >
       <P>
-        The default is that every action of a resource shares one form: the columns
-        of the list, the create form and the edit form are the same description read
-        four times, and that is what makes a resource cheap to declare.
+        The default is that every action of a <Term id="resource">resource</Term>{" "}
+        shares one <Term id="form">form</Term>: the columns of the list, the create
+        form and the edit form are the same description read four times, and that is
+        what makes a resource cheap to declare.
       </P>
 
       <P>
@@ -214,7 +215,8 @@ function Forms() {
       <P>
         Add an article and then edit it: the panel that opens is not the panel that
         opened a moment ago. Nothing else in the declaration changed — the columns,
-        the filters and the repository are still read from the same place.
+        the filters and the <Term id="repository">repository</Term> are still read
+        from the same place.
       </P>
 
       <Callout kind="tip" title="Each action names itself">
@@ -246,8 +248,9 @@ function Forms() {
       <Ul>
         <Li>
           reference the fields, as the example above does —{" "}
-          <C>title: articleForm.inputs.title</C> — and the label, the controller and
-          the validation stay written once;
+          <C>title: articleForm.inputs.title</C> — and the label, the{" "}
+          <Term id="controller">controller</Term> and the validation stay written
+          once;
         </Li>
         <Li>
           or subtract from it —{" "}

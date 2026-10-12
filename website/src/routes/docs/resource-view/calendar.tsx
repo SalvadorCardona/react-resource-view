@@ -5,7 +5,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { sessionsResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/calendar")({
@@ -248,9 +248,10 @@ function CalendarAndTimeline() {
       </P>
 
       <P>
-        What fills it is the variant's <C>rowComponent</C>, which both layouts
-        default to the summary described above. A resource with something better to
-        show declares its own, exactly as the card and list layouts do.
+        What fills it is the <Term id="view-variant">variant</Term>'s{" "}
+        <C>rowComponent</C>, which both layouts default to the summary described
+        above. A <Term id="resource">resource</Term> with something better to show
+        declares its own, exactly as the card and list layouts do.
       </P>
 
       <CodeBlock>{PREVIEW}</CodeBlock>
@@ -259,8 +260,8 @@ function CalendarAndTimeline() {
 
       <P>
         Month names, day headers and the day a week starts on all come from the{" "}
-        <C>dateLocale</C> port — Sunday in en-US, Monday in French — so one call
-        settles both layouts.
+        <C>dateLocale</C> <Term id="port">port</Term> — Sunday in en-US, Monday in
+        French — so one call settles both layouts.
       </P>
 
       <CodeBlock>{LOCALE}</CodeBlock>
