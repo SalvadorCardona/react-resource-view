@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import semver from "semver"
 import * as library from "@/index"
 import {
   BACKEND_IDS,
@@ -118,6 +119,30 @@ describe("reading the command line", () => {
 })
 
 describe("the starter", () => {
+  it("writes versions its peer dependencies accept, so npm install passes", async () => {
+    const pkg = JSON.parse(
+      await readFile(join(__dirname, "..", "package.json"), "utf8")
+    )
+    const files = renderStarter({
+      name: "shop-admin",
+      backend: "api-platform",
+      apiUrl: "http://localhost:8000",
+      pm: "npm",
+    })
+    const manifest = JSON.parse(files["package.json"])
+    const written = { ...manifest.dependencies, ...manifest.devDependencies }
+
+    for (const [name, range] of Object.entries<string>(pkg.peerDependencies)) {
+      if (!(name in written)) continue
+      const version = semver.minVersion(written[name])!
+      expect(
+        semver.satisfies(version, range),
+        `${name}: ${written[name]} vs peer ${range}`
+      ).toBe(true)
+    }
+    expect(written["react-data-form"]).toBe(pkg.peerDependencies["react-data-form"])
+  })
+
   it("talks to Spring Boot with its dialect, and dumps /v3/api-docs", () => {
     const files = renderStarter({
       name: "shop-admin",

@@ -9,6 +9,7 @@
  */
 import { mkdir, readdir, writeFile } from "node:fs/promises"
 import { existsSync, readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path"
 
 /* -------------------------------------------------------------------------- */
@@ -137,30 +138,44 @@ const runScript = (pm, script) => `${pm} run ${script}`
 /* Versions                                                                   */
 /* -------------------------------------------------------------------------- */
 
+function readManifest() {
+  try {
+    const here = dirname(fileURLToPath(import.meta.url))
+    return JSON.parse(readFileSync(join(here, "..", "package.json"), "utf8"))
+  } catch {
+    return {}
+  }
+}
+
+const manifest = readManifest()
+
 /**
  * This package's own version, so a starter made by 0.14 installs 0.14 — the
  * one whose dialects the generated code imports.
  */
 function ownVersion() {
-  try {
-    const manifest = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8")
-    )
-    return manifest.version
-  } catch {
-    return undefined
-  }
+  return manifest.version
+}
+
+/**
+ * The range this package asks of a peer, so the starter can never write one
+ * its own peerDependencies rule out (npm refuses to install it otherwise).
+ */
+function peerRange(name) {
+  const range = manifest.peerDependencies?.[name]
+  if (!range) throw new Error(`${name} is not a peer dependency of this package`)
+  return range
 }
 
 export const VERSIONS = {
   "react-resource-view": ownVersion() ? `^${ownVersion()}` : "latest",
   react: "^19.2.0",
   "react-dom": "^19.2.0",
-  "react-data-form": "^0.2.1",
-  "react-mini-i18n": "^0.1.0",
-  "resource-registry": "^0.1.0",
+  "react-data-form": peerRange("react-data-form"),
+  "react-mini-i18n": peerRange("react-mini-i18n"),
+  "resource-registry": peerRange("resource-registry"),
   "jsonld-api-client": "^0.1.0",
-  "@tanstack/react-router": "^1.170.0",
+  "@tanstack/react-router": peerRange("@tanstack/react-router"),
   "lucide-react": "^0.577.0",
   "api-dumper": "^0.1.0",
   "@tailwindcss/vite": "^4.3.3",
