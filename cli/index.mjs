@@ -2,12 +2,12 @@
 /**
  * react-resource-view — command line.
  *
- * One command, one job: write a view variant where the reader wants it.
+ * Two commands: `init` starts a whole project on an API (see ./init.mjs), and
+ * `create-view-variant` writes a view variant where the reader wants it.
  *
- * A variant is nothing but a `createView` call over three components, so
- * scaffolding it is a template rather than a framework — which is why this file
- * has no dependency, no build step and no second file. It is shipped as it is
- * written, and `npx react-resource-view create-view-variant` runs it.
+ * Both are templates rather than a framework — which is why the command line
+ * has no dependency and no build step. It is shipped as it is written, and
+ * `npx react-resource-view <command>` runs it.
  */
 import { mkdir, writeFile } from "node:fs/promises"
 import { existsSync, realpathSync } from "node:fs"
@@ -15,8 +15,12 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { createInterface } from "node:readline/promises"
 import { pathToFileURL } from "node:url"
 import { stdin, stdout } from "node:process"
+import { runInit } from "./init.mjs"
 
 const COMMANDS = ["create-view-variant", "view-variant"]
+
+/** `init`, under the names someone reaching for a starter would type. */
+const INIT_COMMANDS = ["init", "create", "new"]
 
 /** The directories a project is likely to keep its views in, best first. */
 const LIKELY_DIRECTORIES = [
@@ -27,9 +31,16 @@ const LIKELY_DIRECTORIES = [
   "src",
 ]
 
-export const USAGE = `react-resource-view — create a view variant
+export const USAGE = `react-resource-view — command line
+
+Commands
+  init [directory]              Start a project on your API: API Platform,
+                                Spring Boot, Supabase, Strapi, FastAPI or any
+                                REST API. See \`init --help\`.
+  create-view-variant [name]    Write a view variant — below.
 
 Usage
+  npx react-resource-view init [directory] [options]
   npx react-resource-view create-view-variant [name] [options]
 
 Arguments
@@ -402,6 +413,11 @@ async function ask(question, fallback) {
 }
 
 export async function run(argv, { cwd = process.cwd(), log = console.log } = {}) {
+  if (INIT_COMMANDS.includes(argv[0])) {
+    const interactive = stdin.isTTY && stdout.isTTY
+    return runInit(argv.slice(1), { cwd, log, ask: interactive ? ask : undefined })
+  }
+
   const options = parseCliArgs(argv)
 
   if (options.error) {
