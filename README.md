@@ -12,10 +12,11 @@
 
 # react-resource-view
 
-CRUD views for REST APIs — API Platform, Strapi, Supabase, FastAPI. You
-declare a resource — its path, its form, its layout — and the package renders
-the list, the detail, the create and edit forms, and the delete confirmation,
-wired to the API and to the URL.
+CRUD views for REST APIs — API Platform, Spring Boot, Supabase, Strapi,
+FastAPI, or any REST API that publishes OpenAPI. You declare a resource — its
+path, its form, its layout — and the package renders the list, the detail, the
+create and edit forms, and the delete confirmation, wired to the API and to the
+URL.
 
 ```tsx
 import { createViewResource, ResourceView } from "react-resource-view"
