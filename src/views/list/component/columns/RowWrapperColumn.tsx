@@ -1,14 +1,10 @@
-import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import React, { useState } from "react"
-import getIdFromObject from "@/internal/id/getIdFromObject"
-import getIdentityFromObject from "@/internal/id/getIdentityFromObject"
 import { ValueOptionInterface } from "react-data-form"
-import { BaseJsonLdItemInterface } from "jsonld-item"
 import { Trans } from "react-mini-i18n"
 import { RowInterface } from "@/ViewInterface"
 import { cn } from "@/ui/cn"
-import { RecordCard } from "@/views/list/component/RecordCard"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { BoardCard } from "@/views/list/component/columns/BoardCard"
+import { useBoard, useBoardContext } from "@/views/list/component/columns/useBoard"
 
 export interface RowWrapperColumnComponentPropsInterface {
   valueIdentifier: ValueOptionInterface
@@ -25,59 +21,44 @@ export default function RowWrapperColumnComponent({
   isDragging,
   rows,
 }: RowWrapperColumnComponentPropsInterface) {
-  const listViewContext = useListViewContext()
-  const currentResource = useCurrentViewResourceContext()
-  const resource = currentResource.resource
+  // The board is shared by its columns — a selection spans them, a drag goes
+  // from one to the other. A column drawn on its own, outside `ListColumn`,
+  // keeps a board of its own, without selection.
+  const sharedBoard = useBoardContext()
+  const ownBoard = useBoard({
+    rows,
+    identifierKey,
+    columns: [valueIdentifier],
+    selectable: false,
+  })
+  const board = sharedBoard ?? ownBoard
+
   // Highlighting every column while one card is in the air said nothing about
   // where it would land. Only the column under the pointer lights up.
   const [isOver, setIsOver] = useState(false)
 
   const columnRows = rows.filter(
-    (row) => row.data?.[identifierKey] === valueIdentifier.value
+    (row) => board.columnOf(row) === valueIdentifier.value
   )
+  const columnIds = columnRows.map(board.idOf)
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsOver(false)
     handleDragging(false)
-    // The card carries the short form its URL takes; the record it stands for
-    // is found again among the rows, so the update carries the whole identity
-    // the dialect knows it by — an `@id` included, which is what the local
-    // repository matches on. The short form alone left it looking for "12"
-    // among records keyed "/tasks/12".
-    const id = e.dataTransfer.getData("text")
-    const row = rows.find(
-      (candidate) =>
-        String(
-          getIdFromObject(candidate.data as BaseJsonLdItemInterface, true, resource)
-        ) === id
-    )
-    if (!row?.data) return
-    // Dropped back where it was: there is nothing to save, nor to announce.
-    if (row.data[identifierKey] === valueIdentifier.value) return
+    // The cards carried are the board's to say — the whole selection when the
+    // card picked up was part of it. A drag that did not start on the board
+    // only has the id it carries.
+    const carried = board.draggedNow()
+    const ids = carried.length ? carried : [e.dataTransfer.getData("text")]
+    board.endDrag()
 
-    listViewContext.updateData(
-      {
-        ...getIdentityFromObject(row.data as BaseJsonLdItemInterface, resource),
-        [identifierKey]: valueIdentifier.value,
-      },
-      true
-    )
+    void board.moveTo(ids.filter(Boolean), valueIdentifier.value)
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsOver(true)
-  }
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    e.dataTransfer.setData("text", id)
-    handleDragging(true)
-  }
-
-  const handleDragEnd = () => {
-    setIsOver(false)
-    handleDragging(false)
   }
 
   return (
@@ -90,12 +71,17 @@ export default function RowWrapperColumnComponent({
         "flex w-72 min-w-0 shrink-0 flex-col rounded-2xl border border-border bg-muted/30 transition-colors",
         // While a card is being carried, every column reads as a target; the
         // one under the pointer reads as *the* target.
-        isDragging && "border-dashed",
+        (isDragging || board.dragging.length > 0) && "border-dashed",
         isOver && "border-primary bg-primary/5"
       )}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      onDragLeave={() => setIsOver(false)}
+      onDragLeave={(e) => {
+        // Leaving for one of its own cards is still being over the column.
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setIsOver(false)
+        }
+      }}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-3">
         <p className="truncate text-sm font-medium">{valueIdentifier.label}</p>
@@ -104,30 +90,34 @@ export default function RowWrapperColumnComponent({
         </span>
       </header>
 
-      <div className="flex flex-col gap-2 px-2 pb-2">
-        {columnRows.map((row) => {
-          const data = row.data as BaseJsonLdItemInterface
-          const id = getIdFromObject(data, true, resource) as string
-
-          return (
-            <div
-              key={id}
-              draggable
-              className="cursor-grab active:cursor-grabbing"
-              onDragStart={(e) => handleDragStart(e, id)}
-              onDragEnd={handleDragEnd}
-            >
-              {/* `row`, not `{ data: row }`: wrapping it a second time handed
-                  the row component an object whose every field was undefined,
-                  which is why these columns drew blank cards. */}
-              <RecordCard row={row} className="bg-card" />
-            </div>
-          )
-        })}
+      {/* Each column scrolls on its own, so a long one does not push the
+          board's horizontal scrollbar, nor its neighbours' cards, off the
+          screen. */}
+      <div className="flex max-h-[calc(100dvh-14rem)] min-h-24 flex-col gap-2 overflow-y-auto px-2 pb-2">
+        {columnRows.map((row) => (
+          <BoardCard
+            key={board.idOf(row)}
+            row={row}
+            board={board}
+            columnIds={columnIds}
+          />
+        ))}
 
         {columnRows.length === 0 && (
-          <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-            <Trans>Nothing here</Trans>
+          // An empty column is still somewhere to drop a card: the slot says
+          // so, and says it louder while a card is in the air.
+          <p
+            className={cn(
+              "flex min-h-20 items-center justify-center rounded-xl border border-dashed border-border px-3 text-center text-xs text-muted-foreground transition-colors",
+              board.dragging.length > 0 && "border-primary/50 text-foreground",
+              isOver && "border-primary bg-primary/10"
+            )}
+          >
+            {board.dragging.length > 0 ? (
+              <Trans>Drop here</Trans>
+            ) : (
+              <Trans>Nothing here</Trans>
+            )}
           </p>
         )}
       </div>

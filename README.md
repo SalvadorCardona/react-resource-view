@@ -532,6 +532,40 @@ A list renders through one of several variants, chosen with a factory:
 Several variants can coexist on one resource; the view keeps the reader's
 choice in the URL.
 
+### Boards: opening, selecting, moving
+
+A card of a `columnViewOptionFactory` board opens the record when the view says
+where, and several cards move together:
+
+```tsx
+columnViewOptionFactory({
+  identifierKey: "status",
+  identifierKeyList: STATUSES,
+  behavior: {
+    // "drawer" | "popup" | "window"; unset, a card opens nothing.
+    openRecordIn: "drawer",
+    // On by default.
+    selectable: true,
+    // Beside "Move to…", in the bar a selection brings up.
+    bulkActions: [{ label: "Archive", onAction: (records) => archive(records) }],
+  },
+})
+```
+
+- **Opening** — the whole card is clickable and reachable with Tab, Enter opens
+  it. `drawer` and `popup` show the record's `read` view over the board, with a
+  way to edit it, and write it into the URL as a child view
+  (`…/tasks/list/tasks/read/12`): the link can be shared and Back closes it.
+  `window` goes to the record's page through `generateLink`.
+- **Controls first** — a button, a link, a menu, a checkbox or a drag handle in
+  the card keeps its click (or anything marked `data-card-control`); selecting
+  text does not open the card either.
+- **Selecting** — the checkbox on hover, Ctrl/Cmd+click, Shift+click for a range
+  in a column, a long press on a phone; Escape clears it.
+- **Moving** — drag a selected card to carry the whole selection, or use
+  “Move to…”. One update per record through the repository, drawn at once; a
+  card whose update fails goes back to its column, and a message says how many.
+
 ### A layout of your own
 
 A variant is a `createView` call over three components, so the eighth layout is

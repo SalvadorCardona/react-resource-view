@@ -12,6 +12,17 @@ export interface RowInterface<Data extends object = any> {
   data: Data
 }
 
+/** An action run on every selected card of a board at once. */
+export interface BulkActionInterface<Data extends object = any> {
+  label: string
+  icon?: IconType
+  /**
+   * Receives the selected records. The board refreshes once it has settled,
+   * and the selection is cleared if it resolves.
+   */
+  onAction: (records: Data[]) => void | Promise<void>
+}
+
 export interface ViewInterface<_Read = IdAbleInterface> {
   id?: string
   name?: string
@@ -55,6 +66,32 @@ export interface ViewInterface<_Read = IdAbleInterface> {
      * API (CSV format) and honours the filters currently applied to the list.
      */
     canExport?: boolean
+    /**
+     * What a click on a card of a board (the `columns` layout) opens: the
+     * record's `read` view.
+     *
+     * `drawer` slides it in from the right, `popup` centres it in a dialog —
+     * both over the board, and both written into the URL as a child view
+     * (`…/tasks/list/tasks/read/12`), so the link can be shared and the
+     * browser's Back button closes it. `window` goes to the record's own
+     * page. Left unset, a card opens nothing, as before. Needs `canRead`.
+     *
+     * A button, a link, a checkbox or any control drawn inside the card keeps
+     * its own click: the card only opens on a click that lands on none of them.
+     */
+    openRecordIn?: "popup" | "window" | "drawer"
+    /**
+     * Whether the cards of a board can be selected — a checkbox on each card,
+     * Ctrl/Cmd+click, Shift+click for a range, a long press on a phone — and
+     * moved together, by dragging one of them or through "Move to…".
+     * Defaults to `true`.
+     */
+    selectable?: boolean
+    /**
+     * Actions offered on the selected cards of a board, beside "Move to…", in
+     * the bar that appears as soon as one card is selected.
+     */
+    bulkActions?: BulkActionInterface[]
   }
   viewComponent?: FC
   subViewResource?: {
