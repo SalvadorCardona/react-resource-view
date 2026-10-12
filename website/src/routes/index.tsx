@@ -138,7 +138,7 @@ function Hero() {
           style={{ animationDelay: "250ms" }}
         >
           <Link
-            to="/docs/form"
+            to="/docs/resource-view/quickstart"
             className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
             <BookOpen className="size-4" />
@@ -254,6 +254,16 @@ function GetStarted() {
       </div>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
+        <Link
+          to="/docs/resource-view/quickstart"
+          className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
+        >
+          The 5-minute quickstart — from the command to a running list
+          <ArrowRight className="size-4" />
+        </Link>
+      </p>
+
+      <p className="mt-2 text-center text-sm text-muted-foreground">
         <Link
           to="/docs/resource-view/starter"
           className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
@@ -710,25 +720,25 @@ function Closing() {
       <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-form-soft/60 via-background to-view-soft/60 p-10 text-center">
         <Logo className="mx-auto size-10" />
         <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Start with the forms, then declare a resource
+          Declare a resource, and keep the forms for later
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-          The view package builds on the form package, so the documentation reads in
-          that order — but each half stands on its own.
+          The quickstart goes from zero to a list on your API in five minutes. The
+          form package it builds on stands on its own, when all you need is a form.
         </p>
 
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/docs/resource-view/quickstart"
+            className="rounded-lg bg-view px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
+          >
+            react-resource-view
+          </Link>
           <Link
             to="/docs/form"
             className="rounded-lg bg-form px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
           >
             react-data-form
-          </Link>
-          <Link
-            to="/docs/resource-view"
-            className="rounded-lg bg-view px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
-          >
-            react-resource-view
           </Link>
         </div>
 

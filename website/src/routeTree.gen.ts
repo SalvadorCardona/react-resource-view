@@ -42,6 +42,7 @@ import { Route as DocsResourceViewInstallationRouteImport } from './routes/docs/
 import { Route as DocsResourceViewLayoutsRouteImport } from './routes/docs/resource-view/layouts'
 import { Route as DocsResourceViewOpenapiTypesRouteImport } from './routes/docs/resource-view/openapi-types'
 import { Route as DocsResourceViewPermissionsRouteImport } from './routes/docs/resource-view/permissions'
+import { Route as DocsResourceViewQuickstartRouteImport } from './routes/docs/resource-view/quickstart'
 import { Route as DocsResourceViewResourcesRouteImport } from './routes/docs/resource-view/resources'
 import { Route as DocsResourceViewRoutingRouteImport } from './routes/docs/resource-view/routing'
 import { Route as DocsResourceViewScopesRouteImport } from './routes/docs/resource-view/scopes'
@@ -225,6 +226,12 @@ const DocsResourceViewPermissionsRoute =
     path: '/resource-view/permissions',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsResourceViewQuickstartRoute =
+  DocsResourceViewQuickstartRouteImport.update({
+    id: '/resource-view/quickstart',
+    path: '/resource-view/quickstart',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewResourcesRoute =
   DocsResourceViewResourcesRouteImport.update({
     id: '/resource-view/resources',
@@ -295,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
@@ -335,6 +343,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
@@ -378,6 +387,7 @@ export interface FileRoutesById {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
@@ -504,6 +516,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
@@ -754,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewPermissionsRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/quickstart': {
+      id: '/docs/resource-view/quickstart'
+      path: '/resource-view/quickstart'
+      fullPath: '/docs/resource-view/quickstart'
+      preLoaderRoute: typeof DocsResourceViewQuickstartRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/resources': {
       id: '/docs/resource-view/resources'
       path: '/resource-view/resources'
@@ -833,6 +853,7 @@ interface DocsRouteChildren {
   DocsResourceViewLayoutsRoute: typeof DocsResourceViewLayoutsRoute
   DocsResourceViewOpenapiTypesRoute: typeof DocsResourceViewOpenapiTypesRoute
   DocsResourceViewPermissionsRoute: typeof DocsResourceViewPermissionsRoute
+  DocsResourceViewQuickstartRoute: typeof DocsResourceViewQuickstartRoute
   DocsResourceViewResourcesRoute: typeof DocsResourceViewResourcesRoute
   DocsResourceViewRoutingRoute: typeof DocsResourceViewRoutingRoute
   DocsResourceViewScopesRoute: typeof DocsResourceViewScopesRoute
@@ -872,6 +893,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewLayoutsRoute: DocsResourceViewLayoutsRoute,
   DocsResourceViewOpenapiTypesRoute: DocsResourceViewOpenapiTypesRoute,
   DocsResourceViewPermissionsRoute: DocsResourceViewPermissionsRoute,
+  DocsResourceViewQuickstartRoute: DocsResourceViewQuickstartRoute,
   DocsResourceViewResourcesRoute: DocsResourceViewResourcesRoute,
   DocsResourceViewRoutingRoute: DocsResourceViewRoutingRoute,
   DocsResourceViewScopesRoute: DocsResourceViewScopesRoute,
