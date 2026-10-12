@@ -43,6 +43,7 @@ import {
 } from "@/components/StoryIllustrations"
 import { BACKENDS, namedBackends } from "@/lib/backends"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
+import { INSTALL_COMMAND, INSTALL_PACKAGES } from "@/lib/install"
 import { cn } from "@/lib/cn"
 
 export const Route = createFileRoute("/")({
@@ -161,7 +162,7 @@ function Hero() {
         </div>
 
         <div className="rise mt-10" style={{ animationDelay: "280ms" }}>
-          <InstallCommand packages="react-data-form react-resource-view" />
+          <InstallCommand packages={INSTALL_PACKAGES} />
         </div>
 
         <dl
@@ -377,7 +378,7 @@ const PACKAGES = [
       "Filters, pagination and the chosen layout all live in the URL",
       "Bring your own router: four primitives, or the TanStack adapter",
     ],
-    install: "pnpm add react-resource-view react-data-form",
+    install: INSTALL_COMMAND,
   },
 ]
 
