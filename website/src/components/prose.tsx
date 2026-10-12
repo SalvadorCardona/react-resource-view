@@ -93,7 +93,7 @@ export function A({ href, children }: { href: string; children: ReactNode }) {
 export function Term({ id, children }: { id: ConceptId; children: ReactNode }) {
   return (
     <strong>
-      <a href={`${CONCEPTS_HREF}#${id}`}>{children}</a>
+      <A href={`${CONCEPTS_HREF}#${id}`}>{children}</A>
     </strong>
   )
 }
