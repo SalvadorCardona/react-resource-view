@@ -44,6 +44,7 @@ import { Route as DocsResourceViewInstallationRouteImport } from './routes/docs/
 import { Route as DocsResourceViewLayoutsRouteImport } from './routes/docs/resource-view/layouts'
 import { Route as DocsResourceViewOpenapiTypesRouteImport } from './routes/docs/resource-view/openapi-types'
 import { Route as DocsResourceViewPermissionsRouteImport } from './routes/docs/resource-view/permissions'
+import { Route as DocsResourceViewPythonRouteImport } from './routes/docs/resource-view/python'
 import { Route as DocsResourceViewQuickstartRouteImport } from './routes/docs/resource-view/quickstart'
 import { Route as DocsResourceViewResourcesRouteImport } from './routes/docs/resource-view/resources'
 import { Route as DocsResourceViewRoutingRouteImport } from './routes/docs/resource-view/routing'
@@ -240,6 +241,11 @@ const DocsResourceViewPermissionsRoute =
     path: '/resource-view/permissions',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsResourceViewPythonRoute = DocsResourceViewPythonRouteImport.update({
+  id: '/resource-view/python',
+  path: '/resource-view/python',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsResourceViewQuickstartRoute =
   DocsResourceViewQuickstartRouteImport.update({
     id: '/resource-view/quickstart',
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/python': typeof DocsResourceViewPythonRoute
   '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/python': typeof DocsResourceViewPythonRoute
   '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/docs/resource-view/layouts': typeof DocsResourceViewLayoutsRoute
   '/docs/resource-view/openapi-types': typeof DocsResourceViewOpenapiTypesRoute
   '/docs/resource-view/permissions': typeof DocsResourceViewPermissionsRoute
+  '/docs/resource-view/python': typeof DocsResourceViewPythonRoute
   '/docs/resource-view/quickstart': typeof DocsResourceViewQuickstartRoute
   '/docs/resource-view/resources': typeof DocsResourceViewResourcesRoute
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/python'
     | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/python'
     | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/layouts'
     | '/docs/resource-view/openapi-types'
     | '/docs/resource-view/permissions'
+    | '/docs/resource-view/python'
     | '/docs/resource-view/quickstart'
     | '/docs/resource-view/resources'
     | '/docs/resource-view/routing'
@@ -807,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewPermissionsRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/python': {
+      id: '/docs/resource-view/python'
+      path: '/resource-view/python'
+      fullPath: '/docs/resource-view/python'
+      preLoaderRoute: typeof DocsResourceViewPythonRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/quickstart': {
       id: '/docs/resource-view/quickstart'
       path: '/resource-view/quickstart'
@@ -895,6 +914,7 @@ interface DocsRouteChildren {
   DocsResourceViewLayoutsRoute: typeof DocsResourceViewLayoutsRoute
   DocsResourceViewOpenapiTypesRoute: typeof DocsResourceViewOpenapiTypesRoute
   DocsResourceViewPermissionsRoute: typeof DocsResourceViewPermissionsRoute
+  DocsResourceViewPythonRoute: typeof DocsResourceViewPythonRoute
   DocsResourceViewQuickstartRoute: typeof DocsResourceViewQuickstartRoute
   DocsResourceViewResourcesRoute: typeof DocsResourceViewResourcesRoute
   DocsResourceViewRoutingRoute: typeof DocsResourceViewRoutingRoute
@@ -937,6 +957,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewLayoutsRoute: DocsResourceViewLayoutsRoute,
   DocsResourceViewOpenapiTypesRoute: DocsResourceViewOpenapiTypesRoute,
   DocsResourceViewPermissionsRoute: DocsResourceViewPermissionsRoute,
+  DocsResourceViewPythonRoute: DocsResourceViewPythonRoute,
   DocsResourceViewQuickstartRoute: DocsResourceViewQuickstartRoute,
   DocsResourceViewResourcesRoute: DocsResourceViewResourcesRoute,
   DocsResourceViewRoutingRoute: DocsResourceViewRoutingRoute,

@@ -54,6 +54,12 @@ export const BACKENDS: Backend[] = [
     docs: { to: "/docs/resource-view/backends/", hash: "fastapi" },
   },
   {
+    id: "django",
+    name: "Django",
+    apiUrl: "http://localhost:8000",
+    docs: { to: "/docs/resource-view/backends", hash: "django" },
+  },
+  {
     id: "rest",
     name: "Any REST API (OpenAPI)",
     apiUrl: "http://localhost:3000",
@@ -80,7 +86,7 @@ export function starterSection({ id }: Backend): string {
   return `starter-${id}`
 }
 
-/** "API Platform, Spring Boot, Supabase, Strapi or FastAPI" — the named ones. */
+/** "API Platform, Spring Boot, Supabase, Strapi, FastAPI or Django" — the named ones. */
 export function namedBackends(conjunction: "or" | "and" = "or"): string {
   const names = BACKENDS.filter(({ generic }) => !generic).map(({ name }) => name)
   return `${names.slice(0, -1).join(", ")} ${conjunction} ${names.at(-1)}`

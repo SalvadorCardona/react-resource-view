@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react"
 import {
   Blocks,
   Boxes,
+  Braces,
   CalendarRange,
   CircleCheckBig,
   Columns3,
@@ -260,8 +261,15 @@ export const VIEW_SECTION: DocSection = {
           href: "/docs/resource-view/backends/",
           title: "Backends & dialects",
           summary:
-            "One declaration against API Platform, Spring Boot, Strapi, Supabase or FastAPI — and how to add another.",
+            "One declaration against API Platform, Spring Boot, Strapi, Supabase, FastAPI or Django — and how to add another.",
           icon: Network,
+        },
+        {
+          href: "/docs/resource-view/python/",
+          title: "For Python developers",
+          summary:
+            "FastAPI and Django REST Framework side by side: the starter, the schema, types from your models, pagination, CORS and tokens.",
+          icon: Braces,
         },
         {
           href: "/docs/resource-view/openapi-types/",

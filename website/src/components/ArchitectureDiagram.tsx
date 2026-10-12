@@ -45,7 +45,7 @@ export function ArchitectureDiagram() {
           <Arrow label="spelled by" />
 
           <Box concept="dialect" title="Dialect">
-            JSON-LD, Strapi, Supabase, FastAPI, Spring Boot — or your own.
+            JSON-LD, Strapi, Supabase, FastAPI, Django, Spring Boot — or your own.
           </Box>
 
           <Arrow />

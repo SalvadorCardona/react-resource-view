@@ -44,7 +44,7 @@ import {
   NotesViewsIllustration,
   OneDescriptionIllustration,
 } from "@/components/StoryIllustrations"
-import { BACKENDS, namedBackends } from "@/lib/backends"
+import { BACKENDS, namedBackends, starterSection } from "@/lib/backends"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 import { INSTALL_COMMAND, INSTALL_PACKAGES } from "@/lib/install"
 import { cn } from "@/lib/cn"
@@ -58,8 +58,8 @@ function LandingPage() {
     <div className="min-h-screen">
       <Header />
       <main>
-        <Hero />
         <WorksWith />
+        <Hero />
         <GetStarted />
         <BeforeAfter />
         <WhenToUse />
@@ -106,8 +106,8 @@ function Hero() {
           className="rise mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
           style={{ animationDelay: "160ms" }}
         >
-          For teams with an API — API Platform, Spring, Strapi, Supabase or any REST
-          API that publishes OpenAPI — who have to ship an admin interface and would
+          For teams with an API — API Platform, Spring, Django, FastAPI, Strapi,
+          Supabase or any REST API that publishes OpenAPI — who have to ship an admin interface and would
           rather not hand-write every table, form and filter.
         </p>
 
@@ -197,8 +197,8 @@ function Hero() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The backends a resource renders against, at a glance: each logo opens the
- * section of the backends page that explains its dialect.
+ * The backends a resource renders against, at a glance, right under the header:
+ * each logo opens its section of the starter page.
  */
 function WorksWith() {
   return (
@@ -218,9 +218,9 @@ function WorksWith() {
           {BACKENDS.map((backend) => (
             <li key={backend.id}>
               <Link
-                to={backend.docs.to}
-                hash={backend.docs.hash}
-                title={`${backend.name} — its dialect`}
+                to="/docs/resource-view/starter"
+                hash={starterSection(backend)}
+                title={`${backend.name} — start a project on it`}
                 className="group flex h-full w-36 flex-col items-center justify-center gap-2.5 rounded-xl border border-transparent px-3 py-3 text-muted-foreground transition duration-300 hover:-translate-y-0.5 hover:border-border hover:bg-background hover:text-foreground hover:shadow-sm"
               >
                 <BackendLogo
@@ -232,6 +232,17 @@ function WorksWith() {
             </li>
           ))}
         </ul>
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Writing your API in Python?{" "}
+          <Link
+            to="/docs/resource-view/python"
+            className="font-medium text-foreground underline-offset-4 hover:text-view hover:underline"
+          >
+            FastAPI and Django side by side
+          </Link>
+          .
+        </p>
       </div>
     </section>
   )

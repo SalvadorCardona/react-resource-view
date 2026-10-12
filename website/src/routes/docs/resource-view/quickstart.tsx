@@ -123,7 +123,7 @@ function Quickstart() {
 
       <P>
         It asks which API you talk to (API Platform, Spring Boot, Supabase, Strapi,
-        FastAPI or any REST API) and where it runs.{" "}
+        FastAPI, Django or any REST API) and where it runs.{" "}
         <A href="/docs/resource-view/starter">Start a project</A> lists every flag and
         every file it writes. <strong>You should see</strong> a back office on{" "}
         <C>http://localhost:5173</C>, with its menu and the example resource. Skip to{" "}

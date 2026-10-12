@@ -50,6 +50,7 @@ describe("StarterPicker", () => {
       "Supabase",
       "Strapi",
       "FastAPI",
+      "Django",
       "Any REST API (OpenAPI)",
     ]) {
       expect(await screen.findByRole("img", { name })).toBeInTheDocument()

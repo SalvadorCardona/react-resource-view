@@ -14,7 +14,7 @@ export const Route = createFileRoute("/docs/resource-view/installation")({
       {
         name: "description",
         content:
-          "Install the package, let Tailwind scan it, connect a router and point it at your API — API Platform, Strapi or Supabase.",
+          "Install the package, let Tailwind scan it, connect a router and point it at your API — API Platform, Spring Boot, Strapi, Supabase, FastAPI or Django.",
       },
     ],
   }),
