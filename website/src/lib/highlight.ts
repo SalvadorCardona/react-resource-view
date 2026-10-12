@@ -37,17 +37,39 @@ const LANG_ALIAS: Record<CodeLanguage, string> = {
   yaml: "yaml",
 }
 
+/** A run of lines, 1-based and inclusive. */
+export interface LineRange {
+  from: number
+  to: number
+}
+
 /**
  * Highlights a snippet against both themes at once.
  *
  * `defaultColor: false` makes Shiki emit `--shiki-light` and `--shiki-dark`
  * custom properties instead of committing to one palette, so switching the site
- * theme is a CSS concern and never re-runs the tokenizer.
+ * theme is a CSS concern and never re-runs the tokenizer. `marked` gives the
+ * lines of the snippet that carry the `line-marked` class.
  */
-export function highlight(code: string, lang: CodeLanguage = "tsx"): string {
+export function highlight(
+  code: string,
+  lang: CodeLanguage = "tsx",
+  marked?: LineRange
+): string {
   return highlighter.codeToHtml(code.trim(), {
     lang: LANG_ALIAS[lang],
     themes: { light: "vitesse-light", dark: "vitesse-dark" },
     defaultColor: false,
+    transformers: marked
+      ? [
+          {
+            line(node, line) {
+              if (line >= marked.from && line <= marked.to) {
+                this.addClassToHast(node, "line-marked")
+              }
+            },
+          },
+        ]
+      : [],
   })
 }

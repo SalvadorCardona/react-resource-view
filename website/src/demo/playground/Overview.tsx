@@ -24,6 +24,7 @@ import {
   type Product,
   type User,
 } from "@/demo/playground/adminData"
+import { countLines, DECLARATIONS } from "@/demo/playground/declarations"
 import { commentsResource } from "@/demo/playground/resources/comments"
 import { companiesResource } from "@/demo/playground/resources/companies"
 import { ordersResource } from "@/demo/playground/resources/orders"
@@ -341,6 +342,7 @@ function Resources() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {RESOURCES.map((resource) => {
           const Icon = resource.icon
+          const declaration = DECLARATIONS[resource["@id"]]
           // Each variant is named in the declaration, and that name is what the
           // layout switcher shows — so it is what is listed here too.
           const layouts = (resource.view?.viewVariants ?? [])
@@ -368,7 +370,7 @@ function Resources() {
                 {resource.view?.description}
               </span>
 
-              <span className="mt-auto flex flex-wrap gap-1.5">
+              <span className="mt-auto flex flex-wrap items-center gap-1.5">
                 {layouts.map((layout) => (
                   <span
                     key={layout}
@@ -377,6 +379,11 @@ function Resources() {
                     {layout}
                   </span>
                 ))}
+                {declaration && (
+                  <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                    {countLines(declaration.source)} lines
+                  </span>
+                )}
               </span>
             </Link>
           )

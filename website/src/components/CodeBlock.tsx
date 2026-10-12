@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
-import { highlight, type CodeLanguage } from "@/lib/highlight"
+import { highlight, type CodeLanguage, type LineRange } from "@/lib/highlight"
 import { cn } from "@/lib/cn"
 
 export interface CodeBlockProps {
@@ -8,6 +8,8 @@ export interface CodeBlockProps {
   lang?: CodeLanguage
   /** Shown in the header strip — usually the file the snippet belongs in. */
   filename?: string
+  /** Lines to bring out, 1-based and inclusive. */
+  marked?: LineRange
   className?: string
 }
 
@@ -22,9 +24,10 @@ export function CodeBlock({
   children,
   lang = "tsx",
   filename,
+  marked,
   className,
 }: CodeBlockProps) {
-  const html = highlight(children, lang)
+  const html = highlight(children, lang, marked)
 
   return (
     <div

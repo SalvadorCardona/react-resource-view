@@ -6,6 +6,7 @@ import {
   createItemMenuWithResource,
   type ScopeInterface,
 } from "react-resource-view"
+import { DeclarationButton } from "@/demo/playground/DeclarationButton"
 import {
   commentsResource,
   companiesResource,
@@ -99,7 +100,12 @@ export const adminScope: ScopeInterface = {
     tasksResource,
   ],
   decoratorComponent: createAdminLayout({
-    topBarEnd: <BuilderLink />,
+    topBarEnd: (
+      <>
+        <DeclarationButton />
+        <BuilderLink />
+      </>
+    ),
     ...HELP_FOOTER,
   }),
   // Where the scope opens when the URL names it and nothing else.
