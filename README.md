@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://cardona.digital/react-resource-view/playground">
-    <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi, Supabase or FastAPI and to the URL" width="100%">
+    <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Spring Boot, Strapi, Supabase, FastAPI or Django and to the URL" width="100%">
   </a>
 </p>
 
@@ -13,7 +13,7 @@
 # react-resource-view
 
 CRUD views for REST APIs — API Platform, Spring Boot, Supabase, Strapi,
-FastAPI, or any REST API that publishes OpenAPI. You declare a resource — its
+FastAPI, Django, or any REST API that publishes OpenAPI. You declare a resource — its
 path, its form, its layout — and the package renders the list, the detail, the
 create and edit forms, and the delete confirmation, wired to the API and to the
 URL.
@@ -101,13 +101,14 @@ configureApi({
 })
 ```
 
-| Dialect             | Backend             | What it knows                                                                                                 |
-| ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `jsonLdDialect()`   | API Platform, Hydra | `member` / `totalItems`, IRIs, `page` and `itemsPerPage`, Hydra `violations`, Mercure, CSV export             |
-| `strapiDialect()`   | Strapi v4 and v5    | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`           |
-| `supabaseDialect()` | Supabase, PostgREST | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation`  |
-| `fastapiDialect()`  | FastAPI             | `skip` / `limit` or `page` / `size`, plain query filters, `order_by=-field`, `{ items, total }`, 422 `detail` |
-| `springDialect()`   | Spring Boot         | `page` (from 0) / `size`, `sort=field,desc`, `Page`, `PagedModel` or HAL `_embedded`, Bean Validation errors  |
+| Dialect             | Backend               | What it knows                                                                                                                  |
+| ------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `jsonLdDialect()`   | API Platform, Hydra   | `member` / `totalItems`, IRIs, `page` and `itemsPerPage`, Hydra `violations`, Mercure, CSV export                              |
+| `strapiDialect()`   | Strapi v4 and v5      | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`                            |
+| `supabaseDialect()` | Supabase, PostgREST   | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation`                   |
+| `fastapiDialect()`  | FastAPI               | `skip` / `limit` or `page` / `size`, plain query filters, `order_by=-field`, `{ items, total }`, 422 `detail`                  |
+| `springDialect()`   | Spring Boot           | `page` (from 0) / `size`, `sort=field,desc`, `Page`, `PagedModel` or HAL `_embedded`, Bean Validation errors                   |
+| `djangoDialect()`   | Django REST Framework | `page` / `page_size` or `limit` / `offset`, django-filter query filters, `ordering=-field`, `{ count, results }`, field errors |
 
 JSON-LD is the default, so an application already talking to API Platform needs
 none of this — and keeps going through the client it configured with
@@ -261,6 +262,40 @@ by its `_links.self.href`. `springDialect` takes `primaryKey` (default `id`),
 `"PATCH"`). A failed `@Valid` lands each `errors[].field` on its input, and a
 `ProblemDetail` gives the error its title and explanation.
 
+### Django
+
+```ts
+import { configureApi, djangoDialect, createViewResource } from "react-resource-view"
+
+configureApi({
+  baseUrl: "http://localhost:8000",
+  getAuthToken: () => getAccessToken(),
+  dialect: djangoDialect(),
+})
+
+const articles = createViewResource("articles", {
+  path: "/api/articles", // → /api/articles/?page=1&page_size=30, /api/articles/{id}/
+  name: "Articles",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})
+```
+
+A `ModelViewSet` with a paginator answers `{ count, next, previous, results }`;
+the dialect reads `results` and counts its pages from `count`. A view without
+pagination answers a bare array, which carries no total, so the pagination hides
+itself. `djangoDialect` takes `primaryKey` (default `id`), `pagination`
+(`"page-number"`, the default, or `"limit-offset"` for
+`LimitOffsetPagination`), `pageSizeParam` (default `page_size`, which DRF only
+reads when the paginator sets `page_size_query_param`), `defaultItemsPerPage`
+(default `30`), `orderParam` (default `ordering`, sent as `-created_at,title`)
+and `trailingSlash` (default `true`, as DRF's routers declare it; Django
+redirects the other spelling and the redirect loses the body of a POST). A 400
+lands each message under its field — `{ address: { city: [...] } }` on
+`address.city`, `non_field_errors` on the form — and a `detail` becomes the
+explanation of the error. The schema comes from
+[drf-spectacular](https://drf-spectacular.readthedocs.io) at
+`/api/schema/?format=json`.
+
 ### Two backends at once
 
 A resource may carry a dialect of its own, which wins over the configured one:
@@ -277,13 +312,13 @@ const invoices = createViewResource("invoices", {
 They are written once, in the package's own vocabulary, and the dialect
 translates them:
 
-| Key                 | Means              | Strapi                 | Supabase          | FastAPI                     |
-| ------------------- | ------------------ | ---------------------- | ----------------- | --------------------------- |
-| `page`              | 1-based page       | `pagination[page]`     | `offset`          | `skip` (or `page`)          |
-| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           | `limit` (or `size`)         |
-| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` | `order_by=title` (`-title`) |
-| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  | `title=hello`               |
-| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` | `status=a&status=b`         |
+| Key                 | Means              | Strapi                 | Supabase          | FastAPI                     | Django                      |
+| ------------------- | ------------------ | ---------------------- | ----------------- | --------------------------- | --------------------------- |
+| `page`              | 1-based page       | `pagination[page]`     | `offset`          | `skip` (or `page`)          | `page`                      |
+| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           | `limit` (or `size`)         | `page_size` (or `limit`)    |
+| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` | `order_by=title` (`-title`) | `ordering=title` (`-title`) |
+| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  | `title=hello`               | `title=hello`               |
+| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` | `status=a&status=b`         | `status=a&status=b`         |
 
 A value spelled as an object carries its own operator through untouched —
 `{ title: { $containsi: "hell" } }` on Strapi, `{ createdAt: { gte: "2024-01-01" } }`
@@ -340,7 +375,7 @@ const articles = createViewResource<Article>("articles", {
 ```
 
 The whole recipe — the config, the enums, the per-backend
-specifics for API Platform, Strapi, Supabase and FastAPI, and when to regenerate — is on
+specifics for API Platform, Strapi, Supabase, FastAPI and Django, and when to regenerate — is on
 [the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
 
 ## Start a project
@@ -354,9 +389,9 @@ npx react-resource-view init my-admin
 ```
 
 It asks which API the back office talks to — API Platform, Spring Boot,
-another REST API, Supabase, Strapi or FastAPI — its URL, and the URL of its
+another REST API, Supabase, Strapi, FastAPI or Django — its URL, and the URL of its
 OpenAPI schema, guessed from the backend (`/api/docs.jsonopenapi`,
-`/v3/api-docs`, `/openapi.json`). The dialect is wired in `src/setup.ts`, the URL
+`/v3/api-docs`, `/openapi.json`, `/api/schema/?format=json`). The dialect is wired in `src/setup.ts`, the URL
 lands in `.env`, and the project comes with the commands that dump the schema
 into TypeScript with [api-dumper](https://github.com/SalvadorCardona/api-dumper):
 
@@ -367,18 +402,20 @@ npm run api-schema:check   # in the CI: fails when src/api-schema is stale
 
 One starter per technology, ready to paste:
 
-| Backend        | Command                                                                           | Schema dumped from      |
-| -------------- | --------------------------------------------------------------------------------- | ----------------------- |
-| API Platform   | `npx react-resource-view init my-admin -b api-platform -u https://localhost`      | `/api/docs.jsonopenapi` |
-| Spring Boot    | `npx react-resource-view init my-admin -b spring-boot -u http://localhost:8080`   | `/v3/api-docs`          |
-| Other REST API | `npx react-resource-view init my-admin -b rest -u http://localhost:3000 -s <url>` | the URL you pass        |
-| Supabase       | `npx react-resource-view init my-admin -b supabase -u https://<ref>.supabase.co`  | `supabase gen types`    |
-| Strapi         | `npx react-resource-view init my-admin -b strapi -u http://localhost:1337`        | `/api/openapi.json`     |
-| FastAPI        | `npx react-resource-view init my-admin -b fastapi -u http://localhost:8000`       | `/openapi.json`         |
+| Backend        | Command                                                                           | Schema dumped from         |
+| -------------- | --------------------------------------------------------------------------------- | -------------------------- |
+| API Platform   | `npx react-resource-view init my-admin -b api-platform -u https://localhost`      | `/api/docs.jsonopenapi`    |
+| Spring Boot    | `npx react-resource-view init my-admin -b spring-boot -u http://localhost:8080`   | `/v3/api-docs`             |
+| Other REST API | `npx react-resource-view init my-admin -b rest -u http://localhost:3000 -s <url>` | the URL you pass           |
+| Supabase       | `npx react-resource-view init my-admin -b supabase -u https://<ref>.supabase.co`  | `supabase gen types`       |
+| Strapi         | `npx react-resource-view init my-admin -b strapi -u http://localhost:1337`        | `/api/openapi.json`        |
+| FastAPI        | `npx react-resource-view init my-admin -b fastapi -u http://localhost:8000`       | `/openapi.json`            |
+| Django         | `npx react-resource-view init my-admin -b django -u http://localhost:8000`        | `/api/schema/?format=json` |
 
 Every question has a flag — `--backend spring-boot --api-url http://localhost:8080
 --schema-url … --yes` — see `npx react-resource-view init --help` and
 [the starter page](https://cardona.digital/react-resource-view/docs/resource-view/starter).
+Writing your API in Python? [FastAPI and Django side by side](https://cardona.digital/react-resource-view/docs/resource-view/python).
 
 ## Installation
 
