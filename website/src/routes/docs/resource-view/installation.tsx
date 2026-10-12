@@ -4,6 +4,7 @@ import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { A, C, H2, H3, Li, Ol, P, Ul } from "@/components/prose"
+import { INSTALL_COMMAND } from "@/lib/install"
 
 export const Route = createFileRoute("/docs/resource-view/installation")({
   head: () => ({
@@ -18,8 +19,6 @@ export const Route = createFileRoute("/docs/resource-view/installation")({
   }),
   component: Installation,
 })
-
-const INSTALL = `pnpm add react-resource-view react-data-form react-mini-i18n resource-registry`
 
 const TAILWIND = `@import "tailwindcss";
 
@@ -80,7 +79,7 @@ function Installation() {
     >
       <H2 id="install">Install</H2>
 
-      <CodeBlock lang="bash">{INSTALL}</CodeBlock>
+      <CodeBlock lang="bash">{INSTALL_COMMAND}</CodeBlock>
 
       <P>
         <C>react</C>, <C>react-data-form</C>, <C>react-mini-i18n</C> and{" "}
