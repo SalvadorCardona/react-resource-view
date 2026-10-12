@@ -57,7 +57,7 @@ export const BACKENDS: Backend[] = [
     id: "django",
     name: "Django",
     apiUrl: "http://localhost:8000",
-    docs: { to: "/docs/resource-view/backends", hash: "django" },
+    docs: { to: "/docs/resource-view/backends/", hash: "django" },
   },
   {
     id: "rest",

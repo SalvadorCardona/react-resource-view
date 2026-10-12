@@ -218,7 +218,7 @@ function WorksWith() {
           {BACKENDS.map((backend) => (
             <li key={backend.id}>
               <Link
-                to="/docs/resource-view/starter"
+                to="/docs/resource-view/starter/"
                 hash={starterSection(backend)}
                 title={`${backend.name} — start a project on it`}
                 className="group flex h-full w-36 flex-col items-center justify-center gap-2.5 rounded-xl border border-transparent px-3 py-3 text-muted-foreground transition duration-300 hover:-translate-y-0.5 hover:border-border hover:bg-background hover:text-foreground hover:shadow-sm"
@@ -236,7 +236,7 @@ function WorksWith() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Writing your API in Python?{" "}
           <Link
-            to="/docs/resource-view/python"
+            to="/docs/resource-view/python/"
             className="font-medium text-foreground underline-offset-4 hover:text-view hover:underline"
           >
             FastAPI and Django side by side
