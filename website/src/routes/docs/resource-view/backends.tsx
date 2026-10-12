@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/backends")({
       {
         name: "description",
         content:
-          "One declared resource, five backends: API Platform, Spring Boot, Supabase, Strapi and FastAPI, or any REST API. What a dialect knows, and how to write your own.",
+          "One declared resource, six backends: API Platform, Spring Boot, Supabase, Strapi, FastAPI and Django, or any REST API. What a dialect knows, and how to write your own.",
       },
     ],
   }),
@@ -85,6 +85,40 @@ const books = createViewResource("books", {
   name: "Books",
   view: { form: { inputs: { title: { label: "Title" } } } },
 })`
+
+const DJANGO = `import { configureApi, createViewResource, djangoDialect } from "react-resource-view"
+
+configureApi({
+  baseUrl: "http://localhost:8000",
+  getAuthToken: () => getAccessToken(),
+  dialect: djangoDialect(),
+})
+
+const articles = createViewResource("articles", {
+  path: "/api/articles", // → /api/articles/?page=1&page_size=30, /api/articles/{id}/
+  name: "Articles",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})`
+
+const DJANGO_VIEWSET = `class ArticleViewSet(viewsets.ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ["status", "author"]   # ?status=published
+    ordering_fields = ["created_at", "title"] # ?ordering=-created_at
+
+class ArticlePagination(PageNumberPagination):
+    page_size = 30
+    page_size_query_param = "page_size"        # ?page_size=10
+
+router = DefaultRouter()                       # /api/articles/, /api/articles/{id}/
+router.register("articles", ArticleViewSet)`
+
+const DJANGO_ERROR = `// What DRF answers with a 400…
+{ "title": ["This field is required."], "address": { "city": ["Too short."] } }
+
+// …lands under the inputs named "title" and "address.city".
+// { "non_field_errors": [...] } blames the form, { "detail": "..." } explains the error.`
 
 const SPRING_CONTROLLER = `@RestController
 @RequestMapping("/api/books")
@@ -173,6 +207,7 @@ function Backends() {
         { id: "supabase", title: "Supabase" },
         { id: "fastapi", title: "FastAPI" },
         { id: "spring", title: "Spring Boot" },
+        { id: "django", title: "Django" },
         { id: "several", title: "Two backends at once" },
         { id: "filters", title: "Filters, pages and sorts" },
         { id: "custom", title: "Another API entirely" },
@@ -252,6 +287,22 @@ function Backends() {
                 <C>page</C> (from 0) and <C>size</C>, <C>sort=field,desc</C>, a{" "}
                 <C>Page</C>, a <C>PagedModel</C> or Spring Data REST's HAL, Bean
                 Validation errors pinned on their field.
+              </>
+            ),
+          },
+          {
+            name: "djangoDialect()",
+            type: "ApiDialectInterface",
+            default: "—",
+            description: (
+              <>
+                <A href="https://www.django-rest-framework.org">
+                  Django REST Framework
+                </A>
+                . <C>page</C> / <C>page_size</C> or <C>limit</C> / <C>offset</C>,
+                django-filter query filters, <C>ordering=-field</C>, a{" "}
+                <C>{`{ count, results }`}</C> page or a bare array, field errors
+                pinned on their input.
               </>
             ),
           },
@@ -550,6 +601,109 @@ function Backends() {
         <A href="/docs/resource-view/starter">the starter</A> dumps.
       </P>
 
+      <H2 id="django">Django</H2>
+
+      <CodeBlock filename="setup.ts">{DJANGO}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "primaryKey",
+            type: "string",
+            default: `"id"`,
+            description: (
+              <>
+                The field a record is addressed by in <C>/articles/{"{id}"}/</C>. It
+                is left out of the body of a write, since it travels in the URL.
+              </>
+            ),
+          },
+          {
+            name: "pagination",
+            type: `"page-number" | "limit-offset"`,
+            default: `"page-number"`,
+            description: (
+              <>
+                <C>?page=3&amp;page_size=10</C>, DRF's <C>PageNumberPagination</C>,
+                or <C>?limit=10&amp;offset=20</C>, its <C>LimitOffsetPagination</C>.
+              </>
+            ),
+          },
+          {
+            name: "pageSizeParam",
+            type: "string",
+            default: `"page_size"`,
+            description: (
+              <>
+                The page size parameter of <C>page-number</C>. DRF only reads one
+                when the paginator sets <C>page_size_query_param</C>.
+              </>
+            ),
+          },
+          {
+            name: "defaultItemsPerPage",
+            type: "number",
+            default: "30",
+            description: "Rows per page when a list asks for none.",
+          },
+          {
+            name: "orderParam",
+            type: "string",
+            default: `"ordering"`,
+            description: (
+              <>
+                The query parameter the sort travels in, as <C>-created_at,title</C>:
+                the one of DRF's <C>OrderingFilter</C>.
+              </>
+            ),
+          },
+          {
+            name: "trailingSlash",
+            type: "boolean",
+            default: "true",
+            description: (
+              <>
+                Ends every route with a slash — <C>/articles/</C>,{" "}
+                <C>/articles/1/</C> — as DRF's routers declare them. Django redirects
+                the other spelling, and a redirect loses the body of a POST. Pass{" "}
+                <C>false</C> for a router built with <C>trailing_slash=False</C>.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <P>
+        A <C>ModelViewSet</C> with django-filter and <C>OrderingFilter</C> needs
+        nothing more:
+      </P>
+
+      <CodeBlock filename="views.py">{DJANGO_VIEWSET}</CodeBlock>
+
+      <Callout kind="note" title="Without pagination, no total">
+        <P>
+          A view with no paginator answers a bare array: the dialect knows the rows
+          but not how many there are, so the pagination hides itself. A paginated one
+          answers <C>{`{ count, next, previous, results }`}</C> and the page count
+          comes from <C>count</C>. <C>CursorPagination</C> has no count either.
+        </P>
+      </Callout>
+
+      <P>
+        A 400 maps each field to its messages: a nested serializer gives{" "}
+        <C>address.city</C>, a list of them <C>lines.1.qty</C>, and{" "}
+        <C>non_field_errors</C> the form itself. A <C>detail</C> — a 401, a 403, a
+        404 — becomes the explanation of the error. The schema comes from{" "}
+        <A href="https://drf-spectacular.readthedocs.io">drf-spectacular</A>, at{" "}
+        <C>/api/schema/?format=json</C>, and{" "}
+        <A href="/docs/resource-view/starter#starter-django">the starter</A> dumps
+        it. Writing Python on both sides?{" "}
+        <A href="/docs/resource-view/python">The Python guide</A> sets FastAPI and
+        Django side by side.
+      </P>
+
+      <CodeBlock>{DJANGO_ERROR}</CodeBlock>
+
       <H2 id="several">Two backends at once</H2>
 
       <P>
@@ -588,7 +742,7 @@ function Backends() {
               <>
                 1-based page. <C>pagination[page]</C> on Strapi, an <C>offset</C> on
                 Supabase, <C>skip</C> (or <C>page</C>) on FastAPI, <C>page</C> on API
-                Platform.
+                Platform and Django.
               </>
             ),
           },
@@ -599,7 +753,7 @@ function Backends() {
             description: (
               <>
                 Rows per page. <C>pagination[pageSize]</C> on Strapi, <C>limit</C> on
-                Supabase, <C>limit</C> (or <C>size</C>) on FastAPI. The page size a view declares travels with the request, so
+                Supabase, <C>limit</C> (or <C>size</C>) on FastAPI, <C>page_size</C> on Django. The page size a view declares travels with the request, so
                 the pagination counts the rows the API actually returned.
               </>
             ),
@@ -612,7 +766,7 @@ function Backends() {
               <>
                 The sort, field by field. <C>sort[0]=title:asc</C> on Strapi,{" "}
                 <C>order=title.asc</C> on Supabase, <C>order_by=title</C> (<C>-title</C>{" "}
-                descending) on FastAPI.
+                descending) on FastAPI, <C>ordering=-title</C> on Django.
               </>
             ),
           },
@@ -650,7 +804,7 @@ function Backends() {
       <P>
         Whatever the backend called it — Hydra <C>violations</C>, a Strapi{" "}
         <C>error.details.errors</C>, a PostgREST message, a FastAPI 422{" "}
-        <C>detail</C> — the dialect reads it into one shape, and the{" "}
+        <C>detail</C>, a DRF field list — the dialect reads it into one shape, and the{" "}
         <Term id="form">form</Term> pins each message on the field that caused it. A
         failure with no field to blame, such as a unique constraint, becomes the
         toast's description instead. See{" "}

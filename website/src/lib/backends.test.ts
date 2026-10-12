@@ -43,7 +43,7 @@ describe("BACKENDS", () => {
 
   it("names the products, not the generic REST tile", () => {
     expect(namedBackends()).toBe(
-      "API Platform, Spring Boot, Supabase, Strapi or FastAPI"
+      "API Platform, Spring Boot, Supabase, Strapi, FastAPI or Django"
     )
   })
 })

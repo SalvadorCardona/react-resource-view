@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/openapi-types")({
       {
         name: "description",
         content:
-          "Export the OpenAPI schema your API publishes, turn it into TypeScript with api-dumper, and type the client and every resource from it — API Platform, Strapi, Supabase, FastAPI or any other API.",
+          "Export the OpenAPI schema your API publishes, turn it into TypeScript with api-dumper, and type the client and every resource from it — API Platform, Strapi, Supabase, FastAPI, Django or any other API.",
       },
     ],
   }),

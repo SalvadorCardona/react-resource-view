@@ -74,7 +74,7 @@ export const CONCEPTS = [
     id: "dialect",
     term: "Dialect",
     definition:
-      "How a given backend spells URLs, pages, filters, collections and validation errors. The repository speaks through it, so the same declaration runs against API Platform, Strapi, Supabase, FastAPI or Spring Boot.",
+      "How a given backend spells URLs, pages, filters, collections and validation errors. The repository speaks through it, so the same declaration runs against API Platform, Strapi, Supabase, FastAPI, Django or Spring Boot.",
     href: "/docs/resource-view/backends#dialects",
     linkLabel: "Backends & dialects",
   },

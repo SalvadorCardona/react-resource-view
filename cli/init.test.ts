@@ -42,7 +42,8 @@ describe("choosing a backend", () => {
     expect(resolveBackend("jsonld")).toBe("api-platform")
     expect(resolveBackend("1")).toBe(BACKEND_IDS[0])
     expect(resolveBackend(String(BACKEND_IDS.length + 1))).toBeUndefined()
-    expect(resolveBackend("django")).toBeUndefined()
+    expect(resolveBackend("drf")).toBe("django")
+    expect(resolveBackend("laravel")).toBeUndefined()
   })
 
   it("guesses where each backend publishes its OpenAPI schema", () => {
@@ -54,6 +55,9 @@ describe("choosing a backend", () => {
     )
     expect(defaultSchemaUrl("fastapi", "http://localhost:8000")).toBe(
       "http://localhost:8000/openapi.json"
+    )
+    expect(defaultSchemaUrl("django", "http://localhost:8000/")).toBe(
+      "http://localhost:8000/api/schema/?format=json"
     )
     // Swagger 2.0: api-dumper cannot read it.
     expect(defaultSchemaUrl("supabase", "https://x.supabase.co")).toBeUndefined()
@@ -95,7 +99,7 @@ describe("reading the command line", () => {
   })
 
   it("says what is wrong rather than guessing", () => {
-    expect(parseInitArgs(["-b", "django"]).error).toMatch(/not a backend/)
+    expect(parseInitArgs(["-b", "laravel"]).error).toMatch(/not a backend/)
     expect(parseInitArgs(["-u", "localhost"]).error).toMatch(/not an http/)
     expect(parseInitArgs(["-b"]).error).toMatch(/needs a value/)
     expect(parseInitArgs(["--pm", "pip"]).error).toMatch(/--pm/)
@@ -163,6 +167,23 @@ describe("the starter", () => {
     expect(manifest.devDependencies).toHaveProperty("api-dumper")
     expect(files.Makefile).toContain("\tpnpm run api-schema\n")
     expect(files["README.md"]).toContain("http://localhost:8080/v3/api-docs")
+  })
+
+  it("talks to Django REST Framework with its dialect, and dumps drf-spectacular's schema", () => {
+    const files = renderStarter({
+      name: "blog-admin",
+      backend: "django",
+      apiUrl: "http://localhost:8000",
+    })
+
+    expect(files["src/setup.ts"]).toContain("dialect: djangoDialect()")
+    expect(files["api-dumper.config.ts"]).toContain(
+      'source: "http://localhost:8000/api/schema/?format=json"'
+    )
+    expect(files["src/resources/articles.ts"]).toContain('path: "/api/articles"')
+    expect(JSON.parse(files["package.json"]).scripts["api-schema:check"]).toBe(
+      "api-dumper --check"
+    )
   })
 
   it("configures the JSON-LD client on API Platform, and strips the CSV", () => {

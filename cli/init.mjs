@@ -81,6 +81,15 @@ export const BACKENDS = {
     sample: { id: "items", name: "Items", path: "items" },
     docs: "https://fastapi.tiangolo.com/tutorial/first-steps/#openapi",
   },
+  django: {
+    label: "Django REST Framework (drf-spectacular)",
+    dialect: "djangoDialect",
+    dialectCall: "djangoDialect()",
+    apiUrl: "http://localhost:8000",
+    schemaPath: "/api/schema/?format=json",
+    sample: { id: "articles", name: "Articles", path: "/api/articles" },
+    docs: "https://drf-spectacular.readthedocs.io",
+  },
 }
 
 export const BACKEND_IDS = Object.keys(BACKENDS)
@@ -93,6 +102,7 @@ const BACKEND_ALIASES = {
   supabase: ["postgrest"],
   strapi: [],
   fastapi: ["fast-api"],
+  django: ["drf", "django-rest-framework", "django-rest"],
 }
 
 /** The backend a typed name refers to, or `undefined`. */

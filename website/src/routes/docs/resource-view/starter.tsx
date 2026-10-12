@@ -13,7 +13,7 @@ export const Route = createFileRoute("/docs/resource-view/starter")({
       {
         name: "description",
         content:
-          "One command starts a back office on your API — API Platform, Spring Boot, Supabase, Strapi, FastAPI or any REST API — with the dialect wired and the commands that dump its OpenAPI schema into TypeScript.",
+          "One command starts a back office on your API — API Platform, Spring Boot, Supabase, Strapi, FastAPI, Django or any REST API — with the dialect wired and the commands that dump its OpenAPI schema into TypeScript.",
       },
     ],
   }),
@@ -30,6 +30,7 @@ Which API does it talk to?
   4. Supabase (PostgREST)
   5. Strapi v4 / v5
   6. FastAPI
+  7. Django REST Framework (drf-spectacular)
 Choice [1] 2
 URL of the API? [http://localhost:8080]
 URL of its OpenAPI schema? [http://localhost:8080/v3/api-docs]
@@ -190,6 +191,51 @@ module.exports = {
 # or generate it as a file, and point --schema-url at it
 npm run strapi openapi generate -- --output ./openapi.json`,
   },
+  django: {
+    command: starterCommand(backend("django")),
+    setup: `configureApi({
+  baseUrl: import.meta.env.VITE_API_URL,
+  getAuthToken,
+  dialect: djangoDialect(),
+})`,
+    config: `export default defineConfig({
+  source: "http://localhost:8000/api/schema/?format=json",
+  outDir: "src/api-schema",
+})`,
+    backend: `# pip install djangorestframework drf-spectacular django-cors-headers django-filter
+
+# settings.py
+INSTALLED_APPS += ["rest_framework", "drf_spectacular", "corsheaders", "django_filters"]
+
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # before CommonMiddleware
+    "django.middleware.common.CommonMiddleware",
+    # …
+]
+
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "core.pagination.PageSizePagination",
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+    ],
+}
+
+# core/pagination.py
+from rest_framework.pagination import PageNumberPagination
+
+class PageSizePagination(PageNumberPagination):
+    page_size = 30
+    page_size_query_param = "page_size"  # what the dialect sends
+
+# urls.py
+from drf_spectacular.views import SpectacularAPIView
+
+urlpatterns += [path("api/schema/", SpectacularAPIView.as_view())]`,
+  },
   fastapi: {
     command: starterCommand(backend("fastapi")),
     setup: `configureApi({
@@ -309,6 +355,18 @@ function Starter() {
             default: "/openapi.json",
             description: "FastAPI — the Pydantic models become the schemas.",
           },
+          {
+            name: "django",
+            type: "djangoDialect()",
+            default: "/api/schema/?format=json",
+            description: (
+              <>
+                Django REST Framework with{" "}
+                <A href="https://drf-spectacular.readthedocs.io">drf-spectacular</A>:
+                the serializers become the schemas.
+              </>
+            ),
+          },
         ]}
       />
 
@@ -357,7 +415,7 @@ function Starter() {
       <CodeBlock filename="src/setup.ts">{TECH.rest.setup}</CodeBlock>
       <CodeBlock filename="api-dumper.config.ts">{TECH.rest.config}</CodeBlock>
       <P>
-        Express, NestJS, Laravel, Django REST Framework, Go… anything that publishes
+        Express, NestJS, Laravel, Go… anything that publishes
         an OpenAPI 3 document. Pass its URL with <C>--schema-url</C>, since there is
         no convention to guess it from. If the API pages, sorts or nests its lists
         differently, replace the dialect with{" "}
@@ -404,6 +462,32 @@ function Starter() {
         its schemas. On the API:
       </P>
       <CodeBlock filename="main.py">{TECH.fastapi.backend}</CodeBlock>
+      <P>
+        Writing Python on both sides? <A href="/docs/resource-view/python">The Python
+        guide</A> sets FastAPI and Django side by side.
+      </P>
+
+      <H3 id="starter-django">Django</H3>
+
+      <CodeBlock lang="bash">{TECH.django.command}</CodeBlock>
+      <CodeBlock filename="src/setup.ts">{TECH.django.setup}</CodeBlock>
+      <CodeBlock filename="api-dumper.config.ts">{TECH.django.config}</CodeBlock>
+      <P>
+        Django REST Framework publishes no schema by itself:{" "}
+        <A href="https://drf-spectacular.readthedocs.io">drf-spectacular</A> serves
+        it at <C>/api/schema/?format=json</C>, the serializers as its schemas. The
+        browser calls the API from another origin, so{" "}
+        <C>django-cors-headers</C> has to let it through. On the API:
+      </P>
+      <CodeBlock filename="settings.py · pagination.py · urls.py">
+        {TECH.django.backend}
+      </CodeBlock>
+      <P>
+        See <A href="/docs/resource-view/backends#django">the Django dialect</A> for
+        what it reads and sends, and{" "}
+        <A href="/docs/resource-view/python">the Python guide</A> for FastAPI and
+        Django together.
+      </P>
 
       <H2 id="what">What it writes</H2>
 
@@ -471,7 +555,7 @@ function Starter() {
       <Ul>
         <Li>
           <C>-b, --backend</C> — <C>api-platform</C>, <C>spring-boot</C>,{" "}
-          <C>rest</C>, <C>supabase</C>, <C>strapi</C> or <C>fastapi</C>.
+          <C>rest</C>, <C>supabase</C>, <C>strapi</C>, <C>fastapi</C> or <C>django</C>.
         </Li>
         <Li>
           <C>-u, --api-url</C> — the API's URL, written to <C>.env</C>.

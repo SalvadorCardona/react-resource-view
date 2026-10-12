@@ -15,7 +15,7 @@ export const Route = createFileRoute("/docs/resource-view/")({
       {
         name: "description",
         content:
-          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to your API — API Platform, Spring Boot, Supabase, Strapi, FastAPI or any REST API — and to the URL.",
+          "Declare a resource once and get its list, detail, create, edit and delete screens, wired to your API — API Platform, Spring Boot, Supabase, Strapi, FastAPI, Django or any REST API — and to the URL.",
       },
     ],
   }),
@@ -192,7 +192,7 @@ function ViewIntroduction() {
           <strong>It knows no API in particular.</strong> Which backend answers, and
           how it spells a page or a filter, is a{" "}
           <A href="/docs/resource-view/backends">dialect</A> — API Platform, Spring
-          Boot, Supabase, Strapi and FastAPI ship with the package, and any other
+          Boot, Supabase, Strapi, FastAPI and Django ship with the package, and any other
           REST API works without one — configured separately through{" "}
           <C>configureApi</C>.
         </Li>
