@@ -64,11 +64,21 @@ export function C({ children }: { children: ReactNode }) {
   return <code>{children}</code>
 }
 
+/**
+ * Pages are written with site-absolute paths (`/docs/form`). The site is served
+ * under `/<repository>/` on GitHub Pages, so those paths get the base prefix
+ * here — once — instead of resolving against the domain root.
+ */
 export function A({ href, children }: { href: string; children: ReactNode }) {
   const external = href.startsWith("http")
+  const internal = href.startsWith("/")
+  const resolved = internal ? `${import.meta.env.BASE_URL}${href.slice(1)}` : href
 
   return (
-    <a href={href} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}>
+    <a
+      href={resolved}
+      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+    >
       {children}
     </a>
   )
