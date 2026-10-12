@@ -5,7 +5,7 @@ import { CodeBlock } from "@/components/CodeBlock"
 import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { articlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/")({
@@ -109,11 +109,13 @@ function ViewIntroduction() {
       ]}
     >
       <P>
-        <C>react-resource-view</C> renders the CRUD surface of a resource: the list
-        and its layouts, the detail page, the create and edit forms, the delete
-        confirmation, the filter bar and the pagination. You describe the resource;
-        it writes the screens. Those are its five views — list, detail, create,
-        edit and delete — and the list alone comes in seven layouts.
+        <C>react-resource-view</C> renders the CRUD surface of a{" "}
+        <Term id="resource">resource</Term>: the list and its{" "}
+        <Term id="view-variant">layouts</Term>, the detail page, the create and edit{" "}
+        <Term id="form">forms</Term>, the delete confirmation, the filter bar and the
+        pagination. You describe the resource; it writes the screens. Those are its
+        five <Term id="view">views</Term> — list, detail, create, edit and delete —
+        and the list alone comes in seven layouts.
       </P>
 
       <P>
@@ -150,16 +152,18 @@ function ViewIntroduction() {
       <Callout kind="note" title="No server behind this page">
         <P>
           A resource declared without a <C>path</C> falls back to a
-          localStorage-backed repository. Every demo on this site runs against a real
-          repository with no API behind it — your edits survive a reload.
+          localStorage-backed <Term id="repository">repository</Term>. Every demo on
+          this site runs against a real repository with no API behind it — your edits
+          survive a reload.
         </P>
       </Callout>
 
       <H2 id="url">The URL is the state</H2>
 
       <P>
-        Which view, which item, which filters, which page, which layout: all of it
-        lives in the address bar rather than in component state.
+        Which view, which item, which filters, which page,
+        which layout: all of it lives in the address bar rather than in component
+        state.
       </P>
 
       <Ul>

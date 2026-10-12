@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/cn"
+import { CONCEPTS_HREF, type ConceptId } from "@/lib/concepts"
 
 /**
  * The elements every documentation page is written with.
@@ -81,6 +82,19 @@ export function A({ href, children }: { href: string; children: ReactNode }) {
     >
       {children}
     </a>
+  )
+}
+
+/**
+ * A word of the library's own vocabulary — resource, dialect, scope… — set in
+ * bold and linked to its definition on the Concepts page. A page writes it this
+ * way the first time it uses the word, and plainly after that.
+ */
+export function Term({ id, children }: { id: ConceptId; children: ReactNode }) {
+  return (
+    <strong>
+      <a href={`${CONCEPTS_HREF}#${id}`}>{children}</a>
+    </strong>
   )
 }
 

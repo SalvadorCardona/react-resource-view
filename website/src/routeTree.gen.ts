@@ -36,6 +36,7 @@ import { Route as DocsResourceViewAuthenticationJwtRouteImport } from './routes/
 import { Route as DocsResourceViewBackendsRouteImport } from './routes/docs/resource-view/backends'
 import { Route as DocsResourceViewCalendarRouteImport } from './routes/docs/resource-view/calendar'
 import { Route as DocsResourceViewChangelogRouteImport } from './routes/docs/resource-view/changelog'
+import { Route as DocsResourceViewConceptsRouteImport } from './routes/docs/resource-view/concepts'
 import { Route as DocsResourceViewCustomVariantRouteImport } from './routes/docs/resource-view/custom-variant'
 import { Route as DocsResourceViewFiltersRouteImport } from './routes/docs/resource-view/filters'
 import { Route as DocsResourceViewFormsRouteImport } from './routes/docs/resource-view/forms'
@@ -194,6 +195,12 @@ const DocsResourceViewChangelogRoute =
     path: '/resource-view/changelog',
     getParentRoute: () => DocsRoute,
   } as any)
+const DocsResourceViewConceptsRoute =
+  DocsResourceViewConceptsRouteImport.update({
+    id: '/resource-view/concepts',
+    path: '/resource-view/concepts',
+    getParentRoute: () => DocsRoute,
+  } as any)
 const DocsResourceViewCustomVariantRoute =
   DocsResourceViewCustomVariantRouteImport.update({
     id: '/resource-view/custom-variant',
@@ -303,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/changelog': typeof DocsResourceViewChangelogRoute
+  '/docs/resource-view/concepts': typeof DocsResourceViewConceptsRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/changelog': typeof DocsResourceViewChangelogRoute
+  '/docs/resource-view/concepts': typeof DocsResourceViewConceptsRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
@@ -390,6 +399,7 @@ export interface FileRoutesById {
   '/docs/resource-view/backends': typeof DocsResourceViewBackendsRoute
   '/docs/resource-view/calendar': typeof DocsResourceViewCalendarRoute
   '/docs/resource-view/changelog': typeof DocsResourceViewChangelogRoute
+  '/docs/resource-view/concepts': typeof DocsResourceViewConceptsRoute
   '/docs/resource-view/custom-variant': typeof DocsResourceViewCustomVariantRoute
   '/docs/resource-view/filters': typeof DocsResourceViewFiltersRoute
   '/docs/resource-view/forms': typeof DocsResourceViewFormsRoute
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/changelog'
+    | '/docs/resource-view/concepts'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/forms'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/changelog'
+    | '/docs/resource-view/concepts'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/forms'
@@ -522,6 +534,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/backends'
     | '/docs/resource-view/calendar'
     | '/docs/resource-view/changelog'
+    | '/docs/resource-view/concepts'
     | '/docs/resource-view/custom-variant'
     | '/docs/resource-view/filters'
     | '/docs/resource-view/forms'
@@ -738,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewChangelogRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/concepts': {
+      id: '/docs/resource-view/concepts'
+      path: '/resource-view/concepts'
+      fullPath: '/docs/resource-view/concepts'
+      preLoaderRoute: typeof DocsResourceViewConceptsRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/custom-variant': {
       id: '/docs/resource-view/custom-variant'
       path: '/resource-view/custom-variant'
@@ -867,6 +887,7 @@ interface DocsRouteChildren {
   DocsResourceViewBackendsRoute: typeof DocsResourceViewBackendsRoute
   DocsResourceViewCalendarRoute: typeof DocsResourceViewCalendarRoute
   DocsResourceViewChangelogRoute: typeof DocsResourceViewChangelogRoute
+  DocsResourceViewConceptsRoute: typeof DocsResourceViewConceptsRoute
   DocsResourceViewCustomVariantRoute: typeof DocsResourceViewCustomVariantRoute
   DocsResourceViewFiltersRoute: typeof DocsResourceViewFiltersRoute
   DocsResourceViewFormsRoute: typeof DocsResourceViewFormsRoute
@@ -908,6 +929,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewBackendsRoute: DocsResourceViewBackendsRoute,
   DocsResourceViewCalendarRoute: DocsResourceViewCalendarRoute,
   DocsResourceViewChangelogRoute: DocsResourceViewChangelogRoute,
+  DocsResourceViewConceptsRoute: DocsResourceViewConceptsRoute,
   DocsResourceViewCustomVariantRoute: DocsResourceViewCustomVariantRoute,
   DocsResourceViewFiltersRoute: DocsResourceViewFiltersRoute,
   DocsResourceViewFormsRoute: DocsResourceViewFormsRoute,

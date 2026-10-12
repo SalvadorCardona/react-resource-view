@@ -5,7 +5,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { articlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/table")({
@@ -90,9 +90,9 @@ function TableAndCards() {
 
       <P>
         There is no <C>columns</C> array. The table renders one column per field of
-        the view's form, in declaration order, skipping fields marked{" "}
-        <C>generatedValue</C>. The header is the field's <C>label</C>, passed through
-        the translation dictionary.
+        the <Term id="view">view</Term>'s <Term id="form">form</Term>, in declaration
+        order, skipping fields marked <C>generatedValue</C>. The header is the
+        field's <C>label</C>, passed through the translation dictionary.
       </P>
 
       <CodeBlock>{COLUMNS}</CodeBlock>
@@ -106,8 +106,8 @@ function TableAndCards() {
       </Callout>
 
       <P>
-        When the table wants more than the cards, give each variant its own{" "}
-        <C>form</C>:
+        When the table wants more than the cards, give each{" "}
+        <Term id="view-variant">variant</Term> its own <C>form</C>:
       </P>
 
       <CodeBlock>{PER_VARIANT}</CodeBlock>
@@ -115,9 +115,10 @@ function TableAndCards() {
       <H2 id="editing">Editing in place</H2>
 
       <P>
-        A table cell is rendered by the same controller the form would use, so a row
-        is editable where it stands — no modal, no separate edit mode. A change
-        writes through the repository and the list refetches.
+        A table cell is rendered by the same <Term id="controller">controller</Term>{" "}
+        the form would use, so a row is editable where it stands — no modal, no
+        separate edit mode. A change writes through the{" "}
+        <Term id="repository">repository</Term> and the list refetches.
       </P>
 
       <Demo label="Change a status in the table" wide>

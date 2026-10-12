@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, Ol, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, Ol, P, Term, Ul } from "@/components/prose"
 import { INSTALL_COMMAND } from "@/lib/install"
 import { LATEST_VERSION } from "@/lib/changelog"
 
@@ -86,8 +86,8 @@ function Installation() {
       <P>
         <C>react</C>, <C>react-data-form</C>, <C>react-mini-i18n</C> and{" "}
         <C>resource-registry</C> are peer dependencies. The last two own module-level
-        singletons — a dictionary and a registry — so they have to resolve to a
-        single copy. See{" "}
+        singletons — a dictionary and a <Term id="registry">registry</Term> — so they
+        have to resolve to a single copy. See{" "}
         <A href="/docs/form/installation">the same note on the forms side</A>.
       </P>
 
@@ -132,10 +132,10 @@ function Installation() {
       </CodeBlock>
 
       <P>
-        Both packages need the <C>@source</C> line — the views render form fields, so
-        both sets of classes have to be generated. If your application already has a
-        shadcn theme, leave the <C>@import</C> out and the components take your
-        palette.
+        Both packages need the <C>@source</C> line — the <Term id="view">views</Term>{" "}
+        render <Term id="form">form</Term> fields, so both sets of classes have to be
+        generated. If your application already has a shadcn theme, leave the{" "}
+        <C>@import</C> out and the components take your palette.
       </P>
 
       <H2 id="router">Connect a router</H2>
@@ -156,8 +156,9 @@ function Installation() {
 
       <Callout kind="warning" title="Unconfigured, navigation is full page loads">
         <P>
-          Left without a navigation port, the views fall back to the History API and
-          full reloads. Enough for a test or a story; not for production.
+          Left without a navigation <Term id="port">port</Term>, the views fall back
+          to the History API and full reloads. Enough for a test or a story; not for
+          production.
         </P>
       </Callout>
 
@@ -213,8 +214,8 @@ function Installation() {
       <H3>On API Platform</H3>
 
       <P>
-        The JSON-LD dialect is the default, and it goes through the client of{" "}
-        <C>jsonld-api-client</C> — middleware, scope header and{" "}
+        The JSON-LD <Term id="dialect">dialect</Term> is the default, and it goes
+        through the client of <C>jsonld-api-client</C> — middleware, scope header and{" "}
         <A href="/docs/resource-view/openapi-types">typed paths</A> included.
         Configuring that client is enough; <C>configureApi</C> falls back to its
         settings when it is given none of its own.
@@ -299,8 +300,9 @@ function Installation() {
         </Li>
         <Li>
           <strong>“Resource not found”</strong> — the provider was given a{" "}
-          <C>resourceId</C> that is not in the registry. Pass the resource object, or
-          register it through <A href="/docs/resource-view/scopes">a scope</A>.
+          <C>resourceId</C> that is not in the registry. Pass the{" "}
+          <Term id="resource">resource</Term> object, or register it through{" "}
+          <A href="/docs/resource-view/scopes">a scope</A>.
         </Li>
         <Li>
           <strong>An empty list against a working API</strong> — the dialect and the

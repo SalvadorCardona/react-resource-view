@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, Ol, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, Ol, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/authentication-jwt")({
   head: () => ({
@@ -307,7 +307,8 @@ function AuthenticationJwt() {
           LexikJWTAuthenticationBundle
         </A>
         : the API hands out a JWT, the browser sends it back on every request. This
-        page wires that session to the scopes of react-resource-view with{" "}
+        page wires that session to the <Term id="scope">scopes</Term> of
+        react-resource-view with{" "}
         <A href="https://github.com/SalvadorCardona/react-jwt-session">
           react-jwt-session
         </A>{" "}
@@ -429,7 +430,8 @@ function AuthenticationJwt() {
       <P>
         <C>setUserConfig</C> is where the package learns your API: how to sign in,
         where the user comes from, and the two URLs of the refresh token. The same
-        file hands the JWT to the client the views request through.
+        file hands the JWT to the client the <Term id="view">views</Term> request
+        through.
       </P>
 
       <CodeBlock filename="session.ts" lang="ts">
@@ -627,7 +629,9 @@ function AuthenticationJwt() {
 
       <CodeBlock lang="ts">{LOAD_SESSION}</CodeBlock>
 
-      <P>The resources read the roles:</P>
+      <P>
+        The <Term id="resource">resources</Term> read the roles:
+      </P>
 
       <CodeBlock filename="resources/articles.ts" lang="ts">
         {FLAGS}

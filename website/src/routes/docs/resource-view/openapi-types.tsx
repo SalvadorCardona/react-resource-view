@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/openapi-types")({
   head: () => ({
@@ -232,10 +232,11 @@ function OpenApiTypes() {
       <H2 id="why">One schema, one source of truth</H2>
 
       <P>
-        Every resource is typed — <C>createViewResource&lt;Article&gt;</C> — and the
-        type has to come from somewhere. Written by hand, it is a copy of what the API
-        returns, and a copy drifts: a field is renamed on the back, the interface
-        still compiles, and the bug surfaces in a table cell.
+        Every <Term id="resource">resource</Term> is typed —{" "}
+        <C>createViewResource&lt;Article&gt;</C> — and the type has to come from
+        somewhere. Written by hand, it is a copy of what the API returns, and a copy
+        drifts: a field is renamed on the back, the interface still compiles, and the
+        bug surfaces in a table cell.
       </P>
 
       <CodeBlock>{HANDWRITTEN}</CodeBlock>
@@ -339,8 +340,8 @@ function OpenApiTypes() {
             type: "interface",
             description: (
               <>
-                Each operation by its <C>operationId</C> — handy to type a filter
-                form from a collection's query parameters.
+                Each operation by its <C>operationId</C> — handy to type a filter{" "}
+                <Term id="form">form</Term> from a collection's query parameters.
               </>
             ),
           },
@@ -381,8 +382,9 @@ function OpenApiTypes() {
           the library grew up on JSON-LD, where every item has one. API Platform's{" "}
           <C>.jsonld</C> schemas already include it, so there the generated type is
           used as is (see <A href="#api-platform">below</A>). On a backend that sends
-          no <C>@id</C>, add it to the type: it only satisfies the compiler, the
-          dialect still addresses a row by its <C>documentId</C> or its primary key.
+          no <C>@id</C>, add it to the type: it only satisfies the compiler, the{" "}
+          <Term id="dialect">dialect</Term> still addresses a row by its{" "}
+          <C>documentId</C> or its primary key.
         </P>
       </Callout>
 
@@ -443,9 +445,9 @@ function OpenApiTypes() {
         <Li>
           <strong>The schema names.</strong> API Platform emits one schema per format
           and per serialization group: <C>Article</C>, <C>Article.jsonld</C>,{" "}
-          <C>Article.jsonld-read</C>, <C>Article.jsonMergePatch</C>… The item a JSON-LD
-          view receives is the <C>.jsonld</C> one, which carries <C>@id</C> and{" "}
-          <C>@type</C>:
+          <C>Article.jsonld-read</C>, <C>Article.jsonMergePatch</C>… The item a JSON-LD{" "}
+          <Term id="view">view</Term> receives is the <C>.jsonld</C> one, which
+          carries <C>@id</C> and <C>@type</C>:
         </Li>
       </Ul>
 

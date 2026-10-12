@@ -5,7 +5,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, Ol, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, Ol, P, Term, Ul } from "@/components/prose"
 import { articlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/filters")({
@@ -82,8 +82,8 @@ function Filters() {
         There is no filter DSL. <C>formFilter</C> is an ordinary{" "}
         <A href="/docs/form/fields">form description</A>, built with{" "}
         <C>saveOnChange</C> so that editing it fires a request rather than waiting
-        for a submit. Every controller in the catalogue is available — a date range,
-        a multi-select, a remote search.
+        for a submit. Every <Term id="controller">controller</Term> in the catalogue
+        is available — a date range, a multi-select, a remote search.
       </P>
 
       <CodeBlock>{FORM_FILTER}</CodeBlock>
@@ -109,10 +109,10 @@ function Filters() {
       <CodeBlock>{WRONG}</CodeBlock>
 
       <P>
-        The first request goes out before the filter form is built. A{" "}
-        <C>defaultValue</C> would reach the form eventually, but the list would
-        already have been fetched unfiltered — so the rows on screen would not match
-        the filters shown above them.
+        The first request goes out before the filter <Term id="form">form</Term> is
+        built. A <C>defaultValue</C> would reach the form eventually, but the list
+        would already have been fetched unfiltered — so the rows on screen would not
+        match the filters shown above them.
       </P>
 
       <CodeBlock>{RIGHT}</CodeBlock>
@@ -129,7 +129,7 @@ function Filters() {
 
       <P>
         The active filter is written into the query string as an encoded object,
-        alongside the view context.
+        alongside the <Term id="view">view</Term> context.
       </P>
 
       <Ol>
@@ -148,9 +148,10 @@ function Filters() {
       <H2 id="injected">Filters the reader cannot clear</H2>
 
       <P>
-        A sub-view showing “this author's articles” is filtered by the parent, and
-        that filter is not the reader's to remove — clearing it would show every
-        author's articles inside a page about one of them.
+        A <Term id="sub-view">sub-view</Term> showing “this author's articles” is
+        filtered by the parent, and that filter is not the reader's to remove —
+        clearing it would show every author's articles inside a page about one of
+        them.
       </P>
 
       <CodeBlock>{INJECTED}</CodeBlock>
@@ -209,8 +210,8 @@ function Filters() {
 
       <Callout kind="note" title="One filter, one request">
         <P>
-          Changing the filter refetches; the layout, the selection and the scroll
-          position do not reset. Switching{" "}
+          Changing the filter refetches; the <Term id="view-variant">layout</Term>,
+          the selection and the scroll position do not reset. Switching{" "}
           <A href="/docs/resource-view/layouts">layout</A> keeps the filter for the
           same reason — they are separate keys of the same context.
         </P>
@@ -223,9 +224,9 @@ function Filters() {
           name.
         </Li>
         <Li>
-          Against the localStorage repository, string filters match as
-          case-insensitive substrings, which is what makes the demos on this site
-          searchable.
+          Against the localStorage <Term id="repository">repository</Term>, string
+          filters match as case-insensitive substrings, which is what makes the demos
+          on this site searchable.
         </Li>
       </Ul>
     </DocArticle>

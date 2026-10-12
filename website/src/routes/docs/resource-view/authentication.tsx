@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, Li, Ol, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, Ol, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/authentication")({
   head: () => ({
@@ -221,9 +221,10 @@ function Authentication() {
       <H2 id="choose">Better Auth or JWT</H2>
 
       <P>
-        react-resource-view depends on no authentication library: a scope only asks
-        for an answer. Two recipes wire a real session to it, from the back end to
-        signing out — pick the one your API already speaks.
+        react-resource-view depends on no authentication library: a{" "}
+        <Term id="scope">scope</Term> only asks for an answer. Two recipes wire a
+        real session to it, from the back end to signing out — pick the one your API
+        already speaks.
       </P>
 
       <Ul>
@@ -402,7 +403,9 @@ function Authentication() {
         {SCOPE_WITH_SESSION}
       </CodeBlock>
 
-      <P>The resources read the roles from it:</P>
+      <P>
+        The <Term id="resource">resources</Term> read the roles from it:
+      </P>
 
       <CodeBlock filename="resources/articles.ts" lang="ts">
         {FLAGS}

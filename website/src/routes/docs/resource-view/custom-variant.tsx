@@ -5,7 +5,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { spotlightResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/custom-variant")({
@@ -235,7 +235,10 @@ function CustomVariant() {
 
       <H2 id="slots">The three slots</H2>
 
-      <P>A variant is a view, and a view renders through three components:</P>
+      <P>
+        A <Term id="view-variant">variant</Term> is a <Term id="view">view</Term>,
+        and a view renders through three components:
+      </P>
 
       <Ul>
         <Li>
@@ -255,9 +258,9 @@ function CustomVariant() {
 
       <P>
         Everything else is one hook away: <C>useCurrentViewResourceContext</C> gives
-        the resource, the loading state, the filters, the selection and the view
-        itself, and <C>useList</C> gives the rows with the mutations that go with
-        them.
+        the <Term id="resource">resource</Term>, the loading state, the filters, the
+        selection and the view itself, and <C>useList</C> gives the rows with the
+        mutations that go with them.
       </P>
 
       <H2 id="declaring">Declaring it</H2>

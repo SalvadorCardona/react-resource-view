@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 import { backend, starterCommand } from "@/lib/backends"
 
 export const Route = createFileRoute("/docs/resource-view/starter")({
@@ -313,8 +313,9 @@ function Starter() {
       />
 
       <P>
-        The type column is the dialect <C>src/setup.ts</C> is written with; the
-        default column is the schema's path, appended to the API's URL.
+        The type column is the <Term id="dialect">dialect</Term> <C>src/setup.ts</C>{" "}
+        is written with; the default column is the schema's path, appended to the
+        API's URL.
       </P>
 
       <H2 id="per-backend">Per technology</H2>
@@ -409,7 +410,7 @@ function Starter() {
       <P>
         A Vite, React, TypeScript and Tailwind project, with TanStack Router for the
         navigation and <A href="/docs/resource-view/admin-layout">AdminLayout</A>{" "}
-        around one example resource:
+        around one example <Term id="resource">resource</Term>:
       </P>
 
       <CodeBlock lang="bash">{TREE}</CodeBlock>
@@ -423,9 +424,10 @@ function Starter() {
 
       <Callout kind="note" title="The browser calls the API">
         <P>
-          The views fetch from the reader's browser, so the API has to allow the
-          origin the back office is served from — <C>http://localhost:5173</C> while
-          developing. Without CORS, the list stays empty and the console says why.
+          The <Term id="view">views</Term> fetch from the reader's browser, so the
+          API has to allow the origin the back office is served from —{" "}
+          <C>http://localhost:5173</C> while developing. Without CORS, the list stays
+          empty and the console says why.
         </P>
       </Callout>
 

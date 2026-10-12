@@ -5,7 +5,7 @@ import { Demo } from "@/components/Demo"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { ResourceDemo } from "@/components/ResourceDemo"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 import { articlesResource } from "@/demo/resources"
 
 export const Route = createFileRoute("/docs/resource-view/split")({
@@ -101,8 +101,9 @@ function SplitAndColumns() {
 
       <P>
         The list on the left, the selected record on the right. It replaces the
-        separate detail page rather than complementing it — which is why the resource
-        often has no <C>read</C> screen to maintain at all.
+        separate detail page rather than complementing it — which is why the{" "}
+        <Term id="resource">resource</Term> often has no <C>read</C> screen to
+        maintain at all.
       </P>
 
       <CodeBlock>{SPLIT}</CodeBlock>
@@ -145,7 +146,8 @@ function SplitAndColumns() {
 
       <P>
         Links built elsewhere — a notification, an email, a share — point at the
-        detail view. With no detail view to point at, they would land nowhere.
+        detail <Term id="view">view</Term>. With no detail view to point at, they
+        would land nowhere.
       </P>
 
       <Callout kind="tip" title="That is what redirectReadToList is for">
@@ -171,10 +173,11 @@ function SplitAndColumns() {
 
       <Callout kind="warning" title="Both keys are required">
         <P>
-          Without <C>identifierKey</C> the layout renders “Not Identifiant Found”,
-          and without <C>identifierKeyList</C>, “no identifierKeyList”. The list is
-          explicit on purpose: an empty column has to exist to be dropped into, and
-          deriving the columns from the data would make it vanish.
+          Without <C>identifierKey</C> the <Term id="view-variant">layout</Term>{" "}
+          renders “Not Identifiant Found”, and without <C>identifierKeyList</C>, “no
+          identifierKeyList”. The list is explicit on purpose: an empty column has to
+          exist to be dropped into, and deriving the columns from the data would make
+          it vanish.
         </P>
       </Callout>
 
@@ -188,8 +191,9 @@ function SplitAndColumns() {
 
       <P>
         Dragging a card into another column writes the new value of{" "}
-        <C>identifierKey</C> through the repository and refetches. There is no drag
-        handler to write: moving a card <em>is</em> editing that field.
+        <C>identifierKey</C> through the <Term id="repository">repository</Term> and
+        refetches. There is no drag handler to write: moving a card <em>is</em>{" "}
+        editing that field.
       </P>
 
       <H2 id="opening">Opening a card</H2>

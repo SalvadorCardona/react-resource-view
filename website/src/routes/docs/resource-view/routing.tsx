@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { C, H2, H3, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/routing")({
   head: () => ({
@@ -101,17 +101,18 @@ function Routing() {
       <H2 id="why">Why a port at all</H2>
 
       <P>
-        The views navigate constantly — opening a record, switching layout, applying
-        a filter — and every one of those is a URL change. Depending on a router
-        would mean picking yours for you; instead the package asks for four
-        primitives and stays out of it.
+        The <Term id="view">views</Term> navigate constantly — opening a record,
+        switching <Term id="view-variant">layout</Term>, applying a filter — and
+        every one of those is a URL change. Depending on a router would mean picking
+        yours for you; instead the package asks for four primitives and stays out of
+        it.
       </P>
 
       <Callout kind="warning" title="Unconfigured means full page loads">
         <P>
-          Left without a navigation port, the views fall back to the History API and
-          full reloads. That is enough for a test or a story, and wrong for
-          production.
+          Left without a navigation <Term id="port">port</Term>, the views fall back
+          to the History API and full reloads. That is enough for a test or a story,
+          and wrong for production.
         </P>
       </Callout>
 
@@ -217,7 +218,8 @@ function Routing() {
       <P>
         This site uses query mode aimed at <C>/playground</C>: every screen of the
         playground&apos;s back office is a URL that can be shared, while the demos on
-        these pages open their forms over the prose instead of leaving it.
+        these pages open their <Term id="form">forms</Term> over the prose instead of
+        leaving it.
       </P>
 
       <H2 id="mounting">Mounting the views</H2>
@@ -231,10 +233,10 @@ function Routing() {
 
       <P>
         <C>ResourceViewProvider</C> is the entry point when the views own the page:
-        it resolves the scope, applies the configuration and renders the right view.{" "}
-        <C>ViewResourceContextProvider</C> is the one to reach for when embedding a
-        single view inside a page you control — that is what every demo on this site
-        uses.
+        it resolves the <Term id="scope">scope</Term>, applies the configuration and
+        renders the right view. <C>ViewResourceContextProvider</C> is the one to
+        reach for when embedding a single view inside a page you control — that is
+        what every demo on this site uses.
       </P>
 
       <H2 id="links">Building links</H2>

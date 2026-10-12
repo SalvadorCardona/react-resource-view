@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, P, Ul, Li } from "@/components/prose"
+import { A, C, H2, P, Term, Ul, Li } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/admin-layout")({
   head: () => ({
@@ -165,18 +165,20 @@ function AdminLayoutPage() {
       <H2 id="what">What it is</H2>
 
       <P>
-        A scope&apos;s <C>decoratorComponent</C> wraps every view of that scope — the
-        navigation and the page heading around them. Writing one from scratch is a
-        sidebar, a top bar and a mobile navigation that every project ends up
-        rewriting; <C>AdminLayout</C> is that shell, ready to point a scope at.
+        A <Term id="scope">scope</Term>&apos;s <C>decoratorComponent</C> wraps every{" "}
+        <Term id="view">view</Term> of that scope — the navigation and the page
+        heading around them. Writing one from scratch is a sidebar, a top bar and a
+        mobile navigation that every project ends up rewriting; <C>AdminLayout</C> is
+        that shell, ready to point a scope at.
       </P>
 
       <Callout kind="tip" title="See it running">
         <P>
           The <A href={PLAYGROUND}>playground</A>&apos;s whole back office is this
           template, configured in a line: users, companies, a blog, a catalogue and a
-          task board, every screen a URL. The link opens the tasks — the resource
-          drawn full width, next to screens that keep the column.
+          task board, every screen a URL. The link opens the tasks — the{" "}
+          <Term id="resource">resource</Term> drawn full width, next to screens that
+          keep the column.
         </P>
       </Callout>
 
@@ -230,7 +232,7 @@ function AdminLayoutPage() {
 
       <P>
         An entry stays lit on everything inside what it points at: the list of a
-        resource, one of its records, the form editing it.
+        resource, one of its records, the <Term id="form">form</Term> editing it.
       </P>
 
       <H2 id="options">A logo, a search, a user menu</H2>
@@ -312,11 +314,11 @@ function AdminLayoutPage() {
       <CodeBlock>{FULL_WIDTH}</CodeBlock>
 
       <P>
-        The option is read at three levels, and the most specific one wins: the list
-        variant on screen, then the action&apos;s entry in <C>views</C>, then the
-        resource&apos;s <C>view</C>. Nothing declared means the column, so a
-        resource that never mentions it is drawn exactly as before. For a single
-        layout of a list:
+        The option is read at three levels, and the most specific one wins: the list{" "}
+        <Term id="view-variant">variant</Term> on screen, then the action&apos;s
+        entry in <C>views</C>, then the resource&apos;s <C>view</C>. Nothing declared
+        means the column, so a resource that never mentions it is drawn exactly as
+        before. For a single layout of a list:
       </P>
 
       <CodeBlock>{VARIANT}</CodeBlock>

@@ -3,7 +3,7 @@ import { Callout } from "@/components/Callout"
 import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
-import { A, C, H2, Li, P, Ul } from "@/components/prose"
+import { A, C, H2, Li, P, Term, Ul } from "@/components/prose"
 
 export const Route = createFileRoute("/docs/resource-view/permissions")({
   head: () => ({
@@ -131,8 +131,8 @@ function Permissions() {
             type: "boolean | (() => boolean)",
             description: (
               <>
-                Carried on the resource for your own use — the action check itself
-                reads <C>canRead</C>.
+                Carried on the <Term id="resource">resource</Term> for your own use —
+                the action check itself reads <C>canRead</C>.
               </>
             ),
           },
@@ -208,9 +208,9 @@ function Permissions() {
           has no cap”.
         </Li>
         <Li>
-          A limit can also be injected at runtime through the view context, which is
-          how a nested view's create button is driven by how many rows the parent has
-          selected.
+          A limit can also be injected at runtime through the{" "}
+          <Term id="view">view</Term> context, which is how a nested view's create
+          button is driven by how many rows the parent has selected.
         </Li>
         <Li>
           <C>useLimit</C> is exported, should a component of yours need to ask the
@@ -232,7 +232,8 @@ function Permissions() {
         <C>UnauthorizedError</C> (401) and <C>ForbiddenError</C> (403) are exported
         and carry their status, thrown or rejected alike. <C>onUnauthorized</C> on
         the resource configuration is where you send the reader to sign in; a 403,
-        or a <C>false</C>, renders <C>forbiddenFallback</C> instead of the scope.{" "}
+        or a <C>false</C>, renders <C>forbiddenFallback</C> instead of the{" "}
+        <Term id="scope">scope</Term>.{" "}
         <A href="/docs/resource-view/authentication">Authentication</A> wires it to
         Better Auth, sign-out included.
       </P>
