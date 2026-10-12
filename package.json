@@ -35,7 +35,8 @@
   ],
   "files": [
     "dist",
-    "cli/index.mjs"
+    "cli/index.mjs",
+    "cli/init.mjs"
   ],
   "bin": {
     "react-resource-view": "./cli/index.mjs"

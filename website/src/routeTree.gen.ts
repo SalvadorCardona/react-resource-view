@@ -46,6 +46,7 @@ import { Route as DocsResourceViewResourcesRouteImport } from './routes/docs/res
 import { Route as DocsResourceViewRoutingRouteImport } from './routes/docs/resource-view/routing'
 import { Route as DocsResourceViewScopesRouteImport } from './routes/docs/resource-view/scopes'
 import { Route as DocsResourceViewSplitRouteImport } from './routes/docs/resource-view/split'
+import { Route as DocsResourceViewStarterRouteImport } from './routes/docs/resource-view/starter'
 import { Route as DocsResourceViewSubViewsRouteImport } from './routes/docs/resource-view/sub-views'
 import { Route as DocsResourceViewTableRouteImport } from './routes/docs/resource-view/table'
 
@@ -245,6 +246,11 @@ const DocsResourceViewSplitRoute = DocsResourceViewSplitRouteImport.update({
   path: '/resource-view/split',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsResourceViewStarterRoute = DocsResourceViewStarterRouteImport.update({
+  id: '/resource-view/starter',
+  path: '/resource-view/starter',
+  getParentRoute: () => DocsRoute,
+} as any)
 const DocsResourceViewSubViewsRoute =
   DocsResourceViewSubViewsRouteImport.update({
     id: '/resource-view/sub-views',
@@ -293,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
   '/docs/resource-view/split': typeof DocsResourceViewSplitRoute
+  '/docs/resource-view/starter': typeof DocsResourceViewStarterRoute
   '/docs/resource-view/sub-views': typeof DocsResourceViewSubViewsRoute
   '/docs/resource-view/table': typeof DocsResourceViewTableRoute
   '/docs/form/': typeof DocsFormIndexRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
   '/docs/resource-view/split': typeof DocsResourceViewSplitRoute
+  '/docs/resource-view/starter': typeof DocsResourceViewStarterRoute
   '/docs/resource-view/sub-views': typeof DocsResourceViewSubViewsRoute
   '/docs/resource-view/table': typeof DocsResourceViewTableRoute
   '/docs/form': typeof DocsFormIndexRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/docs/resource-view/routing': typeof DocsResourceViewRoutingRoute
   '/docs/resource-view/scopes': typeof DocsResourceViewScopesRoute
   '/docs/resource-view/split': typeof DocsResourceViewSplitRoute
+  '/docs/resource-view/starter': typeof DocsResourceViewStarterRoute
   '/docs/resource-view/sub-views': typeof DocsResourceViewSubViewsRoute
   '/docs/resource-view/table': typeof DocsResourceViewTableRoute
   '/docs/form/': typeof DocsFormIndexRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
     | '/docs/resource-view/split'
+    | '/docs/resource-view/starter'
     | '/docs/resource-view/sub-views'
     | '/docs/resource-view/table'
     | '/docs/form/'
@@ -456,6 +466,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
     | '/docs/resource-view/split'
+    | '/docs/resource-view/starter'
     | '/docs/resource-view/sub-views'
     | '/docs/resource-view/table'
     | '/docs/form'
@@ -497,6 +508,7 @@ export interface FileRouteTypes {
     | '/docs/resource-view/routing'
     | '/docs/resource-view/scopes'
     | '/docs/resource-view/split'
+    | '/docs/resource-view/starter'
     | '/docs/resource-view/sub-views'
     | '/docs/resource-view/table'
     | '/docs/form/'
@@ -770,6 +782,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsResourceViewSplitRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/resource-view/starter': {
+      id: '/docs/resource-view/starter'
+      path: '/resource-view/starter'
+      fullPath: '/docs/resource-view/starter'
+      preLoaderRoute: typeof DocsResourceViewStarterRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/docs/resource-view/sub-views': {
       id: '/docs/resource-view/sub-views'
       path: '/resource-view/sub-views'
@@ -818,6 +837,7 @@ interface DocsRouteChildren {
   DocsResourceViewRoutingRoute: typeof DocsResourceViewRoutingRoute
   DocsResourceViewScopesRoute: typeof DocsResourceViewScopesRoute
   DocsResourceViewSplitRoute: typeof DocsResourceViewSplitRoute
+  DocsResourceViewStarterRoute: typeof DocsResourceViewStarterRoute
   DocsResourceViewSubViewsRoute: typeof DocsResourceViewSubViewsRoute
   DocsResourceViewTableRoute: typeof DocsResourceViewTableRoute
   DocsFormIndexRoute: typeof DocsFormIndexRoute
@@ -856,6 +876,7 @@ const DocsRouteChildren: DocsRouteChildren = {
   DocsResourceViewRoutingRoute: DocsResourceViewRoutingRoute,
   DocsResourceViewScopesRoute: DocsResourceViewScopesRoute,
   DocsResourceViewSplitRoute: DocsResourceViewSplitRoute,
+  DocsResourceViewStarterRoute: DocsResourceViewStarterRoute,
   DocsResourceViewSubViewsRoute: DocsResourceViewSubViewsRoute,
   DocsResourceViewTableRoute: DocsResourceViewTableRoute,
   DocsFormIndexRoute: DocsFormIndexRoute,

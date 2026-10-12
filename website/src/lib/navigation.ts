@@ -24,6 +24,7 @@ import {
   PanelsTopLeft,
   PenLine,
   Plug,
+  Rocket,
   Route,
   Settings2,
   ShieldCheck,
@@ -218,6 +219,13 @@ export const VIEW_SECTION: DocSection = {
           icon: Plug,
         },
         {
+          href: "/docs/resource-view/starter",
+          title: "Start a project",
+          summary:
+            "npx react-resource-view init: a back office on your API, its schema dumped into TypeScript.",
+          icon: Rocket,
+        },
+        {
           href: "/docs/resource-view/resources",
           title: "Declaring a resource",
           summary: "createViewResource, its views, and the repository behind them.",
@@ -234,7 +242,7 @@ export const VIEW_SECTION: DocSection = {
           href: "/docs/resource-view/backends",
           title: "Backends & dialects",
           summary:
-            "One declaration against API Platform, Strapi or Supabase — and how to add a fourth.",
+            "One declaration against API Platform, Spring Boot, Strapi, Supabase or FastAPI — and how to add another.",
           icon: Network,
         },
         {

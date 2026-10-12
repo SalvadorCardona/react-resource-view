@@ -72,6 +72,32 @@ const items = createViewResource("items", {
   view: { form: { inputs: { title: { label: "Title" } } } },
 })`
 
+const SPRING = `import { configureApi, createViewResource, springDialect } from "react-resource-view"
+
+configureApi({
+  baseUrl: "http://localhost:8080",
+  getAuthToken: () => getAccessToken(),
+  dialect: springDialect(),
+})
+
+const books = createViewResource("books", {
+  path: "/api/books", // → /api/books?page=0&size=20, /api/books/{id}
+  name: "Books",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})`
+
+const SPRING_CONTROLLER = `@RestController
+@RequestMapping("/api/books")
+class BookController {
+    @GetMapping
+    Page<Book> list(@RequestParam(required = false) String title, Pageable pageable) { … }
+
+    @GetMapping("/{id}") Book read(@PathVariable Long id) { … }
+    @PostMapping Book create(@Valid @RequestBody Book book) { … }
+    @PutMapping("/{id}") Book update(@PathVariable Long id, @Valid @RequestBody Book book) { … }
+    @DeleteMapping("/{id}") void delete(@PathVariable Long id) { … }
+}`
+
 const FASTAPI_ROUTES = `@app.get("/items", response_model=list[Item])
 def list_items(skip: int = 0, limit: int = 30, order_by: str | None = None):
     return repository.list(offset=skip, limit=limit, order_by=order_by)
@@ -146,6 +172,7 @@ function Backends() {
         { id: "strapi", title: "Strapi" },
         { id: "supabase", title: "Supabase" },
         { id: "fastapi", title: "FastAPI" },
+        { id: "spring", title: "Spring Boot" },
         { id: "several", title: "Two backends at once" },
         { id: "filters", title: "Filters, pages and sorts" },
         { id: "custom", title: "Another API entirely" },
@@ -211,6 +238,19 @@ function Backends() {
                 <C>limit</C> or <C>page</C> / <C>size</C>, plain query filters,{" "}
                 <C>order_by=-field</C>, a bare array or <C>{`{ items, total }`}</C>,
                 422 <C>detail</C> pinned on its field.
+              </>
+            ),
+          },
+          {
+            name: "springDialect()",
+            type: "ApiDialectInterface",
+            default: "—",
+            description: (
+              <>
+                <A href="https://spring.io/projects/spring-boot">Spring Boot</A>.{" "}
+                <C>page</C> (from 0) and <C>size</C>, <C>sort=field,desc</C>, a{" "}
+                <C>Page</C>, a <C>PagedModel</C> or Spring Data REST's HAL, Bean
+                Validation errors pinned on their field.
               </>
             ),
           },
@@ -454,6 +494,60 @@ function Backends() {
       </P>
 
       <CodeBlock>{FASTAPI_ERROR}</CodeBlock>
+
+      <H2 id="spring">Spring Boot</H2>
+
+      <CodeBlock filename="setup.ts">{SPRING}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "primaryKey",
+            type: "string",
+            default: `"id"`,
+            description: (
+              <>
+                The field a record is addressed by in <C>/books/{"{id}"}</C>. When
+                Spring Data REST keeps it out of the body, it is read from the
+                record's <C>_links.self.href</C>.
+              </>
+            ),
+          },
+          {
+            name: "defaultItemsPerPage",
+            type: "number",
+            default: "20",
+            description: "Rows per page when a list asks for none — Spring's own default.",
+          },
+          {
+            name: "updateMethod",
+            type: `"PUT" | "PATCH"`,
+            default: `"PUT"`,
+            description: (
+              <>
+                The verb an edit goes out with. <C>PUT</C> is what a{" "}
+                <C>@PutMapping</C> answers; Spring Data REST takes both.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <P>
+        A controller taking a <C>Pageable</C> and returning a <C>Page</C> needs
+        nothing more — the dialect reads <C>content</C> and <C>totalElements</C>,
+        or the <C>page</C> block of a <C>PagedModel</C> and of HAL:
+      </P>
+
+      <CodeBlock filename="BookController.java">{SPRING_CONTROLLER}</CodeBlock>
+
+      <P>
+        A failed <C>@Valid</C> lands each <C>errors[].field</C> on its input; a{" "}
+        <C>ProblemDetail</C> gives the error its title and explanation.{" "}
+        <A href="https://springdoc.org">springdoc-openapi</A> publishes the schema at{" "}
+        <C>/v3/api-docs</C>, which is what{" "}
+        <A href="/docs/resource-view/starter">the starter</A> dumps.
+      </P>
 
       <H2 id="several">Two backends at once</H2>
 

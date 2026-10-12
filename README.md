@@ -1,5 +1,3 @@
-
-
 <p align="center">
   <a href="https://cardona.digital/react-resource-view/playground">
     <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Strapi, Supabase or FastAPI and to the URL" width="100%">
@@ -108,6 +106,7 @@ configureApi({
 | `strapiDialect()`   | Strapi v4 and v5    | `pagination[page]`, `filters[field][$eq]`, `sort[0]`, `populate`, writes under `data`, `documentId`           |
 | `supabaseDialect()` | Supabase, PostgREST | `limit` / `offset`, `field=eq.value`, `order`, the count in `Content-Range`, `Prefer: return=representation`  |
 | `fastapiDialect()`  | FastAPI             | `skip` / `limit` or `page` / `size`, plain query filters, `order_by=-field`, `{ items, total }`, 422 `detail` |
+| `springDialect()`   | Spring Boot         | `page` (from 0) / `size`, `sort=field,desc`, `Page`, `PagedModel` or HAL `_embedded`, Bean Validation errors  |
 
 JSON-LD is the default, so an application already talking to API Platform needs
 none of this — and keeps going through the client it configured with
@@ -235,6 +234,32 @@ def list_items():
 add_pagination(app)
 ```
 
+### Spring Boot
+
+```ts
+import { configureApi, springDialect, createViewResource } from "react-resource-view"
+
+configureApi({
+  baseUrl: "http://localhost:8080",
+  getAuthToken: () => getAccessToken(),
+  dialect: springDialect(),
+})
+
+const books = createViewResource("books", {
+  path: "/api/books", // → /api/books?page=0&size=20, /api/books/{id}
+  name: "Books",
+  view: { form: { inputs: { title: { label: "Title" } } } },
+})
+```
+
+A controller taking a `Pageable` and returning a `Page` needs nothing more: the
+dialect reads `content` and `totalElements`, the `page` block of a `PagedModel`,
+or Spring Data REST's `_embedded` — a record whose id is hidden is addressed
+by its `_links.self.href`. `springDialect` takes `primaryKey` (default `id`),
+`defaultItemsPerPage` (default `20`) and `updateMethod` (`"PUT"`, the default, or
+`"PATCH"`). A failed `@Valid` lands each `errors[].field` on its input, and a
+`ProblemDetail` gives the error its title and explanation.
+
 ### Two backends at once
 
 A resource may carry a dialect of its own, which wins over the configured one:
@@ -316,6 +341,43 @@ const articles = createViewResource<Article>("articles", {
 The whole recipe — the config, the enums, the per-backend
 specifics for API Platform, Strapi, Supabase and FastAPI, and when to regenerate — is on
 [the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
+
+## Start a project
+
+One command writes a whole back office on your API — Vite, React, Tailwind,
+TanStack Router, the admin layout and one example resource — and asks for the
+rest:
+
+```bash
+npx react-resource-view init my-admin
+```
+
+It asks which API the back office talks to — API Platform, Spring Boot,
+another REST API, Supabase, Strapi or FastAPI — its URL, and the URL of its
+OpenAPI schema, guessed from the backend (`/api/docs.jsonopenapi`,
+`/v3/api-docs`, `/openapi.json`). The dialect is wired in `src/setup.ts`, the URL
+lands in `.env`, and the project comes with the commands that dump the schema
+into TypeScript with [api-dumper](https://github.com/SalvadorCardona/api-dumper):
+
+```bash
+npm run api-schema         # or: make api-schema — writes src/api-schema/
+npm run api-schema:check   # in the CI: fails when src/api-schema is stale
+```
+
+One starter per technology, ready to paste:
+
+| Backend        | Command                                                                           | Schema dumped from      |
+| -------------- | --------------------------------------------------------------------------------- | ----------------------- |
+| API Platform   | `npx react-resource-view init my-admin -b api-platform -u https://localhost`      | `/api/docs.jsonopenapi` |
+| Spring Boot    | `npx react-resource-view init my-admin -b spring-boot -u http://localhost:8080`   | `/v3/api-docs`          |
+| Other REST API | `npx react-resource-view init my-admin -b rest -u http://localhost:3000 -s <url>` | the URL you pass        |
+| Supabase       | `npx react-resource-view init my-admin -b supabase -u https://<ref>.supabase.co`  | `supabase gen types`    |
+| Strapi         | `npx react-resource-view init my-admin -b strapi -u http://localhost:1337`        | `/api/openapi.json`     |
+| FastAPI        | `npx react-resource-view init my-admin -b fastapi -u http://localhost:8000`       | `/openapi.json`         |
+
+Every question has a flag — `--backend spring-boot --api-url http://localhost:8080
+--schema-url … --yes` — see `npx react-resource-view init --help` and
+[the starter page](https://cardona.digital/react-resource-view/docs/resource-view/starter).
 
 ## Installation
 
