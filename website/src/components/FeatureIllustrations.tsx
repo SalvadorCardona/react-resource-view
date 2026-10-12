@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { BACKENDS } from "@/lib/backends"
 
 /**
  * One drawing per argument of the landing's "agnostic" grid.
@@ -314,14 +315,16 @@ export function PortsIllustration() {
 
 /* -------------------------------------------------------------------------- */
 
-const BACKENDS = [
-  { y: 14, label: "API Platform" },
-  { y: 46, label: "Strapi" },
-  { y: 78, label: "Supabase" },
-  { y: 110, label: "your own", dashed: true },
-]
+/** Every backend the site lists, then the one the reader writes. */
+const BACKEND_ROWS = [
+  ...BACKENDS.map(({ name, generic }) => ({
+    label: generic ? "any REST API" : name,
+    dashed: false,
+  })),
+  { label: "your own", dashed: true },
+].map((row, index) => ({ ...row, y: 4 + index * 20 }))
 
-/** One declaration, one dialect per backend, four backends. */
+/** One declaration, one dialect per backend, and one of your own. */
 export function BackendsIllustration() {
   return (
     <Frame>
@@ -377,10 +380,10 @@ export function BackendsIllustration() {
         dialect
       </text>
 
-      {BACKENDS.map(({ y, label, dashed }) => (
+      {BACKEND_ROWS.map(({ y, label, dashed }) => (
         <g key={label}>
           <path
-            d={`M190 75C204 75 198 ${y + 12} 212 ${y + 12}`}
+            d={`M190 75C204 75 198 ${y + 8} 212 ${y + 8}`}
             className={dashed ? "stroke-muted-foreground/60" : "stroke-primary/60"}
             strokeDasharray={dashed ? "3 3" : undefined}
           />
@@ -388,8 +391,8 @@ export function BackendsIllustration() {
             x="212"
             y={y}
             width="96"
-            height="24"
-            rx="6"
+            height="16"
+            rx="5"
             className={
               dashed ? "stroke-muted-foreground/60" : "fill-background stroke-border"
             }
@@ -397,20 +400,20 @@ export function BackendsIllustration() {
           />
           {/* A generic database, not anyone's logo */}
           <ellipse
-            cx="226"
-            cy={y + 8.5}
-            rx="5"
-            ry="2"
+            cx="224"
+            cy={y + 5}
+            rx="4"
+            ry="1.5"
             className="stroke-muted-foreground"
           />
           <path
-            d={`M221 ${y + 8.5}v7c0 1.1 2.2 2 5 2s5-.9 5-2v-7`}
+            d={`M220 ${y + 5}v5c0 .8 1.8 1.5 4 1.5s4-.7 4-1.5v-5`}
             className="stroke-muted-foreground"
           />
           <text
-            x="238"
-            y={y + 15}
-            fontSize="8"
+            x="234"
+            y={y + 11}
+            fontSize="7.5"
             className={dashed ? "fill-muted-foreground" : "fill-foreground"}
           >
             {label}

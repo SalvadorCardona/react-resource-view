@@ -1,17 +1,16 @@
-import { useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowRight,
+  BookOpen,
   Boxes,
-  Check,
   Compass,
-  Copy,
   Languages,
   LayoutGrid,
   Link2,
   MousePointerClick,
   PlayCircle,
   PlugZap,
+  Rocket,
   ShieldCheck,
   Terminal,
 } from "lucide-react"
@@ -23,6 +22,8 @@ import {
   UrlIllustration,
   ValidationIllustration,
 } from "@/components/FeatureIllustrations"
+import { BackendLogo } from "@/components/BackendLogo"
+import { CopyCommand } from "@/components/CopyCommand"
 import { Header } from "@/components/Header"
 import { HeroBackdrop } from "@/components/HeroBackdrop"
 import { HomeBuilder } from "@/components/HomeBuilder"
@@ -34,11 +35,13 @@ import {
   ViewPackageIllustration,
 } from "@/components/PackageIllustrations"
 import { SiteVideo } from "@/components/SiteVideo"
+import { StarterPicker } from "@/components/StarterPicker"
 import {
   FrozenScreenIllustration,
   NotesViewsIllustration,
   OneDescriptionIllustration,
 } from "@/components/StoryIllustrations"
+import { BACKENDS, namedBackends } from "@/lib/backends"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 import { cn } from "@/lib/cn"
 
@@ -52,6 +55,8 @@ function LandingPage() {
       <Header />
       <main>
         <Hero />
+        <WorksWith />
+        <GetStarted />
         <TourVideo />
         <Packages />
         <OneDescription />
@@ -105,34 +110,50 @@ function Hero() {
           and delete screens — wired to your API and to the URL.
         </p>
 
+        {/* One way in that stands out — a project on your own API, in one
+            command — one beside it for those who want to see it work first,
+            and the rest as plain links. */}
         <div
           className="rise mt-10 flex flex-wrap items-center justify-center gap-3"
           style={{ animationDelay: "220ms" }}
         >
           <a
+            href="#get-started"
+            className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:opacity-95"
+          >
+            <Rocket className="size-5" />
+            Get started
+          </a>
+          <a
             href="#try"
-            className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            className="flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 text-sm font-medium transition hover:bg-muted"
           >
             <MousePointerClick className="size-4" />
             Try it right here
           </a>
+        </div>
+
+        <div
+          className="rise mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm"
+          style={{ animationDelay: "250ms" }}
+        >
           <Link
             to="/docs/form"
-            className="flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-medium transition hover:bg-muted"
+            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
-            Read the documentation
-            <ArrowRight className="size-4" />
+            <BookOpen className="size-4" />
+            Documentation
           </Link>
           <Link
             to="/playground"
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
             <Compass className="size-4" />
             Playground
           </Link>
           <a
             href="#tour"
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
           >
             <PlayCircle className="size-4" />
             Watch the 1-minute tour
@@ -155,6 +176,92 @@ function Hero() {
           ))}
         </dl>
       </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The backends a resource renders against, at a glance: each logo opens the
+ * section of the backends page that explains its dialect.
+ */
+function WorksWith() {
+  return (
+    <section
+      aria-labelledby="works-with"
+      className="border-b border-border bg-muted/25 py-10"
+    >
+      <div className="mx-auto max-w-5xl px-4 lg:px-8">
+        <h2
+          id="works-with"
+          className="text-center text-xs font-medium uppercase tracking-wider text-muted-foreground"
+        >
+          Works with
+        </h2>
+
+        <ul className="mt-6 flex flex-wrap items-stretch justify-center gap-3">
+          {BACKENDS.map((backend) => (
+            <li key={backend.id}>
+              <Link
+                to={backend.docs.to}
+                hash={backend.docs.hash}
+                title={`${backend.name} — its dialect`}
+                className="group flex h-full w-36 flex-col items-center justify-center gap-2.5 rounded-xl border border-transparent px-3 py-3 text-muted-foreground transition duration-300 hover:-translate-y-0.5 hover:border-border hover:bg-background hover:text-foreground hover:shadow-sm"
+              >
+                <BackendLogo
+                  backend={backend}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                />
+                <span className="text-center text-xs">{backend.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Where "Get started" lands: the backend, then the one command that writes a
+ * back office on it, then what to type next.
+ */
+function GetStarted() {
+  return (
+    <section
+      id="get-started"
+      className="mx-auto max-w-5xl scroll-mt-20 px-4 pt-20 lg:px-8"
+    >
+      <header className="mx-auto max-w-2xl text-center">
+        <p className="text-xs font-medium uppercase tracking-wider text-view">
+          Get started
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          Start a project in one command
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          Pick the API you already have. The starter writes a Vite and React back
+          office around it — the dialect wired, one example resource, and the
+          commands that turn the API's OpenAPI schema into TypeScript.
+        </p>
+      </header>
+
+      <div className="mt-10">
+        <StarterPicker />
+      </div>
+
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        <Link
+          to="/docs/resource-view/starter"
+          className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
+        >
+          The full starter page — every flag, every file it writes
+          <ArrowRight className="size-4" />
+        </Link>
+      </p>
     </section>
   )
 }
@@ -517,43 +624,6 @@ function Layouts() {
   )
 }
 
-/**
- * A shell command and the button that copies it.
- *
- * `InstallCommand` copies an install line in the reader's package manager; this
- * one is a command run as it is, so it only keeps the copying.
- */
-function CopyCommand({ command }: { command: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function copy() {
-    void navigator.clipboard.writeText(command).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1600)
-    })
-  }
-
-  return (
-    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
-      <code className="min-w-0 font-mono text-xs text-foreground sm:overflow-x-auto sm:whitespace-nowrap">
-        <span className="text-view">$</span> {command}
-      </code>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label="Copy the command"
-        className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition hover:text-foreground"
-      >
-        {copied ? (
-          <Check className="size-3.5 text-view" />
-        ) : (
-          <Copy className="size-3.5" />
-        )}
-      </button>
-    </div>
-  )
-}
-
 /* -------------------------------------------------------------------------- */
 
 const FEATURES = [
@@ -572,8 +642,8 @@ const FEATURES = [
   {
     icon: Boxes,
     illustration: BackendsIllustration,
-    title: "API Platform, Strapi, Supabase",
-    body: "A dialect holds what each backend spells differently — pages, filters, envelopes, errors — so one declared resource renders against any of the three, or a fourth you write.",
+    title: "Five backends, or any REST API",
+    body: `A dialect holds what each backend spells differently — pages, filters, envelopes, errors — so one declared resource renders against ${namedBackends()}, any REST API that publishes OpenAPI, or a dialect you write.`,
   },
   {
     icon: ShieldCheck,

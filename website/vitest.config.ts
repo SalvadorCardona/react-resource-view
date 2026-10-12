@@ -13,6 +13,8 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     dedupe: ["react", "react-dom", "@tanstack/react-router"],
   },
+  // backends.test.ts reads the CLI, one directory up, to compare its list.
+  server: { fs: { allow: [".."] } },
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],

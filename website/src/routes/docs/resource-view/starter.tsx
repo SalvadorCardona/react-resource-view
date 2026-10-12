@@ -4,6 +4,7 @@ import { CodeBlock } from "@/components/CodeBlock"
 import { DocArticle } from "@/components/DocArticle"
 import { PropsTable } from "@/components/PropsTable"
 import { A, C, H2, H3, Li, P, Ul } from "@/components/prose"
+import { backend, starterCommand } from "@/lib/backends"
 
 export const Route = createFileRoute("/docs/resource-view/starter")({
   head: () => ({
@@ -85,10 +86,13 @@ SUPABASE_PROJECT_REF=abcdefghijklmnop
 make api-schema`
 
 
-/** One starter per backend: the command, the setup it writes, and the backend side. */
+/**
+ * One starter per backend: the command, the setup it writes, and the backend
+ * side. The commands come from the list the landing page shows its logos from.
+ */
 const TECH = {
   apiPlatform: {
-    command: `npx react-resource-view init my-admin -b api-platform -u https://localhost`,
+    command: starterCommand(backend("api-platform")),
     setup: `import { configureClient } from "jsonld-api-client"
 
 configureClient({ baseUrl: import.meta.env.VITE_API_URL, getAuthToken })
@@ -112,7 +116,7 @@ nelmio_cors:
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$'`,
   },
   spring: {
-    command: `npx react-resource-view init my-admin -b spring-boot -u http://localhost:8080`,
+    command: starterCommand(backend("spring-boot")),
     setup: `configureApi({
   baseUrl: import.meta.env.VITE_API_URL,
   getAuthToken,
@@ -140,8 +144,7 @@ class CorsConfig implements WebMvcConfigurer {
 }`,
   },
   rest: {
-    command: `npx react-resource-view init my-admin -b rest -u http://localhost:3000 \\
-  -s http://localhost:3000/docs/openapi.json`,
+    command: starterCommand(backend("rest")),
     setup: `configureApi({
   baseUrl: import.meta.env.VITE_API_URL,
   getAuthToken,
@@ -154,7 +157,7 @@ class CorsConfig implements WebMvcConfigurer {
 })`,
   },
   supabase: {
-    command: `npx react-resource-view init my-admin -b supabase -u https://abcdefghijklmnop.supabase.co`,
+    command: starterCommand(backend("supabase")),
     setup: `configureApi({
   baseUrl: import.meta.env.VITE_API_URL,
   getAuthToken,
@@ -167,7 +170,7 @@ class CorsConfig implements WebMvcConfigurer {
 }`,
   },
   strapi: {
-    command: `npx react-resource-view init my-admin -b strapi -u http://localhost:1337`,
+    command: starterCommand(backend("strapi")),
     setup: `configureApi({
   baseUrl: import.meta.env.VITE_API_URL,
   getAuthToken,
@@ -188,7 +191,7 @@ module.exports = {
 npm run strapi openapi generate -- --output ./openapi.json`,
   },
   fastapi: {
-    command: `npx react-resource-view init my-admin -b fastapi -u http://localhost:8000`,
+    command: starterCommand(backend("fastapi")),
     setup: `configureApi({
   baseUrl: import.meta.env.VITE_API_URL,
   getAuthToken,
