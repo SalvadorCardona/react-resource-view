@@ -265,13 +265,31 @@ export function parseLink(url: string): ViewResourceContextParams {
   if (resourceAction) params.resourceAction = resourceAction as ActionList
   if (id) params.id = decodeIri(id)
 
-  if (rest.length === 1) {
+  const actionValues = Object.values(ActionList) as string[]
+
+  // A list has no id of its own, so the child view drawn over it — the record
+  // a board card opens in a drawer — starts right after the action:
+  // .../{resourceId}/list/{childResourceId}/{childAction}/{childId}
+  // What was read as the id is the child's resource.
+  if (
+    resourceAction === ActionList.list &&
+    id &&
+    rest[0] &&
+    actionValues.includes(rest[0])
+  ) {
+    delete params.id
+    const child: ViewResourceContextParams = {
+      resourceId: decodeIri(id),
+      resourceAction: rest[0] as ActionList,
+    }
+    if (rest[1]) child.id = decodeIri(rest[1])
+    params.childViewResource = child
+  } else if (rest.length === 1) {
     params.subResource = decodeIri(rest[0])
   } else if (rest.length >= 2) {
     // The childAction segment disambiguates:
     // .../{childResourceId}/{childAction}/{childId}
     // .../{subResource}/{childResourceId}/{childAction}/{childId}
-    const actionValues = Object.values(ActionList) as string[]
     const hasSubResource = !actionValues.includes(rest[1])
     if (hasSubResource) {
       params.subResource = decodeIri(rest[0])

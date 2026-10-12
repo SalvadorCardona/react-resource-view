@@ -253,6 +253,34 @@ describe("parseLink", () => {
     expect(parsed).toEqual(original)
   })
 
+  it("is the exact inverse of generateLink with a record opened over a list", () => {
+    const original: ViewResourceContextParams = {
+      scope: "admin",
+      resourceId: "admin_tasks",
+      resourceAction: ActionList.list,
+      viewVariantId: "board",
+      childViewResource: {
+        resourceId: "admin_tasks",
+        resourceAction: ActionList.read,
+        id: "12",
+      },
+    }
+    const link = generateLink(original)
+    expect(link).toEqual("/admin/admin_tasks/list/admin_tasks/read/12?variant=board")
+
+    expect(parseLink(link)).toEqual(original)
+  })
+
+  it("still reads the id of a split list followed by a sub-resource", () => {
+    expect(parseLink("/admin/posts/list/42/comments")).toEqual({
+      scope: "admin",
+      resourceId: "posts",
+      resourceAction: ActionList.list,
+      id: "42",
+      subResource: "comments",
+    })
+  })
+
   it("is the exact inverse of generateLink with a childViewResourceContext", () => {
     const original: ViewResourceContextParams = {
       scope: "user",
@@ -274,7 +302,6 @@ describe("parseLink", () => {
     expect(parsed).toEqual(original)
   })
 })
-
 
 describe("the chosen layout", () => {
   it("travels with the link", () => {

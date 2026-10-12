@@ -36,6 +36,37 @@ viewVariants: [
   }),
 ]`
 
+const OPENING = `columnViewOptionFactory({
+  identifierKey: "status",
+  identifierKeyList: STATUSES,
+  behavior: {
+    // "drawer" | "popup" | "window". Unset, a card opens nothing.
+    openRecordIn: "drawer",
+  },
+})`
+
+const BULK = `columnViewOptionFactory({
+  identifierKey: "status",
+  identifierKeyList: STATUSES,
+  behavior: {
+    // On by default; false takes the checkboxes and the bar away.
+    selectable: true,
+    // Beside "Move to…", in the bar the selection brings up.
+    bulkActions: [
+      {
+        label: "Mark as urgent",
+        icon: Flame,
+        onAction: (tasks) =>
+          Promise.all(
+            tasks.map((task) =>
+              tasksResource.updateItem({ id: task.id, priority: "urgent" })
+            )
+          ),
+      },
+    ],
+  },
+})`
+
 const COLUMNS = `import { columnViewOptionFactory } from "react-resource-view"
 
 const STATUSES = [
@@ -61,6 +92,8 @@ function SplitAndColumns() {
         { id: "redirect", title: "Incoming links" },
         { id: "columns", title: "Columns" },
         { id: "dragging", title: "Moving a card" },
+        { id: "opening", title: "Opening a card" },
+        { id: "selecting", title: "Moving several cards" },
         { id: "choosing", title: "Which one, when" },
       ]}
     >
@@ -158,6 +191,102 @@ function SplitAndColumns() {
         <C>identifierKey</C> through the repository and refetches. There is no drag
         handler to write: moving a card <em>is</em> editing that field.
       </P>
+
+      <H2 id="opening">Opening a card</H2>
+
+      <P>
+        <C>behavior.openRecordIn</C> makes the whole card clickable — with a pointer
+        cursor, a hover state and a focus ring — and says what a click opens: the
+        record's <C>read</C> view, with a way to edit it.
+      </P>
+
+      <CodeBlock>{OPENING}</CodeBlock>
+
+      <Ul>
+        <Li>
+          <C>drawer</C> slides it in from the right — up from the bottom on a phone.
+        </Li>
+        <Li>
+          <C>popup</C> centres it in a dialog.
+        </Li>
+        <Li>
+          <C>window</C> goes to the record's own page, through <C>generateLink</C>{" "}
+          and the configured router.
+        </Li>
+      </Ul>
+
+      <P>
+        A drawer or a popup is written into the URL as a child view of the list —{" "}
+        <C>…/tasks/list/tasks/read/12</C> — so it can be shared, a reload reopens it,
+        and the browser's Back button closes it. The host reads it back with{" "}
+        <A href="/docs/resource-view/routing">
+          <C>parseLink</C>
+        </A>
+        , as it does every other link. Escape, the close button or a click on the
+        backdrop close it too; the focus stays inside while it is open, and goes back
+        to the card afterwards. On the keyboard a card is reached with Tab and opened
+        with Enter.
+      </P>
+
+      <Callout kind="tip" title="The controls of a card keep their click">
+        <P>
+          A button, a link, a menu, a checkbox or a drag handle drawn by your row
+          component never opens the card: a click that lands on a control — or in
+          anything with <C>data-card-control</C> — is the control's alone, with no{" "}
+          <C>stopPropagation</C> to add. Selecting some of the card's text does not
+          open it either.
+        </P>
+      </Callout>
+
+      <H2 id="selecting">Moving several cards</H2>
+
+      <P>
+        Cards can be selected: the checkbox that shows on hover, Ctrl/Cmd+click to
+        add or remove one, Shift+click for a range within a column, Space on a
+        focused card — and a long press on a phone, after which a tap adds or
+        removes. As soon as one card is selected, a bar comes up with the count,
+        “Move to…”, the view's own <C>bulkActions</C> and “Deselect all”; Escape
+        empties the selection too.
+      </P>
+
+      <P>
+        Dragging a selected card carries the whole selection, under a “3 cards”
+        preview. Either way, each record is updated through the repository and drawn
+        in its new column straight away; a card whose update fails goes back to where
+        it was, stays selected, and a message says how many could not be moved.
+      </P>
+
+      <CodeBlock>{BULK}</CodeBlock>
+
+      <PropsTable
+        rows={[
+          {
+            name: "behavior.openRecordIn",
+            type: '"drawer" | "popup" | "window"',
+            description: (
+              <>
+                What a click on a card opens. Needs <C>canRead</C>.
+              </>
+            ),
+          },
+          {
+            name: "behavior.selectable",
+            type: "boolean",
+            default: "true",
+            description: "Whether cards can be selected and moved together.",
+          },
+          {
+            name: "behavior.bulkActions",
+            type: "BulkActionInterface[]",
+            description: (
+              <>
+                <C>{"{ label, icon?, onAction(records) }"}</C>, run on the selected
+                records; the board refreshes once it settles.
+              </>
+            ),
+          },
+        ]}
+      />
 
       <H2 id="choosing">Which one, when</H2>
 
