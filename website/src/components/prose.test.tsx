@@ -13,7 +13,7 @@ describe("A", () => {
 
     expect(screen.getByRole("link", { name: "forms" })).toHaveAttribute(
       "href",
-      "/react-resource-view/docs/form"
+      "/react-resource-view/docs/form/"
     )
   })
 
@@ -23,7 +23,7 @@ describe("A", () => {
 
     expect(screen.getByRole("link", { name: "builder" })).toHaveAttribute(
       "href",
-      "/react-resource-view/playground/builder?kit=email"
+      "/react-resource-view/playground/builder/?kit=email"
     )
   })
 

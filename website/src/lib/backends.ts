@@ -19,7 +19,7 @@ export interface Backend {
   /** Not a product but a shape: any API that publishes an OpenAPI document. */
   generic?: boolean
   /** The section of the backends page that explains its dialect. */
-  docs: { to: "/docs/resource-view/backends"; hash: string }
+  docs: { to: "/docs/resource-view/backends/"; hash: string }
 }
 
 export const BACKENDS: Backend[] = [
@@ -27,31 +27,31 @@ export const BACKENDS: Backend[] = [
     id: "api-platform",
     name: "API Platform",
     apiUrl: "https://localhost",
-    docs: { to: "/docs/resource-view/backends", hash: "dialects" },
+    docs: { to: "/docs/resource-view/backends/", hash: "dialects" },
   },
   {
     id: "spring-boot",
     name: "Spring Boot",
     apiUrl: "http://localhost:8080",
-    docs: { to: "/docs/resource-view/backends", hash: "spring" },
+    docs: { to: "/docs/resource-view/backends/", hash: "spring" },
   },
   {
     id: "supabase",
     name: "Supabase",
     apiUrl: "https://abcdefghijklmnop.supabase.co",
-    docs: { to: "/docs/resource-view/backends", hash: "supabase" },
+    docs: { to: "/docs/resource-view/backends/", hash: "supabase" },
   },
   {
     id: "strapi",
     name: "Strapi",
     apiUrl: "http://localhost:1337",
-    docs: { to: "/docs/resource-view/backends", hash: "strapi" },
+    docs: { to: "/docs/resource-view/backends/", hash: "strapi" },
   },
   {
     id: "fastapi",
     name: "FastAPI",
     apiUrl: "http://localhost:8000",
-    docs: { to: "/docs/resource-view/backends", hash: "fastapi" },
+    docs: { to: "/docs/resource-view/backends/", hash: "fastapi" },
   },
   {
     id: "rest",
@@ -59,7 +59,7 @@ export const BACKENDS: Backend[] = [
     apiUrl: "http://localhost:3000",
     schemaUrl: "http://localhost:3000/docs/openapi.json",
     generic: true,
-    docs: { to: "/docs/resource-view/backends", hash: "custom" },
+    docs: { to: "/docs/resource-view/backends/", hash: "custom" },
   },
 ]
 

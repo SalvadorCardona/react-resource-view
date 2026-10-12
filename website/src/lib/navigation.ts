@@ -92,20 +92,20 @@ export const FORM_SECTION: DocSection = {
       label: "Getting started",
       pages: [
         {
-          href: "/docs/form",
+          href: "/docs/form/",
           title: "Introduction",
           summary: "What the library does, and what it deliberately does not.",
           icon: Sparkles,
         },
         {
-          href: "/docs/form/installation",
+          href: "/docs/form/installation/",
           title: "Installation",
           summary:
             "Install, wire Tailwind up, and understand why two dependencies are peers.",
           icon: Plug,
         },
         {
-          href: "/docs/form/anatomy",
+          href: "/docs/form/anatomy/",
           title: "Anatomy of a form",
           summary:
             "useForm, FormElement, and the round trip a value makes between them.",
@@ -117,53 +117,53 @@ export const FORM_SECTION: DocSection = {
       label: "Writing forms",
       pages: [
         {
-          href: "/docs/form/fields",
+          href: "/docs/form/fields/",
           title: "Fields",
           summary:
             "Every key of a field description, and what each one changes on screen.",
           icon: ListChecks,
         },
         {
-          href: "/docs/form/controllers",
+          href: "/docs/form/controllers/",
           title: "Field controllers",
           summary: "The full catalogue — 34 controllers, each one running.",
           icon: Blocks,
         },
         {
-          href: "/docs/form/validation",
+          href: "/docs/form/validation/",
           title: "Validation & API errors",
           summary:
             "Client-side validators, and mapping an API Platform 422 back onto fields.",
           icon: CircleCheckBig,
         },
         {
-          href: "/docs/form/groups",
+          href: "/docs/form/groups/",
           title: "Groups",
           summary: "Splitting a long form into collapsible sections.",
           icon: Group,
         },
         {
-          href: "/docs/form/steps",
+          href: "/docs/form/steps/",
           title: "Multi-step forms",
           summary:
             "Turning the same description into a wizard, with per-step validation.",
           icon: SquareStack,
         },
         {
-          href: "/docs/form/nested",
+          href: "/docs/form/nested/",
           title: "Nested forms & arrays",
           summary: "Sub-forms, repeatable rows, and the page-builder controller.",
           icon: FolderTree,
         },
         {
-          href: "/docs/form/asymmetric",
+          href: "/docs/form/asymmetric/",
           title: "Asymmetric forms",
           summary:
             "Page builders and résumés: a form whose shape its own content decides.",
           icon: LayoutTemplate,
         },
         {
-          href: "/docs/form/email-builder",
+          href: "/docs/form/email-builder/",
           title: "Email builder",
           summary:
             "The same field, an email palette, and a pure function that renders HTML Gmail and Outlook agree on.",
@@ -175,20 +175,20 @@ export const FORM_SECTION: DocSection = {
       label: "Going further",
       pages: [
         {
-          href: "/docs/form/custom-controller",
+          href: "/docs/form/custom-controller/",
           title: "Writing a controller",
           summary:
             "Two props, no registration step: the extension point of the library.",
           icon: PenLine,
         },
         {
-          href: "/docs/form/registry",
+          href: "/docs/form/registry/",
           title: "The form registry",
           summary: "addForm, getForm, and why the registry has to be a singleton.",
           icon: Boxes,
         },
         {
-          href: "/docs/form/configuration",
+          href: "/docs/form/configuration/",
           title: "Configuration & i18n",
           summary: "Ports, form-wide defaults, locales, currency and translation.",
           icon: Settings2,
@@ -210,61 +210,61 @@ export const VIEW_SECTION: DocSection = {
       label: "Getting started",
       pages: [
         {
-          href: "/docs/resource-view/quickstart",
+          href: "/docs/resource-view/quickstart/",
           title: "Quickstart",
           summary:
             "Five minutes from zero to a list on your API, then a filter and a second layout.",
           icon: Zap,
         },
         {
-          href: "/docs/resource-view",
+          href: "/docs/resource-view/",
           title: "Introduction",
           summary:
             "One declaration, five views — list, detail, create, edit, delete — and a URL that carries the state.",
           icon: Compass,
         },
         {
-          href: "/docs/resource-view/concepts",
+          href: "/docs/resource-view/concepts/",
           title: "Concepts",
           summary:
             "The vocabulary in one page — resource, view, dialect, port, scope… — and how the pieces fit together.",
           icon: Waypoints,
         },
         {
-          href: "/docs/resource-view/installation",
+          href: "/docs/resource-view/installation/",
           title: "Installation",
           summary: "Install, style, and connect the package to your API.",
           icon: Plug,
         },
         {
-          href: "/docs/resource-view/starter",
+          href: "/docs/resource-view/starter/",
           title: "Start a project",
           summary:
             "npx react-resource-view init: a back office on your API, its schema dumped into TypeScript.",
           icon: Rocket,
         },
         {
-          href: "/docs/resource-view/resources",
+          href: "/docs/resource-view/resources/",
           title: "Declaring a resource",
           summary: "createViewResource, its views, and the repository behind them.",
           icon: PanelsTopLeft,
         },
         {
-          href: "/docs/resource-view/forms",
+          href: "/docs/resource-view/forms/",
           title: "A form per action",
           summary:
             "One description for four screens — and a different form where creating is not editing.",
           icon: SquarePen,
         },
         {
-          href: "/docs/resource-view/backends",
+          href: "/docs/resource-view/backends/",
           title: "Backends & dialects",
           summary:
             "One declaration against API Platform, Spring Boot, Strapi, Supabase or FastAPI — and how to add another.",
           icon: Network,
         },
         {
-          href: "/docs/resource-view/openapi-types",
+          href: "/docs/resource-view/openapi-types/",
           title: "Types from OpenAPI",
           summary:
             "Export the schema your API publishes, and type the client and every resource from it.",
@@ -276,31 +276,31 @@ export const VIEW_SECTION: DocSection = {
       label: "Layouts",
       pages: [
         {
-          href: "/docs/resource-view/layouts",
+          href: "/docs/resource-view/layouts/",
           title: "Choosing a layout",
           summary: "Seven variants over one resource, and how the reader switches.",
           icon: LayoutGrid,
         },
         {
-          href: "/docs/resource-view/table",
+          href: "/docs/resource-view/table/",
           title: "Table & cards",
           summary: "The two everyday layouts, column by column.",
           icon: Table2,
         },
         {
-          href: "/docs/resource-view/split",
+          href: "/docs/resource-view/split/",
           title: "Split & columns",
           summary: "Master-detail, and a board grouped by a key.",
           icon: Columns3,
         },
         {
-          href: "/docs/resource-view/calendar",
+          href: "/docs/resource-view/calendar/",
           title: "Calendar & timeline",
           summary: "Laying a collection out over time.",
           icon: CalendarRange,
         },
         {
-          href: "/docs/resource-view/custom-variant",
+          href: "/docs/resource-view/custom-variant/",
           title: "Create your own variant",
           summary:
             "One command writes the eighth layout: a single file, yours to draw.",
@@ -312,55 +312,55 @@ export const VIEW_SECTION: DocSection = {
       label: "Behaviour",
       pages: [
         {
-          href: "/docs/resource-view/filters",
+          href: "/docs/resource-view/filters/",
           title: "Filters",
           summary:
             "A filter form, defaults that survive the first request, and the URL.",
           icon: Filter,
         },
         {
-          href: "/docs/resource-view/routing",
+          href: "/docs/resource-view/routing/",
           title: "Routing",
           summary:
             "The four primitives, the TanStack adapter, path mode and query mode.",
           icon: Route,
         },
         {
-          href: "/docs/resource-view/scopes",
+          href: "/docs/resource-view/scopes/",
           title: "Scopes & menu",
           summary:
             "Grouping resources per area of the application, and building its menu.",
           icon: Fingerprint,
         },
         {
-          href: "/docs/resource-view/admin-layout",
+          href: "/docs/resource-view/admin-layout/",
           title: "Admin layout",
           summary:
             "AdminLayout: a ready-made decoratorComponent — sidebar, top bar, a bottom nav on mobile, and full-width views.",
           icon: PanelLeft,
         },
         {
-          href: "/docs/resource-view/permissions",
+          href: "/docs/resource-view/permissions/",
           title: "Permissions & quotas",
           summary: "canCreate, canDelete, and a creation limit with a fallback.",
           icon: KeyRound,
         },
         {
-          href: "/docs/resource-view/authentication",
+          href: "/docs/resource-view/authentication/",
           title: "Authentication",
           summary:
             "Better Auth end to end: an async scope authorization, sign-in, roles and sign-out.",
           icon: ShieldCheck,
         },
         {
-          href: "/docs/resource-view/authentication-jwt",
+          href: "/docs/resource-view/authentication-jwt/",
           title: "Authentication with JWT",
           summary:
             "API Platform and LexikJWT with react-jwt-session: a refresh token, protected scopes, roles and sign-out.",
           icon: LockKeyhole,
         },
         {
-          href: "/docs/resource-view/sub-views",
+          href: "/docs/resource-view/sub-views/",
           title: "Sub-views & tabs",
           summary: "Nesting a resource inside another one's detail page.",
           icon: Wand2,
@@ -371,7 +371,7 @@ export const VIEW_SECTION: DocSection = {
       label: "Releases",
       pages: [
         {
-          href: "/docs/resource-view/changelog",
+          href: "/docs/resource-view/changelog/",
           title: "Changelog",
           summary: "What each release of react-resource-view added, fixed and changed.",
           icon: History,
@@ -393,7 +393,7 @@ export function findSection(pathname: string): DocSection | undefined {
 }
 
 export function findPage(pathname: string): DocPage | undefined {
-  return ALL_PAGES.find((page) => page.href === stripTrailingSlash(pathname))
+  return ALL_PAGES.find((page) => stripTrailingSlash(page.href) === stripTrailingSlash(pathname))
 }
 
 /** The pages either side of `pathname`, for the footer pager. */
@@ -402,7 +402,7 @@ export function findNeighbours(pathname: string): {
   next?: DocPage
 } {
   const index = ALL_PAGES.findIndex(
-    (page) => page.href === stripTrailingSlash(pathname)
+    (page) => stripTrailingSlash(page.href) === stripTrailingSlash(pathname)
   )
   if (index === -1) return {}
 

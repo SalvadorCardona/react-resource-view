@@ -20,7 +20,7 @@ import { tanstackAdapter } from "react-resource-view/tanstack"
  * too would send the reader to /react-resource-view/react-resource-view/… on
  * GitHub Pages.
  */
-export const PLAYGROUND_PATH = "/playground"
+export const PLAYGROUND_PATH = "/playground/"
 
 let configured = false
 

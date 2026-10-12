@@ -72,7 +72,7 @@ function SidebarSection({
 
             <ul className="border-l border-border">
               {group.pages.map((page) => {
-                const current = pathname === page.href
+                const current = pathname === stripTrailingSlash(page.href)
                 const Icon = page.icon
 
                 return (

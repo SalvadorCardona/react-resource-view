@@ -144,7 +144,7 @@ function PlaygroundBuilderRoute() {
     <div className="mx-auto max-w-[100rem] space-y-6 px-4 py-8 lg:px-8">
       <div>
         <Link
-          to="/playground"
+          to="/playground/"
           className="mb-3 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />

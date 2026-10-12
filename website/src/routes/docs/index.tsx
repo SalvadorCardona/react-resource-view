@@ -7,6 +7,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
  */
 export const Route = createFileRoute("/docs/")({
   beforeLoad: () => {
-    throw redirect({ to: "/docs/resource-view/quickstart", replace: true })
+    throw redirect({ to: "/docs/resource-view/quickstart/", replace: true })
   },
 })

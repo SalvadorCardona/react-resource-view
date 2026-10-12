@@ -24,7 +24,7 @@ const BASE = process.env.DOCS_BASE ?? "/"
 const OUT_DIR = join(import.meta.dirname, "..", "dist", "client")
 
 function absoluteUrl(path: string): string {
-  const suffix = path === "/" ? "" : path.slice(1)
+  const suffix = path === "/" ? "" : `${path.slice(1).replace(/\/$/, "")}/`
   return `${SITE_ORIGIN}${BASE}${suffix}`
 }
 

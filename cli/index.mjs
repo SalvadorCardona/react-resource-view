@@ -490,7 +490,7 @@ Declare it on a resource, and the reader gets a switcher:
   }
 
 The variant answers to "${toSlug(name)}" in the URL.
-Documentation: https://salvadorcardona.github.io/react-resource-view/docs/resource-view/custom-variant`)
+Documentation: https://cardona.digital/react-resource-view/docs/resource-view/custom-variant`)
 
   return 0
 }

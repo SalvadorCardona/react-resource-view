@@ -17,7 +17,7 @@ export function NewsletterBuilderLink() {
         Start one from the email builder: what it saves is filed here, as a draft.
       </p>
       <Link
-        to="/playground/builder"
+        to="/playground/builder/"
         search={{ kit: "email" }}
         className="flex shrink-0 items-center gap-1.5 self-start font-medium text-foreground transition hover:text-primary sm:self-auto"
       >
