@@ -1,4 +1,6 @@
+import { Link } from "@tanstack/react-router"
 import { Github } from "lucide-react"
+import { version as RESOURCE_VIEW_VERSION } from "react-resource-view/package.json"
 import { Logo } from "@/components/Logo"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
 
@@ -30,6 +32,10 @@ const BADGES = [
 
 /**
  * The footer of every page.
+ *
+ * It also says which release of react-resource-view the site — the playground
+ * included — runs on, read from the package it was built with. The npm badge
+ * above gives the latest release: when the two differ, the site is behind.
  *
  * Rendered once from the root document rather than per route, so a page added
  * tomorrow carries it without remembering to.
@@ -87,6 +93,13 @@ export function Footer() {
             <Github className="size-3.5" />
             react-resource-view
           </a>
+          <Link
+            to="/docs/resource-view/changelog/"
+            hash={`v${RESOURCE_VIEW_VERSION}`}
+            className="transition hover:text-foreground"
+          >
+            Running react-resource-view v{RESOURCE_VIEW_VERSION}
+          </Link>
         </nav>
       </div>
     </footer>
