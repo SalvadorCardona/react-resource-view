@@ -1,18 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
   ArrowRight,
-  BookOpen,
   Boxes,
   Check,
-  Compass,
   Languages,
   LayoutGrid,
   Link2,
   MousePointerClick,
   X,
-  PlayCircle,
   PlugZap,
-  Rocket,
   ShieldCheck,
   Terminal,
 } from "lucide-react"
@@ -24,13 +20,11 @@ import {
   UrlIllustration,
   ValidationIllustration,
 } from "@/components/FeatureIllustrations"
-import { BackendLogo } from "@/components/BackendLogo"
 import { CodeBlock } from "@/components/CodeBlock"
 import { CopyCommand } from "@/components/CopyCommand"
 import { Header } from "@/components/Header"
 import { HeroBackdrop } from "@/components/HeroBackdrop"
 import { HomeBuilder } from "@/components/HomeBuilder"
-import { InstallCommand } from "@/components/InstallCommand"
 import { LayoutGallery } from "@/components/LayoutGallery"
 import { Logo } from "@/components/Logo"
 import {
@@ -44,9 +38,9 @@ import {
   NotesViewsIllustration,
   OneDescriptionIllustration,
 } from "@/components/StoryIllustrations"
-import { BACKENDS, namedBackends, starterSection } from "@/lib/backends"
+import { VideoDialog } from "@/components/VideoDialog"
+import { namedBackends } from "@/lib/backends"
 import { FORM_SECTION, VIEW_SECTION } from "@/lib/navigation"
-import { INSTALL_COMMAND, INSTALL_PACKAGES } from "@/lib/install"
 import { cn } from "@/lib/cn"
 
 export const Route = createFileRoute("/")({
@@ -58,13 +52,9 @@ function LandingPage() {
     <div className="min-h-screen">
       <Header />
       <main>
-        <WorksWith />
         <Hero />
-        <GetStarted />
         <BeforeAfter />
         <WhenToUse />
-        <TourVideo />
-        <Packages />
         <OneDescription />
         <Layouts />
         <DemoVideo />
@@ -78,226 +68,174 @@ function LandingPage() {
 
 /* -------------------------------------------------------------------------- */
 
-const STATS = [
-  { value: "2", label: "packages" },
-  { value: "34", label: "field controllers" },
-  { value: "7", label: "layouts" },
-  { value: "0", label: "column definitions" },
+const PACKAGES = [
+  {
+    section: VIEW_SECTION,
+    role: "The product",
+    Illustration: ViewPackageIllustration,
+    points: [
+      "Seven layouts over one collection — table, cards, split, calendar…",
+      "Filters, pagination and the chosen layout all live in the URL",
+      "Bring your own router: four primitives, or the TanStack adapter",
+    ],
+  },
+  {
+    section: FORM_SECTION,
+    role: "The form engine underneath",
+    Illustration: FormPackageIllustration,
+    points: [
+      "34 field controllers, from a text input to a page builder",
+      "Groups, steps, sub-forms and repeatable rows",
+      "API Platform violations mapped straight back onto the fields",
+    ],
+  },
 ]
 
+/**
+ * The whole way in, said once: what the product is, the two packages it is
+ * made of, and the one command that starts it on the reader's own API.
+ *
+ * On a wide screen the packages sit on the left and the command on the right,
+ * read side by side; on a phone the command comes first, so it is on the
+ * first screen rather than under two cards.
+ */
 function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border">
       <HeroBackdrop />
 
-      <div className="relative mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
-        <h1
-          className="rise mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl"
-          style={{ animationDelay: "100ms" }}
-        >
-          The back office of your REST API, generated from a{" "}
-          <span className="bg-gradient-to-r from-form to-view bg-clip-text text-transparent">
-            declaration
-          </span>
-          : lists, detail pages, forms, filters
-        </h1>
-
-        <p
-          className="rise mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
-          style={{ animationDelay: "160ms" }}
-        >
-          For teams with an API — API Platform, Spring, Django, FastAPI, Strapi,
-          Supabase or any REST API that publishes OpenAPI — who have to ship an admin interface and would
-          rather not hand-write every table, form and filter.
-        </p>
-
-        <p
-          className="rise mx-auto mt-4 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground"
-          style={{ animationDelay: "190ms" }}
-        >
-          <strong className="font-medium text-foreground">
-            react-resource-view
-          </strong>{" "}
-          is the product: install it and you have the back office.{" "}
-          <strong className="font-medium text-foreground">react-data-form</strong>{" "}
-          is the form engine it is built on — a building block you can also use on
-          its own, without any view.
-        </p>
-
-        {/* One way in that stands out — a project on your own API, in one
-            command — one beside it for those who want to see it work first,
-            and the rest as plain links. */}
-        <div
-          className="rise mt-10 flex flex-wrap items-center justify-center gap-3"
-          style={{ animationDelay: "220ms" }}
-        >
-          <a
-            href="#get-started"
-            className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:opacity-95"
+      <div className="relative mx-auto max-w-7xl px-4 pt-12 pb-16 lg:px-8 lg:pt-20 lg:pb-24">
+        <header className="mx-auto max-w-4xl text-center">
+          <h1
+            className="rise text-balance text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl lg:text-[3.5rem]"
+            style={{ animationDelay: "100ms" }}
           >
-            <Rocket className="size-5" />
-            Get started
-          </a>
-          <a
-            href="#try"
-            className="flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 text-sm font-medium transition hover:bg-muted"
-          >
-            <MousePointerClick className="size-4" />
-            Try it right here
-          </a>
-        </div>
+            The back office of your REST API, generated from a{" "}
+            <span className="bg-gradient-to-r from-form to-view bg-clip-text text-transparent">
+              declaration
+            </span>
+          </h1>
 
-        <div
-          className="rise mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm"
-          style={{ animationDelay: "250ms" }}
-        >
-          <Link
-            to="/docs/resource-view/quickstart/"
-            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
+          <p
+            className="rise mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg"
+            style={{ animationDelay: "160ms" }}
           >
-            <BookOpen className="size-4" />
-            Documentation
-          </Link>
-          <Link
-            to="/playground/"
-            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
-          >
-            <Compass className="size-4" />
-            Playground
-          </Link>
-          <a
-            href="#tour"
-            className="flex items-center gap-1.5 text-muted-foreground transition hover:text-foreground"
-          >
-            <PlayCircle className="size-4" />
-            Watch the 1-minute tour
-          </a>
-        </div>
+            Lists, detail pages, forms and filters for every resource — declared
+            once, never drawn by hand.
+          </p>
+        </header>
 
-        <div className="rise mt-10" style={{ animationDelay: "280ms" }}>
-          <InstallCommand packages={INSTALL_PACKAGES} />
-        </div>
+        <div className="mt-10 grid gap-5 lg:mt-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
+          <ul
+            className="rise order-2 grid gap-4 lg:order-1"
+            style={{ animationDelay: "280ms" }}
+          >
+            {PACKAGES.map((item) => (
+              <li key={item.section.id}>
+                <PackageCard {...item} />
+              </li>
+            ))}
+          </ul>
 
-        <dl
-          className="rise mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4"
-          style={{ animationDelay: "340ms" }}
-        >
-          {STATS.map(({ value, label }) => (
-            <div key={label}>
-              <dt className="text-2xl font-semibold tracking-tight">{value}</dt>
-              <dd className="mt-0.5 text-xs text-muted-foreground">{label}</dd>
+          <div
+            id="get-started"
+            className="rise order-1 scroll-mt-20 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur sm:p-6 lg:order-2"
+            style={{ animationDelay: "220ms" }}
+          >
+            <h2 className="text-sm font-semibold tracking-tight">
+              Start on the API you already have
+            </h2>
+            <p className="mt-1 mb-4 text-xs text-muted-foreground">
+              One command writes a Vite and React back office around it.
+            </p>
+
+            <StarterPicker />
+
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-border pt-5">
+              <a
+                href="#try"
+                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:opacity-95"
+              >
+                <MousePointerClick className="size-4" />
+                Try it live
+              </a>
+              <VideoDialog
+                src="two-libraries.mp4"
+                poster="two-libraries-poster.jpg"
+                title="Two libraries, one idea: react-data-form and react-resource-view in one minute"
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                Watch the demo · 1 min
+              </VideoDialog>
             </div>
-          ))}
-        </dl>
+          </div>
+        </div>
       </div>
     </section>
   )
 }
 
-/* -------------------------------------------------------------------------- */
+/** One package: what it draws, what it is to the other, and three things it does. */
+function PackageCard({
+  section,
+  role,
+  Illustration,
+  points,
+}: (typeof PACKAGES)[number]) {
+  const isForm = section.accent === "form"
 
-/**
- * The backends a resource renders against, at a glance, right under the header:
- * each logo opens its section of the starter page.
- */
-function WorksWith() {
   return (
-    <section
-      aria-labelledby="works-with"
-      className="border-b border-border bg-muted/25 py-10"
+    <Link
+      to={`/docs/${section.id}/`}
+      className={cn(
+        "group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/85 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:shadow-xl sm:flex-row",
+        isForm ? "hover:border-form/50" : "hover:border-view/50"
+      )}
     >
-      <div className="mx-auto max-w-5xl px-4 lg:px-8">
-        <h2
-          id="works-with"
-          className="text-center text-xs font-medium uppercase tracking-wider text-muted-foreground"
-        >
-          Works with
-        </h2>
+      <span
+        className={cn(
+          "absolute inset-y-0 left-0 z-10 w-1",
+          isForm ? "bg-form" : "bg-view"
+        )}
+        aria-hidden
+      />
 
-        <ul className="mt-6 flex flex-wrap items-stretch justify-center gap-3">
-          {BACKENDS.map((backend) => (
-            <li key={backend.id}>
-              <Link
-                to="/docs/resource-view/starter/"
-                hash={starterSection(backend)}
-                title={`${backend.name} — start a project on it`}
-                className="group flex h-full w-36 flex-col items-center justify-center gap-2.5 rounded-xl border border-transparent px-3 py-3 text-muted-foreground transition duration-300 hover:-translate-y-0.5 hover:border-border hover:bg-background hover:text-foreground hover:shadow-sm"
-              >
-                <BackendLogo
-                  backend={backend}
-                  className="transition-transform duration-300 group-hover:scale-105"
-                />
-                <span className="text-center text-xs">{backend.name}</span>
-              </Link>
+      {/* What the package does, drawn beside its name. */}
+      <div className="flex shrink-0 items-center border-b border-border bg-muted/40 bg-dotted px-4 py-3 sm:w-[40%] sm:border-r sm:border-b-0">
+        <div className="aspect-[360/150] w-full">
+          <Illustration />
+        </div>
+      </div>
+
+      <div className="relative min-w-0 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2
+            className={cn(
+              "font-mono text-sm font-semibold",
+              isForm ? "text-form" : "text-view"
+            )}
+          >
+            {section.pkg}
+          </h2>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
+        </div>
+        <p className="mt-0.5 text-xs text-muted-foreground">{role}</p>
+
+        <ul className="mt-3 space-y-1.5 text-[13px] leading-snug text-muted-foreground">
+          {points.map((point) => (
+            <li key={point} className="flex gap-2">
+              <span
+                className={cn(
+                  "mt-1.5 size-1 shrink-0 rounded-full",
+                  isForm ? "bg-form" : "bg-view"
+                )}
+              />
+              {point}
             </li>
           ))}
         </ul>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Writing your API in Python?{" "}
-          <Link
-            to="/docs/resource-view/python/"
-            className="font-medium text-foreground underline-offset-4 hover:text-view hover:underline"
-          >
-            FastAPI and Django side by side
-          </Link>
-          .
-        </p>
       </div>
-    </section>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Where "Get started" lands: the backend, then the one command that writes a
- * back office on it, then what to type next.
- */
-function GetStarted() {
-  return (
-    <section
-      id="get-started"
-      className="mx-auto max-w-5xl scroll-mt-20 px-4 pt-20 lg:px-8"
-    >
-      <header className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-medium uppercase tracking-wider text-view">
-          Get started
-        </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-          Start a project in one command
-        </h2>
-        <p className="mt-3 text-muted-foreground">
-          Pick the API you already have. The starter writes a Vite and React back
-          office around it — the dialect wired, one example resource, and the
-          commands that turn the API's OpenAPI schema into TypeScript.
-        </p>
-      </header>
-
-      <div className="mt-10">
-        <StarterPicker />
-      </div>
-
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        <Link
-          to="/docs/resource-view/quickstart/"
-          className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
-        >
-          The 5-minute quickstart — from the command to a running list
-          <ArrowRight className="size-4" />
-        </Link>
-      </p>
-
-      <p className="mt-2 text-center text-sm text-muted-foreground">
-        <Link
-          to="/docs/resource-view/starter/"
-          className="inline-flex items-center gap-1.5 font-medium text-foreground transition hover:text-view"
-        >
-          The full starter page — every flag, every file it writes
-          <ArrowRight className="size-4" />
-        </Link>
-      </p>
-    </section>
+    </Link>
   )
 }
 
@@ -436,46 +374,6 @@ function WhenToUse() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The way in: a one-minute tour that says there are two packages and what each
- * one does, before the cards below go into the detail of each.
- */
-function TourVideo() {
-  return (
-    <section id="tour" className="mx-auto max-w-5xl px-4 pt-20 lg:px-8">
-      <header className="mx-auto max-w-2xl text-center">
-        <p className="bg-gradient-to-r from-form to-view bg-clip-text text-xs font-medium uppercase tracking-wider text-transparent">
-          Two libraries, one idea
-        </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-          Describe your app. Don’t draw it.
-        </h2>
-        <p className="mt-3 text-muted-foreground">
-          <strong className="font-medium whitespace-nowrap text-foreground">
-            react-data-form
-          </strong>{" "}
-          builds complex forms from a plain object;{" "}
-          <strong className="font-medium whitespace-nowrap text-foreground">
-            react-resource-view
-          </strong>{" "}
-          builds a whole CRUD application from one resource declaration. One minute,
-          with sound.
-        </p>
-      </header>
-
-      <div className="mt-10">
-        <SiteVideo
-          src="two-libraries.mp4"
-          poster="two-libraries-poster.jpg"
-          title="Two libraries, one idea: react-data-form and react-resource-view in one minute"
-        />
-      </div>
-    </section>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-
-/**
  * What the two packages build together, filmed: the page builder is not a
  * third product but a form (the blocks) whose records a resource lists and
  * reopens.
@@ -519,115 +417,6 @@ function DemoVideo() {
           <ArrowRight className="size-4" />
         </Link>
       </p>
-    </section>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-
-const PACKAGES = [
-  {
-    section: FORM_SECTION,
-    Illustration: FormPackageIllustration,
-    points: [
-      "34 field controllers, from a text input to a page builder",
-      "Groups, steps, sub-forms and repeatable rows",
-      "API Platform violations mapped straight back onto the fields",
-    ],
-    install: "pnpm add react-data-form react-mini-i18n resource-registry",
-  },
-  {
-    section: VIEW_SECTION,
-    Illustration: ViewPackageIllustration,
-    points: [
-      "Seven layouts over one collection — table, cards, split, calendar…",
-      "Filters, pagination and the chosen layout all live in the URL",
-      "Bring your own router: four primitives, or the TanStack adapter",
-    ],
-    install: INSTALL_COMMAND,
-  },
-]
-
-function Packages() {
-  return (
-    <section className="mx-auto max-w-6xl px-4 py-20 lg:px-8">
-      <div className="grid gap-6 md:grid-cols-2">
-        {PACKAGES.map(({ section, Illustration, points, install }) => {
-          const isForm = section.accent === "form"
-
-          return (
-            <Link
-              key={section.id}
-              to={`/docs/${section.id}/`}
-              className={cn(
-                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl",
-                isForm ? "hover:border-form/50" : "hover:border-view/50"
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute inset-x-0 top-0 z-10 h-1",
-                  isForm ? "bg-form" : "bg-view"
-                )}
-              />
-
-              {/* A wash of the package's own hue, on hover. */}
-              <span
-                className={cn(
-                  "pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100",
-                  isForm
-                    ? "bg-gradient-to-br from-form-soft/50 to-transparent"
-                    : "bg-gradient-to-br from-view-soft/50 to-transparent"
-                )}
-                aria-hidden
-              />
-
-              {/* What the package does, drawn edge to edge above its name. */}
-              <div className="relative -mx-6 -mt-6 mb-6 h-40 border-b border-border bg-muted/40 bg-dotted px-4 py-3 sm:h-44">
-                <Illustration />
-              </div>
-
-              <div className="relative">
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    {section.label}
-                  </h2>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
-                </div>
-                <p
-                  className={cn(
-                    "mt-1 font-mono text-xs",
-                    isForm ? "text-form" : "text-view"
-                  )}
-                >
-                  {section.pkg}
-                </p>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {section.tagline}
-                </p>
-
-                <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-                  {points.map((point) => (
-                    <li key={point} className="flex gap-2.5">
-                      <span
-                        className={cn(
-                          "mt-2 size-1 shrink-0 rounded-full",
-                          isForm ? "bg-form" : "bg-view"
-                        )}
-                      />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-
-                <code className="mt-6 block overflow-x-auto rounded-lg border border-border bg-code-bg px-3 py-2 font-mono text-[11px] text-muted-foreground">
-                  {install}
-                </code>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
     </section>
   )
 }

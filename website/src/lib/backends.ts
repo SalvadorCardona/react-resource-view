@@ -1,11 +1,10 @@
 /**
  * The backends react-resource-view talks to, in the order the site shows them.
  *
- * One list for the landing page's logos, its "Get started" picker, the backends
- * feature card and the starter page's commands, so none of them can name a
- * backend the others leave out. `id` is the `--backend` value of
- * `npx react-resource-view init` (`cli/init.mjs`), and `backends.test.ts`
- * checks the two lists still match.
+ * One list for the landing page's backend picker, the backends feature card and
+ * the starter page's commands, so none of them can name a backend the others
+ * leave out. `id` is the `--backend` value of `npx react-resource-view init`
+ * (`cli/init.mjs`), and `backends.test.ts` checks the two lists still match.
  */
 export interface Backend {
   /** The `--backend` flag of `init`. */
