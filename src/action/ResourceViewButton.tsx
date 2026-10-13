@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useRef } from "react"
 import { Button } from "@/ui/button"
 import { generateLink } from "@/routes/routes"
 import { ActionList } from "react-data-form"
@@ -79,11 +79,16 @@ export default function ResourceViewButton({
   // onInitViewResource — so the created item is tied to its parent.
   const currentDefaultData = defaultData ?? currentResourceContext?.defaultData
 
+  // Read when the record is saved, not when the button mounted: the list's
+  // `fetchData` closes over its filter, which may have changed since.
+  const fetchDataRef = useRef(currentResourceContext.fetchData)
+  fetchDataRef.current = currentResourceContext.fetchData
+
   useEffect(() => {
     if (!opensOverThePage) return
     const sub = currentResource.onChange.subscribe(() => {
       isOpen.setFalse()
-      currentResourceContext.fetchData()
+      fetchDataRef.current()
     })
     return () => sub.unsubscribe()
   }, [currentResource, opensOverThePage])
