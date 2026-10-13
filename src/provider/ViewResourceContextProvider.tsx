@@ -99,6 +99,7 @@ export default function ViewResourceContextProvider({
   const [isLoading, setIsLoading] = useState<boolean>(needFetch)
   const [error, setError] = useState<boolean>(false)
   const fetchTokenRef = useRef(0)
+  const fetchInThisTickRef = useRef<Promise<void> | null>(null)
   const isFirstFilterEffectRef = useRef(true)
 
   if (!viewResource.view) {
@@ -109,7 +110,7 @@ export default function ViewResourceContextProvider({
     throw new Error("Resource not found")
   }
 
-  const fetchData = async () => {
+  const loadData = async () => {
     if (error) {
       setError(false)
     }
@@ -132,6 +133,18 @@ export default function ViewResourceContextProvider({
     } finally {
       if (token === fetchTokenRef.current) setIsLoading(false)
     }
+  }
+
+  // Every button of a list hears the same save and asks for the same rows:
+  // the calls made in one go share a single request.
+  const fetchData = () => {
+    if (fetchInThisTickRef.current) return fetchInThisTickRef.current
+    const fetching = loadData()
+    fetchInThisTickRef.current = fetching
+    queueMicrotask(() => {
+      fetchInThisTickRef.current = null
+    })
+    return fetching
   }
 
   // Only a dialect that knows a push channel names one. Strapi and Supabase
