@@ -44,16 +44,34 @@ jobs:
       # After a real npm publish, point website/ at the version that was
       # just released so its next deploy (triggered by the push below)
       # ships the new library instead of whatever was previously pinned.
+      #
+      # npm takes a moment to serve a version it has just accepted: asking for
+      # "latest" two seconds after the publish got the previous release, and
+      # 0.14.0 left the site on 0.13.0 with only a lockfile refresh. So the
+      # step waits for the exact version changesets published, and fails —
+      # rather than committing nothing — if npm never serves it.
       - name: Bump website's react-resource-view to the published version
         if: steps.changesets.outputs.published == 'true'
         working-directory: website
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          pnpm update react-resource-view --latest
+          version=$(node -p 'JSON.parse(process.env.PUBLISHED_PACKAGES).find((p) => p.name === "react-resource-view")?.version ?? ""')
+          if [ -z "$version" ]; then
+            exit 0
+          fi
+          for attempt in $(seq 1 30); do
+            if npm view "react-resource-view@$version" version > /dev/null 2>&1; then
+              break
+            fi
+            sleep 10
+          done
+          pnpm add "react-resource-view@^$version"
           if git diff --quiet -- package.json pnpm-lock.yaml; then
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json pnpm-lock.yaml
-          git commit -m "chore(website): bump react-resource-view to latest"
+          git commit -m "chore(website): bump react-resource-view to $version"
           git push
