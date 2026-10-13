@@ -1,5 +1,56 @@
 # react-resource-view
 
+## 0.15.0
+
+### Minor Changes
+
+- b1f8272: Open a card of a board, select several and move them together, instead of only
+  dragging one card at a time onto a column.
+
+  - `behavior.openRecordIn` (`"drawer"`, `"popup"` or `"window"`) makes the whole
+    card clickable — hover and focus states, Enter from the keyboard — and opens
+    the record's `read` view: in a panel on the right or a dialog, both written
+    into the URL as a child view of the list (`…/tasks/list/tasks/read/12`, which
+    `parseLink` now reads), so the link is shareable and Back closes it; or on
+    the record's own page, through `generateLink`. The panel has a way to edit the
+    record, traps the focus and gives it back to the card.
+  - A button, a link, a menu, a checkbox or a drag handle drawn in a card keeps
+    its click, without any `stopPropagation`: the card only opens on a click that
+    lands on none of them (`data-card-control` marks anything else), and not when
+    text is being selected.
+  - Cards can be selected — checkbox, Ctrl/Cmd+click, Shift+click for a range, a
+    long press on a phone, Escape to clear — and a bar offers "Move to…",
+    `behavior.bulkActions` and "Deselect all". Dragging a selected card moves the
+    whole selection under an "N cards" preview. Each record is updated through
+    the repository and drawn in its new column at once; one that fails goes back,
+    and a message says how many could not be moved. `behavior.selectable: false`
+    turns selection off.
+  - Each column scrolls on its own, and an empty column shows where to drop.
+
+- d970551: Add a Django REST Framework dialect: `djangoDialect()` reads DRF's
+  `{ count, next, previous, results }` page (or a bare array when the view has no
+  paginator), pages with `page` / `page_size` — or `limit` / `offset` with
+  `pagination: "limit-offset"` — sorts with `ordering=-field`, sends filters as
+  query parameters for django-filter, addresses a record at `/articles/{id}/` with
+  DRF's trailing slash, and pins a 400's `{ field: ["message"] }` on its input.
+  Options: `primaryKey`, `pagination`, `pageSizeParam`, `defaultItemsPerPage`,
+  `orderParam` and `trailingSlash`.
+
+  `npx react-resource-view init -b django` starts a back office on it, dumping the
+  schema drf-spectacular serves at `/api/schema/?format=json`.
+
+### Patch Changes
+
+- 9582599: `init` writes the `react-data-form`, `react-mini-i18n`, `resource-registry` and
+  `@tanstack/react-router` ranges from the package's own `peerDependencies`, so a
+  generated starter installs without `--legacy-peer-deps` instead of failing with
+  `ERESOLVE` on a hard-coded `react-data-form@^0.2.1` against a `^0.1.0` peer.
+- 35a40a9: A record saved from a button opening over a list (`openIn: "popup"` or
+  `"drawer"`) reads the list again with the filter it has now, instead of the one
+  the button mounted with — a list filtered on « A », then on « B », no longer
+  shows the rows of « A » under « B » after a save. The buttons of every row also
+  share a single request instead of each reading the list again.
+
 ## 0.14.0
 
 ### Minor Changes
