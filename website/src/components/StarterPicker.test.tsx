@@ -20,25 +20,42 @@ function renderPicker() {
   return render(<RouterProvider router={router} />)
 }
 
+/** The command, whose words the picker wraps one by one so it breaks between them. */
+function command(ending: RegExp) {
+  return (_: string, element: Element | null) =>
+    element?.tagName === "CODE" &&
+    /^\$ npx react-resource-view init my-admin /.test(element.textContent ?? "") &&
+    ending.test(element.textContent ?? "")
+}
+
 describe("StarterPicker", () => {
   it("shows the command of the backend picked, and links to its section", async () => {
     const user = userEvent.setup()
     renderPicker()
 
     expect(
-      await screen.findByText(/init my-admin -b api-platform -u https:\/\/localhost$/)
+      await screen.findByText(command(/-b api-platform -u https:\/\/localhost$/))
     ).toBeVisible()
 
     await user.click(screen.getByRole("radio", { name: /FastAPI/ }))
 
     expect(screen.getByRole("radio", { name: /FastAPI/ })).toBeChecked()
     expect(
-      screen.getByText(/init my-admin -b fastapi -u http:\/\/localhost:8000$/)
+      screen.getByText(command(/-b fastapi -u http:\/\/localhost:8000$/))
     ).toBeVisible()
     expect(screen.getByRole("link", { name: /FastAPI: the setup/ })).toHaveAttribute(
       "href",
       "/docs/resource-view/starter#starter-fastapi"
     )
+    expect(
+      screen.getByRole("link", { name: /FastAPI and Django side by side/ })
+    ).toHaveAttribute("href", "/docs/resource-view/python")
+
+    await user.click(screen.getByRole("radio", { name: /Strapi/ }))
+
+    expect(
+      screen.queryByRole("link", { name: /FastAPI and Django side by side/ })
+    ).not.toBeInTheDocument()
   })
 
   it("offers every backend with its logo named for screen readers", async () => {
