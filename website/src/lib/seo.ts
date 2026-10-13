@@ -4,7 +4,28 @@ import { stripTrailingSlash } from "@/lib/navigation"
 /** The domain the site is actually reachable at — GitHub Pages only hosts it. */
 export const SITE_ORIGIN = "https://cardona.digital"
 
-const AUTHOR = { "@type": "Person", name: "Salvador Cardona", url: SITE_ORIGIN }
+/** The host GitHub Pages publishes the build on, behind cardona.digital. */
+const PAGES_HOST = "salvadorcardona.github.io"
+
+/**
+ * Sends a reader who lands on the GitHub Pages address to the same page on
+ * cardona.digital — path, query string and anchor included.
+ *
+ * GitHub Pages cannot answer with a 301, and a `<meta http-equiv="refresh">`
+ * is not an option either: cardona.digital is a proxy that fetches these very
+ * pages from GitHub Pages (`deploy/traefik/github-pages.yml` in the portfolio
+ * repository), so an unconditional redirect would follow the reader there and
+ * loop. Only the browser knows which host it is on, hence a script, blocking
+ * and first in `<head>` so nothing renders before it leaves. Crawlers run it
+ * too and read it as a redirect, on top of the canonical every page carries.
+ */
+export const PAGES_REDIRECT_SCRIPT = `
+if (location.hostname === ${JSON.stringify(PAGES_HOST)}) {
+  location.replace(${JSON.stringify(SITE_ORIGIN)} + location.pathname + location.search + location.hash);
+}
+`
+
+const AUTHOR ={ "@type": "Person", name: "Salvador Cardona", url: SITE_ORIGIN }
 
 /**
  * An absolute, canonical URL for a path served under the site's base.

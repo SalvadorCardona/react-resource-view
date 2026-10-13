@@ -12,6 +12,7 @@ import { findPage, findSection, SECTIONS, stripTrailingSlash } from "@/lib/navig
 import {
   canonicalUrl,
   defaultOgImageUrl,
+  PAGES_REDIRECT_SCRIPT,
   softwareSourceCodeJsonLd,
   techArticleJsonLd,
   tourVideoJsonLd,
@@ -118,6 +119,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* First, and blocking: a reader on github.io leaves before anything paints. */}
+        <script dangerouslySetInnerHTML={{ __html: PAGES_REDIRECT_SCRIPT }} />
         <HeadContent />
         {/* Blocking on purpose: the theme has to be settled before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
