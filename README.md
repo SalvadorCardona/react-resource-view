@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://cardona.digital/react-resource-view/playground">
+  <a href="https://cardona.digital/react-resource-view/playground/">
     <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Spring Boot, Strapi, Supabase, FastAPI or Django and to the URL" width="100%">
   </a>
 </p>
@@ -7,10 +7,13 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/react-resource-view"><img alt="npm" src="https://img.shields.io/npm/v/react-resource-view?color=3b7dd8&label=npm"></a>
   <a href="https://github.com/SalvadorCardona/react-resource-view/blob/main/LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-f0a35a"></a>
-  <a href="https://cardona.digital/react-resource-view/playground"><img alt="Playground" src="https://img.shields.io/badge/playground-live-3ecf8e"></a>
+  <a href="https://cardona.digital/react-resource-view/"><img alt="Documentation" src="https://img.shields.io/badge/docs-cardona.digital-7c5cff"></a>
+  <a href="https://cardona.digital/react-resource-view/playground/"><img alt="Playground" src="https://img.shields.io/badge/playground-live-3ecf8e"></a>
 </p>
 
 # react-resource-view
+
+**Documentation: [cardona.digital/react-resource-view](https://cardona.digital/react-resource-view/)**
 
 CRUD views for REST APIs — API Platform, Spring Boot, Supabase, Strapi,
 FastAPI, Django, or any REST API that publishes OpenAPI. You declare a resource — its
@@ -51,7 +54,7 @@ for the application around them.
 
 A page builder declared as data: blocks on the left, the live page on the
 right, and the JSON behind it. [Watch the full video (with sound)](https://cardona.digital/react-resource-view/videos/page-builder.mp4)
-or [open the page builder](https://cardona.digital/react-resource-view/playground/builder).
+or [open the page builder](https://cardona.digital/react-resource-view/playground/builder/).
 
 <p align="center">
   <a href="https://cardona.digital/react-resource-view/videos/page-builder.mp4">
@@ -62,13 +65,13 @@ or [open the page builder](https://cardona.digital/react-resource-view/playgroun
 ## Documentation
 
 Everything below, at length and with the examples running rather than quoted:
-[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view)
+[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/)
 — a page per layout, per filter, per dialect — and a
-[playground](https://cardona.digital/react-resource-view/playground):
+[playground](https://cardona.digital/react-resource-view/playground/):
 a whole back office built from eight resource declarations, every edit real,
 every screen a URL, and the source of each screen one click away.
 
-[![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://cardona.digital/react-resource-view/playground)
+[![The playground's table layout: an Articles list with its layout switcher, its filter bar, and rows of titles, authors, categories, statuses and dates, each editable in place and each offering open, edit and delete](diagrams/react-resource-view.playground.png)](https://cardona.digital/react-resource-view/playground/)
 
 ## Architecture
 
@@ -376,7 +379,7 @@ const articles = createViewResource<Article>("articles", {
 
 The whole recipe — the config, the enums, the per-backend
 specifics for API Platform, Strapi, Supabase, FastAPI and Django, and when to regenerate — is on
-[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types).
+[the documentation site](https://cardona.digital/react-resource-view/docs/resource-view/openapi-types/).
 
 ## Start a project
 
@@ -414,8 +417,8 @@ One starter per technology, ready to paste:
 
 Every question has a flag — `--backend spring-boot --api-url http://localhost:8080
 --schema-url … --yes` — see `npx react-resource-view init --help` and
-[the starter page](https://cardona.digital/react-resource-view/docs/resource-view/starter).
-Writing your API in Python? [FastAPI and Django side by side](https://cardona.digital/react-resource-view/docs/resource-view/python).
+[the starter page](https://cardona.digital/react-resource-view/docs/resource-view/starter/).
+Writing your API in Python? [FastAPI and Django side by side](https://cardona.digital/react-resource-view/docs/resource-view/python/).
 
 ## Installation
 
@@ -548,9 +551,9 @@ createViewResource("tasks", {
 ```
 
 [The admin layout
-page](https://cardona.digital/react-resource-view/docs/resource-view/admin-layout)
+page](https://cardona.digital/react-resource-view/docs/resource-view/admin-layout/)
 goes through the navigation, the slots and the theme; the
-[playground](https://cardona.digital/react-resource-view/playground?view=admin/admin_tasks/list)
+[playground](https://cardona.digital/react-resource-view/playground/?view=admin/admin_tasks/list)
 runs on it, its task board full width.
 
 ## Layouts
@@ -630,7 +633,7 @@ view: {
 `--icon <LucideIcon>` picks the switcher's icon, `--jsx` writes JavaScript,
 `--dry-run` prints the file instead of writing it, and `--yes` never asks — see
 `npx react-resource-view --help`. [Create your own view
-variant](https://cardona.digital/react-resource-view/docs/resource-view/custom-variant)
+variant](https://cardona.digital/react-resource-view/docs/resource-view/custom-variant/)
 takes the generated file apart, and runs one.
 
 ## Filters

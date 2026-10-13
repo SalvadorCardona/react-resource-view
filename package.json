@@ -28,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/SalvadorCardona/react-resource-view/issues"
   },
-  "homepage": "https://cardona.digital",
+  "homepage": "https://cardona.digital/react-resource-view/",
   "type": "module",
   "sideEffects": [
     "**/*.css"
