@@ -2,6 +2,7 @@ import { FC, ReactNode } from "react"
 import { ResourceDefaults } from "@/ResourceDefinition"
 import { ViewResource } from "@/ViewResource"
 import { ScopeConfig } from "@/scope/scopeInterface"
+import type { NavigationLoader } from "@/navigation/NavigationIndicator"
 
 /** What `ResourceViewProvider` is configured with. */
 export interface ResourceConfigInterface {
@@ -17,6 +18,17 @@ export interface ResourceConfigInterface {
   scopeFallback?: ReactNode
   authorizationFallback?: ReactNode
   forbiddenFallback?: ReactNode
+  /**
+   * What shows while moving from one view to the next, until the new view has
+   * its data: a thin bar along the top of the screen by default. A node or a
+   * component replaces it; `false` shows nothing.
+   */
+  navigationLoader?: NavigationLoader
+  /**
+   * Whether a view fades in when it appears, sliding up a little unless the
+   * user prefers reduced motion. True by default.
+   */
+  viewTransition?: boolean
 }
 
 export interface ResourceViewConfiguration {

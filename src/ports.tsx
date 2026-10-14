@@ -2,6 +2,7 @@ import * as React from "react"
 import { ComponentType, FC, ReactNode } from "react"
 import type { Locale } from "date-fns"
 import { enUS } from "date-fns/locale"
+import { startNavigation } from "@/navigation/navigationState"
 
 /**
  * What the views need from the application hosting them.
@@ -30,7 +31,7 @@ export interface LinkPropsInterface
 }
 
 /**
- * The four router primitives the views use.
+ * The router primitives the views use: four required, one optional.
  *
  * Any router can satisfy this. An adapter for TanStack Router ships with the
  * package:
@@ -61,6 +62,13 @@ export interface NavigationPortInterface {
   Link: ComponentType<LinkPropsInterface>
   /** Redirects on render. */
   Navigate: ComponentType<{ to: string; replace?: boolean }>
+  /**
+   * Whether the router is resolving a navigation — loading a route's code or
+   * data — read as a hook. Optional: without it, a navigation counts from a
+   * click on a link of the library, or a call to its `navigate`, until the new
+   * view has loaded, which misses only the links the application draws itself.
+   */
+  useIsNavigating?: () => boolean
 }
 
 /**
@@ -199,7 +207,13 @@ export const getWeekStartsOn = (): 0 | 1 | 2 | 3 | 4 | 5 | 6 =>
 /** Reads the navigate function through the configured router. */
 export const useNavigate = (): ((
   options: NavigateOptions
-) => Promise<void> | void) => getPorts().navigation.useNavigate()
+) => Promise<void> | void) => {
+  const navigate = getPorts().navigation.useNavigate()
+  return (options) => {
+    startNavigation(options.to)
+    return navigate(options)
+  }
+}
 
 /** Reads the current location through the configured router. */
 export const useLocation = (): {
@@ -209,9 +223,26 @@ export const useLocation = (): {
 } => getPorts().navigation.useLocation()
 
 /** The configured router's link component. */
-export const Link: FC<LinkPropsInterface> = (props) => {
+export const Link: FC<LinkPropsInterface> = ({ onClick, ...props }) => {
   const Component = getPorts().navigation.Link
-  return <Component {...props} />
+  return (
+    <Component
+      {...props}
+      onClick={(event) => {
+        onClick?.(event)
+        // Only a click the router will follow in this tab starts a navigation.
+        const followed =
+          !event.defaultPrevented &&
+          event.button === 0 &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.shiftKey &&
+          !event.altKey &&
+          (!props.target || props.target === "_self")
+        if (followed) startNavigation(props.to)
+      }}
+    />
+  )
 }
 
 /** The configured router's redirect component. */

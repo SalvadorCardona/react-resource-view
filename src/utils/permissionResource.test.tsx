@@ -163,13 +163,20 @@ describe("the buttons of a list", () => {
   })
 
   it("wait for an asynchronous answer, asked once per row and action", async () => {
-    const rule = vi.fn(async ({ item }: { item?: Task }) => item?.status !== "done")
+    // Answered only when the test says so: "pending" is a state, not a race.
+    let answer!: () => void
+    const answered = new Promise<void>((resolve) => (answer = resolve))
+    const rule = vi.fn(async ({ item }: { item?: Task }) => {
+      await answered
+      return item?.status !== "done"
+    })
     renderRows(withRows(createTasks({ delete: rule })))
 
     await screen.findByText("Roast")
     // Pending: nothing is offered before it is known to be allowed.
     expect(buttonOf("1", "delete")).toBeNull()
 
+    answer()
     await waitFor(() => expect(buttonOf("1", "delete")).not.toBeNull())
     expect(buttonOf("2", "delete")).toBeNull()
     // Two rows, one action: two questions, however many renders it took.

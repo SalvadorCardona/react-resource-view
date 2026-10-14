@@ -5,6 +5,7 @@ import {
   ReactNode,
   SetStateAction,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react"
@@ -35,6 +36,9 @@ import { useForbiddenFallback } from "@/provider/useForbiddenFallback"
 import { PageLoader } from "@/ui/Loader"
 import { ActionList } from "react-data-form"
 import { getOptimisticStore } from "@/api/optimistic"
+import { useResourceViewConfiguration } from "@/provider/ResourceViewConfigurationContext"
+import { markViewLoading } from "@/navigation/navigationState"
+import { useViewEnterTransition } from "@/navigation/useViewEnterTransition"
 
 export interface CurrentViewResourceContextParams extends ViewResourceContextParams {
   decoratorComponent?: FC<{ children: ReactNode }>
@@ -215,6 +219,21 @@ export default function ViewResourceContextProvider({
   const access = useRouteAccess(currentViewWithVariant, error, permissionCache)
   const forbiddenFallback = useForbiddenFallback()
 
+  // The view on screen says when it is still loading, so a navigation lasts
+  // until it has what it needs. A view opened inside another is the other's.
+  const isBusy = isLoading || access === "pending"
+  useLayoutEffect(() => {
+    if (parentResource || !isBusy) return
+    return markViewLoading()
+  }, [isBusy, parentResource])
+
+  const viewRef = useRef<HTMLDivElement>(null)
+  const configuration = useResourceViewConfiguration()
+  useViewEnterTransition(
+    viewRef,
+    !parentResource && configuration?.viewTransition !== false && access === "allowed"
+  )
+
   const handleSetSelect = (item: JsonLdIriAble) => {
     const iri = getLdIri(item)
     if (!iri) return
@@ -251,23 +270,25 @@ export default function ViewResourceContextProvider({
         <MetaResourceComponent />
         <Decorator>
           <ViewDecorator>
-            {access === "allowed" ? (
-              <>
-                {components.top && <components.top />}
-                <View />
-                <MultiViewTab />
-                {viewResourceContextParams.childViewResource && (
-                  <ChildViewResourceDialog
-                    childViewResource={viewResourceContextParams.childViewResource}
-                  />
-                )}
-                {components.bottom && <components.bottom />}
-              </>
-            ) : access === "pending" ? (
-              <PageLoader isLoading={true} />
-            ) : (
-              forbiddenFallback
-            )}
+            <div ref={viewRef} aria-busy={isBusy || undefined}>
+              {access === "allowed" ? (
+                <>
+                  {components.top && <components.top />}
+                  <View />
+                  <MultiViewTab />
+                  {viewResourceContextParams.childViewResource && (
+                    <ChildViewResourceDialog
+                      childViewResource={viewResourceContextParams.childViewResource}
+                    />
+                  )}
+                  {components.bottom && <components.bottom />}
+                </>
+              ) : access === "pending" ? (
+                <PageLoader isLoading={true} />
+              ) : (
+                forbiddenFallback
+              )}
+            </div>
           </ViewDecorator>
         </Decorator>
       </PermissionCacheContext>
