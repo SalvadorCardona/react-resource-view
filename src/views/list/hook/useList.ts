@@ -1,3 +1,4 @@
+import { useMemo, useSyncExternalStore } from "react"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { toast } from "sonner"
 import { BaseJsonLdItemInterface, IdAbleInterface } from "jsonld-item"
@@ -8,6 +9,8 @@ import { translate } from "react-mini-i18n"
 import { getCollectionItems } from "@/api/collection"
 import { normalizeApiError } from "@/api/apiRequestError"
 import { resolveDialect } from "@/api/apiConfig"
+import { applyOptimisticWrites, getOptimisticStore } from "@/api/optimistic"
+import { removeRecord, updateRecord } from "@/hook/useResourceMutation"
 
 export interface ListViewOutputsInterface<T> {
   originalData?: JsonLdCollection<T> | null
@@ -19,6 +22,10 @@ export interface ListViewOutputsInterface<T> {
    */
   removeData?: (data: IdAbleInterface) => void
   updateData?: (data: IdAbleInterface, persist?: boolean) => void
+  /**
+   * The rows read from the API, with the writes still in flight laid over
+   * them: what the API is expected to answer, before it does.
+   */
   rows: RowInterface[]
 }
 
@@ -26,6 +33,13 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
   const currentResource = useCurrentViewResourceContext()
   const resource = currentResource.resource
   const originalData = currentResource.data as JsonLdCollection
+  const store = getOptimisticStore(resource)
+  const writes = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot
+  )
+  const context = { viewResourceContext: currentResource.viewResource }
 
   const updateData = (newData: IdAbleInterface, persist: boolean = true) => {
     const identifier = getIdFromObject(newData, true, resource)
@@ -36,11 +50,7 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
 
     if (!persist) return
 
-    resource
-      .updateItem({
-        id: identifier,
-        ...newData,
-      })
+    updateRecord(resource, { id: identifier, ...newData }, { context })
       .then(() => {
         currentResource.fetchData()
         toast(translate("Saved"))
@@ -52,8 +62,7 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
   }
 
   const removeData = (data: IdAbleInterface) => {
-    resource
-      .removeItem(data)
+    removeRecord(resource, data, { context })
       .then(() => {
         currentResource.fetchData()
         toast(translate("Deleted"))
@@ -70,13 +79,19 @@ export default function useList(): ListViewOutputsInterface<BaseJsonLdItemInterf
       })
   }
 
-  const data = getCollectionItems<BaseJsonLdItemInterface>(originalData, resource)
-
-  const rows: RowInterface[] = data.map((e) => {
-    return {
-      data: e,
-    }
-  })
+  const rows = useMemo(
+    () =>
+      applyOptimisticWrites(
+        getCollectionItems<BaseJsonLdItemInterface>(originalData, resource),
+        writes,
+        resource
+      ),
+    [originalData, writes, resource]
+  )
+  const data = useMemo(
+    () => rows.map((row) => row.data as BaseJsonLdItemInterface),
+    [rows]
+  )
 
   return {
     data,

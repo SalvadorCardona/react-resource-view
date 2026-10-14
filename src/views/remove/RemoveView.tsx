@@ -5,9 +5,12 @@ import { toast } from "sonner"
 import { Button } from "@/ui/button"
 import { IdAbleInterface } from "jsonld-item"
 import { CardContent, CardDescription, CardHeader } from "@/ui/card"
+import { isOptimistic, removeRecord } from "@/hook/useResourceMutation"
+import { useOverlay } from "@/action/overlayContext"
 
 export default function RemoveViewComponent() {
   const currentResourceContext = useCurrentViewResourceContext()
+  const overlay = useOverlay()
 
   if (!currentResourceContext.data) return null
 
@@ -29,11 +32,22 @@ export default function RemoveViewComponent() {
         </AlertDialogCancel>
         <Button
           onClick={async () => {
+            const { resource } = currentResourceContext
+            const removal = removeRecord(
+              resource,
+              currentResourceContext.data as IdAbleInterface,
+              {
+                context: {
+                  viewResourceContext: currentResourceContext.viewResource,
+                },
+              }
+            )
+            // The row is already gone from the list: the confirmation has
+            // nothing left to ask. If the API refuses, the row comes back and
+            // the toast says why.
+            if (isOptimistic(resource, "delete")) overlay?.close()
             try {
-              await currentResourceContext.resource.removeItem(
-                currentResourceContext.data as IdAbleInterface,
-                { viewResourceContext: currentResourceContext.viewResource }
-              )
+              await removal
               toast.success(translate("Deleted"), {
                 description: translate("The item has been removed"),
               })

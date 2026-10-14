@@ -35,12 +35,17 @@ export function RecordCard({
   // separator with nothing under it, and the padding below it.
   const rowActions = useRowActions()
   const hasActions = useAllowedActions(rowActions, row.data).length > 0
+  // Drawn before the API created it: no identifier yet, so nothing to act on.
+  const isDraft = row.pending === "create"
 
   return (
     <div
+      aria-busy={row.pending ? true : undefined}
       className={cn(
         "flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4",
-        "transition-colors hover:border-foreground/20",
+        "transition-[colors,opacity] hover:border-foreground/20",
+        row.pending && "opacity-60",
+        isDraft && "pointer-events-none border-dashed",
         className
       )}
     >
@@ -50,7 +55,7 @@ export function RecordCard({
         {children ?? <DefaultRowComponent row={row} />}
       </div>
 
-      {withActions && hasActions && (
+      {withActions && hasActions && !isDraft && (
         // `mt-auto` pins the actions to the bottom edge: the grid stretches
         // every card of a row to the tallest one, and without it a card whose
         // record is one line shorter puts its buttons a line higher than its

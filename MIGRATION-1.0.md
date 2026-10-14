@@ -130,6 +130,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-VIEW-007](#rv1-view-007)     | `formFilter` and `defaultFilter` become `views.list.filters` with `initial`                                                                                                                      | merge    | automatic             |
 | [RV1-VIEW-008](#rv1-view-008)     | `titleKey` becomes `titleField`                                                                                                                                                                  | rename   | automatic             |
 | [RV1-VIEW-009](#rv1-view-009)     | A view no longer declares `id` or `icon`                                                                                                                                                         | remove   | automatic             |
+| [RV1-VIEW-010](#rv1-view-010)     | A dialog or a drawer of `read` and `update` links to its full page (`expandable`)                                                                                                                | semantic | manual                |
 | [RV1-BEHAV-001](#rv1-behav-001)   | `behavior` disappears: each option moves to where it has an effect                                                                                                                               | remove   | automatic             |
 | [RV1-BEHAV-002](#rv1-behav-002)   | `openIn` becomes `open`: `window` → `page`, `popup` → `dialog`                                                                                                                                   | rename   | automatic             |
 | [RV1-BEHAV-003](#rv1-behav-003)   | `closeAfterUpdate`, `refreshDataAfterUpdate`, `redirectToAfterUpdate` become one `afterSave`                                                                                                     | merge    | automatic, then check |
@@ -159,6 +160,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-DATA-003](#rv1-data-003)     | Repository methods move to `repository`                                                                                                                                                          | move     | automatic             |
 | [RV1-DATA-004](#rv1-data-004)     | `limit` becomes `quota` (`getLimit` → `get`)                                                                                                                                                     | rename   | automatic, then check |
 | [RV1-DATA-005](#rv1-data-005)     | `resourceBuild`, `onChange` and `@type` are no longer declared                                                                                                                                   | remove   | automatic             |
+| [RV1-DATA-006](#rv1-data-006)     | Writes are drawn before the API answers (`optimistic`)                                                                                                                                           | semantic | manual                |
 | [RV1-SCOPE-001](#rv1-scope-001)   | A resource no longer declares its `scope`: the scope lists it in `resources`                                                                                                                     | move     | automatic, then check |
 | [RV1-SCOPE-002](#rv1-scope-002)   | A scope's `menu` takes resources directly, or `"auto"`                                                                                                                                           | semantic | automatic             |
 | [RV1-SCOPE-003](#rv1-scope-003)   | `setResourceConfig({ defaultResource })` becomes `configureResourceView({ defaults })`                                                                                                           | rename   | automatic, then check |
@@ -550,6 +552,34 @@ icon: ListTodo, // the resource's icon is the one the views use
 ```
 
 Why: Neither had an effect on a view.
+
+### RV1-VIEW-010
+
+**A dialog or a drawer of `read` and `update` links to its full page (`expandable`)** — semantic, by hand.
+
+Before (0.x):
+
+```ts
+views: {
+  read: {
+    open: "drawer"
+  }
+}
+// 0.x: no way to the record's page from the drawer
+```
+
+After (1.0):
+
+```ts
+views: { read: { open: "drawer" } } // "Open in full page" in its header
+views: { read: { open: "drawer", expandable: false } } // as in 0.x
+```
+
+Why: A window too narrow for its record had to be closed, and the record found again by hand.
+
+By hand: Nothing to rewrite. `read` and `update` opened with `open: "dialog"` or `"drawer"` — and the records a board opens with `openRecord` — now show an "Open in full page" link beside the close button; `create` and `delete` do not. Declare `expandable: false` on a view (or on `layout.board()`) to take it away, `expandable: true` to add it to `create`.
+
+Note: The link is a real link (`<a href>`): Ctrl/Cmd+click opens the page in a new tab. It keeps the layout of the list it was opened from.
 
 ## `behavior`
 
@@ -1220,6 +1250,32 @@ After (1.0):
 Why: What the library builds was offered in the autocompletion of what one writes.
 
 Note: `resource.onChange` still exists on the built resource.
+
+### RV1-DATA-006
+
+**Writes are drawn before the API answers (`optimistic`)** — semantic, by hand.
+
+Before (0.x):
+
+```ts
+createViewResource("tasks", { path: "/api/tasks" })
+// 0.x: a deleted row stays until the API has answered
+```
+
+After (1.0):
+
+```ts
+createViewResource("tasks", {
+  path: "/api/tasks",
+  views: { delete: { optimistic: false } }, // as in 0.x, for deletions
+})
+```
+
+Why: Every write waited for the API before anything moved, and only the board's drag and drop did otherwise.
+
+By hand: Nothing to rewrite, but the perceived behaviour changes: a saved form, a deleted row, a cell edited in place, a card moved and the writes of `bulkActions` made through their `mutation` argument show in the list before the API answers — a created row appears, marked as being saved, before it has an id. A refusal puts the row back with a toast; a form keeps the API's violations on its fields. Declare `optimistic: false` at the root of a resource, or on one action (`views.delete: { optimistic: false }`) where the list must wait for the server — an in-place edit and a card moved are updates.
+
+Note: The API's answer replaces the guess as soon as it comes (generated id, computed fields); several writes to one record show the last one; a list read again while a write is in flight — a realtime push — keeps the row as written. `useResourceMutation(resource)` gives an application's own actions the same optimism and rollback; `BulkActionInterface.onAction` receives it as its second argument.
 
 ## Scopes, menus and defaults
 

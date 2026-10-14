@@ -4,6 +4,7 @@ import { BaseJsonLdItemInterface } from "jsonld-item"
 import { Index } from "coooking-pubsub"
 import { ActionList } from "react-data-form"
 import { ApiDialectInterface } from "@/api/apiDialectInterface"
+import type { ResourceMutation } from "@/hook/useResourceMutation"
 import type { LayoutComponents, ResolvedLayout } from "@/layout/layout"
 import type {
   AfterSave,
@@ -30,6 +31,12 @@ export type IconType = FC<{ className?: string }>
 
 export interface RowInterface<Data extends object = any> {
   data: Data
+  /**
+   * Set while a write to the record waits for the API: `"create"` for a
+   * record drawn before it exists — it has no identifier yet, so nothing can
+   * be done with it —, `"update"` for one whose new values are not confirmed.
+   */
+  pending?: "create" | "update"
 }
 
 /** An action run on every selected card of a board at once. */
@@ -39,8 +46,10 @@ export interface BulkActionInterface<Data extends object = any> {
   /**
    * Receives the selected records, and may return a promise. The board
    * refreshes once it has settled, and the selection is cleared if it resolves.
+   * Writes made through `mutation` — the resource's
+   * {@link ResourceMutation} — are drawn before the API answers.
    */
-  onAction: (records: Data[]) => unknown
+  onAction: (records: Data[], mutation: ResourceMutation<Data>) => unknown
 }
 
 export interface ListComponentPropsInterface<Data extends object = any> {
@@ -89,6 +98,10 @@ export interface ResolvedView {
   className?: string
   titleField?: string
   open: OpenMode
+  /** Whether a dialog or a drawer of this view links to its full page. */
+  expandable: boolean
+  /** Whether this action's writes are drawn before the API answers. */
+  optimistic: boolean
   afterSave?: AfterSave
   /** `false` inputs removed, ready for `react-data-form`. */
   form?: FormInterface

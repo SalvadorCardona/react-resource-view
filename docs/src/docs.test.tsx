@@ -53,6 +53,16 @@ describe("the documentation site", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders the actions page from its URL", async () => {
+    renderAt("/?view=docs/actions/read")
+    expect(
+      await screen.findByRole("heading", { name: "Actions" }, WAIT)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Optimistic writes" })
+    ).toBeInTheDocument()
+  })
+
   it("renders the admin layout page", async () => {
     renderAt("/?view=docs/admin-layout/read")
     expect(

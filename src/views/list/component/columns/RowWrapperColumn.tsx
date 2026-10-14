@@ -94,9 +94,10 @@ export default function RowWrapperColumnComponent({
           board's horizontal scrollbar, nor its neighbours' cards, off the
           screen. */}
       <div className="flex max-h-[calc(100dvh-14rem)] min-h-24 flex-col gap-2 overflow-y-auto px-2 pb-2">
-        {columnRows.map((row) => (
+        {columnRows.map((row, index) => (
           <BoardCard
-            key={board.idOf(row)}
+            // A card drawn before the API created it has no id yet.
+            key={row.pending === "create" ? `draft-${index}` : board.idOf(row)}
             row={row}
             board={board}
             columnIds={columnIds}

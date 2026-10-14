@@ -29,6 +29,7 @@ import {
   trackChildViewMounted,
 } from "@/components/childViewOpener"
 import { cn } from "@/ui/cn"
+import { ExpandToPageLink } from "@/components/ExpandToPageLink"
 
 export interface ChildViewResourceDialogProps {
   childViewResource: ViewResourceContextParams
@@ -51,7 +52,7 @@ export function ChildViewResourceDialog({
   const isWideScreen = useMediaQuery("(min-width: 768px)")
 
   const childResource = findResource(childViewResource)
-  const { openRecord } = useLayout<BoardLayoutOptions>().options
+  const { openRecord, expandable } = useLayout<BoardLayoutOptions>().options
   // Asked without the record, which loads inside the dialog: the update view
   // checks it again, record in hand, before drawing its form.
   const canUpdate = usePermission(ActionList.update, undefined, childResource)
@@ -134,6 +135,21 @@ export function ChildViewResourceDialog({
 
   const title = <Trans>{childView?.title ?? childAction}</Trans>
 
+  // The record on its own page, in the child's own scope. The board's option
+  // wins over the view's, so a board can offer it for its cards alone.
+  const expandLink =
+    (expandable ?? childView?.expandable) && childViewResource.id ? (
+      <ExpandToPageLink
+        to={generateLink({
+          resource: childResource,
+          resourceAction: childAction as ActionList,
+          id: childViewResource.id,
+          scope: childResource.scope ?? parentParams.scope,
+        })}
+        onNavigate={forgetChildViewOpener}
+      />
+    ) : null
+
   const editButton = editLink && (
     <Link
       to={editLink}
@@ -179,9 +195,10 @@ export function ChildViewResourceDialog({
         showSwipeHandle
       >
         <DrawerContent className="data-[swipe-axis=y]:[--drawer-height:85dvh] md:[--drawer-content-width:40rem]">
-          <DrawerHeader className="gap-3 pr-14">
+          <DrawerHeader className={cn("gap-3", expandLink ? "pr-24" : "pr-14")}>
             <DrawerTitle>{title}</DrawerTitle>
             {editButton}
+            {expandLink}
           </DrawerHeader>
           <ScrollArea className="min-h-0 flex-1" viewportClassName="px-4 pb-4">
             {content}
@@ -203,9 +220,10 @@ export function ChildViewResourceDialog({
         showCloseButton={true}
         className={cn("md:min-w-162.5", childView?.className)}
       >
-        <DialogHeader className="gap-3">
+        <DialogHeader className={cn("gap-3", expandLink && "pr-20")}>
           <DialogTitle>{title}</DialogTitle>
           {editButton}
+          {expandLink}
         </DialogHeader>
         <ScrollArea className="max-h-[80vh]">
           {childView?.description && (

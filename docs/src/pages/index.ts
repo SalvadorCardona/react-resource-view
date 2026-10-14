@@ -3,6 +3,7 @@ import { createItemMenuWithResource } from "react-resource-view"
 import overviewResource from "./overview"
 import routingResource from "./routing"
 import layoutsResource from "./layouts"
+import actionsResource from "./actions"
 import adminLayoutResource from "./adminLayout"
 import adminLayoutDemoResource from "./adminLayoutDemo"
 import demoResource, { articlesResource } from "./demo"
@@ -12,6 +13,7 @@ export const pages = [
   overviewResource,
   routingResource,
   layoutsResource,
+  actionsResource,
   adminLayoutResource,
   adminLayoutDemoResource,
   demoResource,

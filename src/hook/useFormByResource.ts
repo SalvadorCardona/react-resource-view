@@ -19,6 +19,7 @@ import { resolveViewResourceContext } from "@/utils/resolveViewResourceContext"
 import { findResource } from "@/utils/findResource"
 import { ViewResource } from "@/ViewResource"
 import { translate } from "react-mini-i18n"
+import { createRecord, updateRecord } from "@/hook/useResourceMutation"
 
 export interface formByResourceInputsInterface<DataProps extends object = object> {
   currentResource: ViewResourceContextParams
@@ -119,10 +120,13 @@ export default function useFormByResource<DataMain extends object = object>({
       const context = { viewResourceContext: currentResource as ViewResourceContext }
 
       try {
+        // The lists of the resource show the record as saved at once; the
+        // form itself stays until the API answers, so a refusal can still be
+        // pinned on the fields it is about.
         const response =
           action === ActionList.create && !idInObjet
-            ? await resource?.createItem(newDataWithId, context)
-            : await resource?.updateItem(newDataWithId, context)
+            ? await createRecord(resource, newDataWithId, { context })
+            : await updateRecord(resource, newDataWithId, { context })
         toast.success(formContext.form?.label?.success, {
           description: translate("Your changes have been saved"),
         })
@@ -200,8 +204,11 @@ export default function useFormByResource<DataMain extends object = object>({
         }
 
         // Not an API failure — a network outage, a bug. Nothing to pin on a
-        // field, and nothing gained by dressing it up as a validation message.
+        // field, and nothing gained by dressing it up as a validation message;
+        // but the row drawn before the answer has gone back, and that needs
+        // saying.
         console.error(error)
+        toast.error(formContext.form.label.error)
       }
 
       return data

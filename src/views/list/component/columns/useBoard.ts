@@ -8,6 +8,7 @@ import getIdFromObject from "@/internal/id/getIdFromObject"
 import getIdentityFromObject from "@/internal/id/getIdentityFromObject"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { permissionResource } from "@/utils/permissionResource"
+import { updateRecord } from "@/hook/useResourceMutation"
 import {
   draggedIds,
   selectRange,
@@ -26,7 +27,10 @@ export interface BoardInterface {
   extendTo: (id: string, columnIds: string[]) => void
   clear: () => void
   idOf: (row: RowInterface) => string
-  /** The column a card is drawn in — the one it is being moved to, if any. */
+  /**
+   * The column a card is drawn in — the one it is being moved to, if any: the
+   * rows already carry the writes in flight.
+   */
   columnOf: (row: RowInterface) => unknown
   rowsOf: (ids: string[]) => RowInterface[]
   /** The cards being dragged, from the drag start to the drop. */
@@ -38,7 +42,8 @@ export interface BoardInterface {
   /**
    * Writes the new column of every card back, one update per record through
    * the resource's repository, and draws them there before the answers come
-   * back. A card whose update fails goes back where it was.
+   * back — unless the resource's updates are not optimistic. A card whose
+   * update fails goes back where it was.
    */
   moveTo: (ids: string[], value: unknown) => Promise<void>
 }
@@ -69,8 +74,6 @@ export function useBoard({
   // Read by the drop, which may come before the render the drag start asked
   // for.
   const draggingRef = useRef<string[]>([])
-  // The column each card is being moved to, until the list is fetched again.
-  const [pending, setPending] = useState<Record<string, unknown>>({})
 
   const idOf = (row: RowInterface) =>
     String(getIdFromObject(row.data as BaseJsonLdItemInterface, true, resource))
@@ -80,10 +83,7 @@ export function useBoard({
   // A card filtered out, deleted or paged away is not selected any more.
   const selected = rawSelected.filter((id) => byId.has(id))
 
-  const columnOf = (row: RowInterface) => {
-    const id = idOf(row)
-    return id in pending ? pending[id] : row.data?.[identifierKey]
-  }
+  const columnOf = (row: RowInterface) => row.data?.[identifierKey]
 
   const clear = () => {
     setSelected([])
@@ -128,10 +128,7 @@ export function useBoard({
     if (!moving.length) return
 
     const movingIds = moving.map(idOf)
-    setPending((current) => ({
-      ...current,
-      ...Object.fromEntries(movingIds.map((id) => [id, value])),
-    }))
+    const context = { viewResourceContext: currentResource.viewResource }
 
     const results = await Promise.allSettled(
       moving.map((row) => {
@@ -141,10 +138,11 @@ export function useBoard({
           ...getIdentityFromObject(row.data as BaseJsonLdItemInterface, resource),
           [identifierKey]: value,
         }
-        return resource.updateItem({
-          id: getIdFromObject(data, true, resource),
-          ...data,
-        })
+        return updateRecord(
+          resource,
+          { id: getIdFromObject(data, true, resource), ...data },
+          { context }
+        )
       })
     )
 
@@ -153,9 +151,8 @@ export function useBoard({
       if (result.status === "rejected") console.error(result.reason)
     })
 
-    // A card that could not be moved goes back to its column at once; the
+    // A card that could not be moved is already back in its column; the
     // others stay where they were dropped until the list says the same.
-    setPending((current) => omit(current, failed))
     // The cards moved leave the selection; the ones still to move stay in it,
     // so trying again is one click away.
     setSelected((current) =>
@@ -179,7 +176,6 @@ export function useBoard({
     }
 
     await currentResource.fetchData()
-    setPending((current) => omit(current, movingIds))
   }
 
   return {
@@ -215,10 +211,4 @@ export function useBoard({
     },
     moveTo,
   }
-}
-
-function omit<T>(record: Record<string, T>, keys: string[]): Record<string, T> {
-  return Object.fromEntries(
-    Object.entries(record).filter(([key]) => !keys.includes(key))
-  )
 }

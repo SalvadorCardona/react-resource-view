@@ -16,6 +16,7 @@ import ItemRender from "@/views/list/ItemRender"
 import { FormInputViolation } from "react-data-form"
 
 import { DefaultItemComponent } from "@/views/list/component/DefaultItemComponent"
+import { cn } from "@/ui/cn"
 
 function ListFormGroupProvider({
   formInput,
@@ -70,7 +71,14 @@ export function RowTable({ row }: RowComponentPropsInterface) {
   return (
     <FormContext key={"row-" + id} value={formContext}>
       <TableRow
-        className={currentResource.isSelected(row.data) ? "bg-primary/10" : ""}
+        aria-busy={row.pending ? true : undefined}
+        className={cn(
+          currentResource.isSelected(row.data) && "bg-primary/10",
+          // Shown before the API answered: a discreet "being saved", and
+          // nothing to act on for a record that has no identifier yet.
+          row.pending && "opacity-60 transition-opacity",
+          row.pending === "create" && "pointer-events-none"
+        )}
       >
         {getFormInputsFromForm(formContext.form)
           .filter((formInput) => !formInput.generatedValue)
@@ -81,7 +89,7 @@ export function RowTable({ row }: RowComponentPropsInterface) {
             />
           ))}
         <TableCell className={"flex gap-2"}>
-          <ListResourceViewButton data={row.data} />
+          {row.pending !== "create" && <ListResourceViewButton data={row.data} />}
         </TableCell>
       </TableRow>
     </FormContext>

@@ -17,6 +17,8 @@ import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
 import { useQuota } from "@/hook/useQuota"
 import type { Action } from "@/ResourceDefinition"
 import { useMediaQuery } from "@/internal/browser/useMediaQuery"
+import { OverlayContext } from "@/action/overlayContext"
+import { ExpandToPageLink } from "@/components/ExpandToPageLink"
 
 export interface ResourceButtonProps extends ViewResourceContextParams {
   /** `"update"`, or `ActionList.update`. */
@@ -140,16 +142,38 @@ export default function ResourceViewButton({
   const overlayTitle = <Trans>{view?.title ?? currentAction}</Trans>
 
   const overlayView = (
-    <ViewResourceContextProvider
-      resourceAction={currentAction}
-      resource={currentResource}
-      id={currentId}
-      data={data}
-      defaultData={
-        currentAction === ActionList.create ? currentDefaultData : undefined
-      }
-    />
+    <OverlayContext value={{ close: isOpen.setFalse }}>
+      <ViewResourceContextProvider
+        resourceAction={currentAction}
+        resource={currentResource}
+        id={currentId}
+        data={data}
+        defaultData={
+          currentAction === ActionList.create ? currentDefaultData : undefined
+        }
+      />
+    </OverlayContext>
   )
+
+  // The same view on its own page, the layout of the list underneath kept for
+  // the way back. Created records have no page until they are saved.
+  const expandLink = view?.expandable ? (
+    <ExpandToPageLink
+      to={generateLink({
+        resourceId,
+        resourceAction: currentAction,
+        id: currentId,
+        scope: currentResource.scope,
+        viewVariantId:
+          currentResourceContext?.resource === currentResource
+            ? currentResourceContext.viewVariant
+            : undefined,
+        defaultData:
+          currentAction === ActionList.create ? currentDefaultData : undefined,
+      })}
+      onNavigate={isOpen.setFalse}
+    />
+  ) : null
 
   return (
     <>
@@ -189,8 +213,9 @@ export default function ResourceViewButton({
             aria-describedby="modal"
             showCloseButton={true}
           >
-            <DialogHeader>
+            <DialogHeader className={expandLink ? "pr-20" : undefined}>
               <DialogTitle>{overlayTitle}</DialogTitle>
+              {expandLink}
             </DialogHeader>
             <ScrollArea className="max-h-[90vh]">{overlayView}</ScrollArea>
           </DialogContent>
@@ -213,8 +238,9 @@ export default function ResourceViewButton({
             // scrolls inside it instead of pushing it around.
             className="data-[swipe-axis=y]:[--drawer-height:85dvh] md:[--drawer-content-width:40rem]"
           >
-            <DrawerHeader>
+            <DrawerHeader className={expandLink ? "pr-24" : undefined}>
               <DrawerTitle>{overlayTitle}</DrawerTitle>
+              {expandLink}
             </DrawerHeader>
             <ScrollArea className="min-h-0 flex-1" viewportClassName="px-4 pb-4">
               {overlayView}

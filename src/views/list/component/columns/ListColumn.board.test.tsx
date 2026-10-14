@@ -462,6 +462,38 @@ describe("the record opened from a card", () => {
     )
   })
 
+  it("links to the record's full page, in the board's scope", async () => {
+    renderBoard("expand_board", {
+      board: { openRecord: "drawer" },
+      params: {
+        childViewResource: {
+          ...openedAt.childViewResource,
+          resourceId: "expand_board_tasks",
+        } as ViewResourceContextParams,
+      },
+    })
+
+    const panel = await screen.findByRole("dialog")
+    expect(
+      within(panel).getByRole("link", { name: "Open in full page" })
+    ).toHaveAttribute("href", "/expand_board/expand_board_tasks/read/1")
+  })
+
+  it("does not link to it when the board says `expandable: false`", async () => {
+    renderBoard("no_expand_board", {
+      board: { openRecord: "dialog", expandable: false },
+      params: {
+        childViewResource: {
+          ...openedAt.childViewResource,
+          resourceId: "no_expand_board_tasks",
+        } as ViewResourceContextParams,
+      },
+    })
+
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).queryByRole("link", { name: "Open in full page" })).toBeNull()
+  })
+
   it("is drawn in a centred dialog in popup mode, and closes to the board", async () => {
     renderBoard("open_popup_board", {
       board: { openRecord: "dialog" },

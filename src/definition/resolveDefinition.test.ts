@@ -241,3 +241,42 @@ describe("normalizePermissions", () => {
     })
   })
 })
+
+describe("optimism and the link to the full page", () => {
+  it("draw every write before the answer, unless the resource says otherwise", () => {
+    const optimistic = createViewResource(id(), { storage: "local" })
+    const waiting = createViewResource(id(), {
+      storage: "local",
+      optimistic: false,
+      views: { update: { optimistic: true } },
+    })
+
+    expect(optimistic.views.update.optimistic).toBe(true)
+    expect(optimistic.views.delete.optimistic).toBe(true)
+    expect(waiting.views.delete.optimistic).toBe(false)
+    expect(waiting.views.update.optimistic).toBe(true)
+  })
+
+  it("take the application's default beneath the resource's", () => {
+    configureResourceView({ defaults: { optimistic: false } })
+    const resource = createViewResource(id(), {
+      storage: "local",
+      views: { create: { optimistic: true } },
+    })
+
+    expect(resource.views.update.optimistic).toBe(false)
+    expect(resource.views.create.optimistic).toBe(true)
+  })
+
+  it("offer the full page from read and update, not from create or delete", () => {
+    const resource = createViewResource(id(), {
+      storage: "local",
+      views: { read: { expandable: false }, delete: { expandable: true } },
+    })
+
+    expect(resource.views.read.expandable).toBe(false)
+    expect(resource.views.update.expandable).toBe(true)
+    expect(resource.views.create.expandable).toBe(false)
+    expect(resource.views.delete.expandable).toBe(true)
+  })
+})

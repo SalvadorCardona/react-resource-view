@@ -171,7 +171,7 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
     <div
       data-record-card={id}
       // Dropped in another column, a card updates its record.
-      draggable={canUpdate}
+      draggable={canUpdate && row.pending !== "create"}
       tabIndex={0}
       role="group"
       aria-label={title}
@@ -181,7 +181,8 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
         "focus-visible:ring-3 focus-visible:ring-ring/50",
         canOpen ? "cursor-pointer" : "cursor-grab",
         "active:cursor-grabbing",
-        isDragged && "opacity-50"
+        isDragged && "opacity-50",
+        row.pending === "create" && "pointer-events-none"
       )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}

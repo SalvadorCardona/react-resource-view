@@ -34,6 +34,7 @@ import {
 import { useForbiddenFallback } from "@/provider/useForbiddenFallback"
 import { PageLoader } from "@/ui/Loader"
 import { ActionList } from "react-data-form"
+import { getOptimisticStore } from "@/api/optimistic"
 
 export interface CurrentViewResourceContextParams extends ViewResourceContextParams {
   decoratorComponent?: FC<{ children: ReactNode }>
@@ -111,6 +112,9 @@ export default function ViewResourceContextProvider({
     null
   )
   const isFirstFilterEffectRef = useRef(true)
+  // When the rows on screen were asked for, on the clock of the writes in
+  // flight: once drawn, the answers older than that are in them.
+  const readAtRef = useRef<number | null>(null)
 
   if (!viewResource.view) {
     console.warn(viewResource)
@@ -126,6 +130,7 @@ export default function ViewResourceContextProvider({
     }
 
     const token = ++fetchTokenRef.current
+    const readAt = getOptimisticStore(viewResource.resource).now()
     console.log('DBG load', viewResource.resource['@id'], viewResource.resourceAction, token)
     setIsLoading(true)
 
@@ -138,6 +143,7 @@ export default function ViewResourceContextProvider({
       // back would restore the one captured when the request left — undoing
       // the layout, the filter or the selection chosen while it was in flight.
       setViewResource((current) => ({ ...current, data: viewProcessed.data }))
+      if (viewResource.resourceAction === ActionList.list) readAtRef.current = readAt
     } catch (e) {
       if (token !== fetchTokenRef.current) return
       console.warn("Fetch Error", e)
@@ -180,6 +186,14 @@ export default function ViewResourceContextProvider({
       fetchTokenRef.current++
     }
   }, [id, needFetch])
+
+  // Let go of the answers the rows now hold — after they are drawn, not
+  // before: dropped first, the row would show its old values for one frame.
+  useEffect(() => {
+    if (readAtRef.current === null) return
+    getOptimisticStore(viewResource.resource).acknowledge(readAtRef.current)
+    readAtRef.current = null
+  }, [viewResource.data, viewResource.resource])
 
   useEffect(() => {
     if (isFirstFilterEffectRef.current) {
