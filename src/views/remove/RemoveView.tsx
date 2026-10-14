@@ -31,7 +31,8 @@ export default function RemoveViewComponent() {
           onClick={async () => {
             try {
               await currentResourceContext.resource.removeItem(
-                currentResourceContext.data as IdAbleInterface
+                currentResourceContext.data as IdAbleInterface,
+                { viewResourceContext: currentResourceContext.viewResource }
               )
               toast.success(translate("Deleted"), {
                 description: translate("The item has been removed"),

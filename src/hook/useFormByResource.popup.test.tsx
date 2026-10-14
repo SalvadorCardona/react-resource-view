@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { ActionList } from "react-data-form"
-import type { ViewInterface } from "@/ViewInterface"
+import type { ResolvedView } from "@/ViewResource"
 
 /**
  * What happens once a record has been created, and where the user lands.
@@ -14,6 +14,7 @@ import type { ViewInterface } from "@/ViewInterface"
 
 const created = { "@id": "/items/1" }
 let submit: ((data: object) => Promise<unknown>) | undefined
+const updateData = vi.fn()
 
 vi.mock("react-data-form", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-data-form")>()
@@ -22,7 +23,7 @@ vi.mock("react-data-form", async (importOriginal) => {
     // The form itself is not under test: only the callback it is handed.
     useForm: ({ onSubmit }: { onSubmit: (data: object) => Promise<unknown> }) => {
       submit = onSubmit
-      return { form: { label: {} }, updateData: () => {} }
+      return { form: { label: {} }, updateData }
     },
   }
 })
@@ -37,10 +38,11 @@ vi.mock("@/views/update/getFormByCurrentResourceContext", () => ({
   default: () => ({ label: {}, inputs: {} }),
 }))
 
+const createItem = vi.fn(async () => ({ data: created }))
 const resource = {
   "@id": "items",
   scope: "admin",
-  createItem: async () => ({ data: created }),
+  createItem,
 }
 
 vi.mock("@/utils/findResource", () => ({
@@ -51,13 +53,13 @@ vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }))
 
 const { default: useFormByResource } = await import("@/hook/useFormByResource")
 
-async function createWith(view: ViewInterface) {
+async function createWith(view: Partial<ResolvedView>) {
   renderHook(() =>
     useFormByResource({
       currentResource: {
         resourceId: "items",
         resourceAction: ActionList.create,
-        view,
+        view: view as ResolvedView,
       },
     })
   )
@@ -66,29 +68,75 @@ async function createWith(view: ViewInterface) {
 }
 
 describe("useFormByResource, after a creation", () => {
-  beforeEach(() => navigate.mockClear())
+  beforeEach(() => {
+    navigate.mockClear()
+    updateData.mockClear()
+    createItem.mockClear()
+  })
 
   it("stays where it is when the form opened in a dialog", async () => {
-    await createWith({ behavior: { openIn: "popup" } })
+    await createWith({ open: "dialog" })
 
     expect(navigate).not.toHaveBeenCalled()
   })
 
   it("stays where it is when the form opened in a drawer", async () => {
-    await createWith({ behavior: { openIn: "drawer" } })
+    await createWith({ open: "drawer" })
 
     expect(navigate).not.toHaveBeenCalled()
   })
 
   it("moves on to the new record's edit screen on a screen of its own", async () => {
-    await createWith({ behavior: { openIn: "window" } })
+    await createWith({ open: "page" })
 
     expect(navigate).toHaveBeenCalledTimes(1)
+    expect(navigate.mock.calls[0][0].to).toContain("update")
   })
 
   it("builds that link in the resource's own scope", async () => {
-    await createWith({ behavior: { openIn: "window" } })
+    await createWith({ open: "page" })
 
     expect(navigate.mock.calls[0][0].to).toContain("admin")
+  })
+
+  it("hands the view context to the repository with the payload", async () => {
+    await createWith({ open: "page" })
+
+    expect(createItem).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "A new one" }),
+      expect.objectContaining({
+        viewResourceContext: expect.objectContaining({ resourceId: "items" }),
+      })
+    )
+  })
+})
+
+describe("useFormByResource, `afterSave`", () => {
+  beforeEach(() => {
+    navigate.mockClear()
+    updateData.mockClear()
+  })
+
+  it("goes back to the list on `close`, from a page", async () => {
+    await createWith({ open: "page", afterSave: "close" })
+
+    expect(navigate).toHaveBeenCalledTimes(1)
+    expect(navigate.mock.calls[0][0].to).toContain("list")
+  })
+
+  it("goes where `redirect` says, given the saved record", async () => {
+    await createWith({
+      open: "dialog",
+      afterSave: { redirect: (item) => `/done${item["@id"]}` },
+    })
+
+    expect(navigate).toHaveBeenCalledWith({ to: "/done/items/1" })
+  })
+
+  it("fills the form again with the answer on `reload`", async () => {
+    await createWith({ open: "dialog", afterSave: "reload" })
+
+    expect(updateData).toHaveBeenCalledWith(created)
+    expect(navigate).not.toHaveBeenCalled()
   })
 })

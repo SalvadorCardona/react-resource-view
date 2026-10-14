@@ -41,21 +41,23 @@ function renderCard(
 
 describe("the foot of a record card", () => {
   it("holds the row's actions when the resource permits one", () => {
-    const container = renderCard({ canUpdate: true, canDelete: false })
+    const container = renderCard({ permissions: { update: true, delete: false } })
 
     expect(screen.getByTestId("actions")).toBeInTheDocument()
     expect(container.querySelector(".border-t")).not.toBeNull()
   })
 
   it("is left out, separator included, when no action is permitted", () => {
-    const container = renderCard({ canUpdate: false, canDelete: () => false })
+    const container = renderCard({
+      permissions: { update: false, delete: () => false },
+    })
 
     expect(screen.queryByTestId("actions")).toBeNull()
     expect(container.querySelector(".border-t")).toBeNull()
   })
 
   it("is left out when the layout asks for no actions", () => {
-    const container = renderCard({ canUpdate: true, canDelete: true }, false)
+    const container = renderCard({ permissions: {} }, false)
 
     expect(screen.queryByTestId("actions")).toBeNull()
     expect(container.querySelector(".border-t")).toBeNull()

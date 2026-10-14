@@ -1,38 +1,37 @@
 import { useState } from "react"
 import { Trans } from "react-mini-i18n"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import RowWrapperColumnComponent from "@/views/list/component/columns/RowWrapperColumn"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { useLayout } from "@/layout/useLayout"
+import type { BoardLayoutOptions } from "@/layout/layout"
 import { BoardContext, useBoard } from "@/views/list/component/columns/useBoard"
 import { BoardSelectionBar } from "@/views/list/component/columns/BoardSelectionBar"
 
 export default function ListColumn({ rows = [] }: ListComponentPropsInterface) {
-  const currentViewOption = useCurrentViewResourceContext().view
+  const { groupBy, columns, selectable } = useLayout<BoardLayoutOptions>().options
   const [isDragging, setIsDragging] = useState(false)
 
-  const identifierKey = currentViewOption.identifierKey
-  const identifierKeyList = currentViewOption.identifierKeyList
   const board = useBoard({
     rows,
-    identifierKey: identifierKey ?? "",
-    columns: identifierKeyList ?? [],
-    selectable: currentViewOption.behavior?.selectable ?? true,
+    identifierKey: groupBy ?? "",
+    columns: columns ?? [],
+    selectable: selectable ?? true,
   })
 
   if (!rows.length) return <Trans>No data yet</Trans>
 
-  if (!identifierKey) return <>Not Identifiant Found</>
-  if (!identifierKeyList) return <>no identifierKeyList</>
+  // `layout.board()` refuses to be built without them in development.
+  if (!groupBy || !columns) return null
 
   return (
     <BoardContext value={board}>
       {/* The columns keep their width and the board scrolls, rather than each
           column shrinking until its cards are unreadable. */}
       <div className={"flex items-start gap-3 overflow-x-auto pb-2"}>
-        {identifierKeyList.map((currentIdentifier) => (
+        {columns.map((currentIdentifier) => (
           <RowWrapperColumnComponent
             key={currentIdentifier.value as string}
-            identifierKey={identifierKey}
+            identifierKey={groupBy}
             valueIdentifier={currentIdentifier}
             isDragging={isDragging}
             handleDragging={setIsDragging}

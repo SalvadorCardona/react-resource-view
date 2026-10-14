@@ -1,5 +1,5 @@
 import ListPagination from "@/views/list/component/ListPagination"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { Trans } from "react-mini-i18n"
 import ListResourceViewButton from "@/action/ListResourceViewButton"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"

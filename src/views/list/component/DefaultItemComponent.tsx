@@ -1,13 +1,12 @@
-import { ItemComponentPropsInterface } from "@/ViewInterface"
+import { ItemComponentPropsInterface } from "@/ViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 
 export function DefaultItemComponent({ formInput }: ItemComponentPropsInterface) {
   const view = useCurrentViewResourceContext().view
-  if (!view.itemComponent) {
+  const Item = view.components.item
+  if (!Item) {
     return <>Item Component is not defined</>
   }
-
-  const Item = view.itemComponent
 
   return <Item formInput={formInput} />
 }

@@ -6,16 +6,18 @@ import { Button } from "@/ui/button"
 import { cn } from "@/ui/cn"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { useLayout } from "@/layout/useLayout"
+import type { BoardLayoutOptions } from "@/layout/layout"
 import { BoardInterface } from "@/views/list/component/columns/useBoard"
 
 /**
  * The bar that comes up as soon as a card of the board is selected: how many
  * there are, "Move to…" — the way to move them without dragging, which is
- * also the way on a phone — the view's own `bulkActions`, and a way out.
+ * also the way on a phone — the board's own `bulkActions`, and a way out.
  */
 export function BoardSelectionBar({ board }: { board: BoardInterface }) {
   const currentResource = useCurrentViewResourceContext()
-  const bulkActions = currentResource.view?.behavior?.bulkActions ?? []
+  const bulkActions = useLayout<BoardLayoutOptions>().options.bulkActions ?? []
   const [isMoveOpen, setIsMoveOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
 

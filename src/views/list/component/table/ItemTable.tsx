@@ -1,5 +1,5 @@
 import { TableCell } from "@/ui/table"
-import { ItemComponentPropsInterface } from "@/ViewInterface"
+import { ItemComponentPropsInterface } from "@/ViewResource"
 import { InputControllerProvider } from "react-data-form"
 
 export function ItemTable({ formInput }: ItemComponentPropsInterface) {

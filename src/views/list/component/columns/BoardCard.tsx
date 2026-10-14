@@ -1,12 +1,14 @@
 import React, { useRef } from "react"
 import { ActionList } from "react-data-form"
 import { translate } from "react-mini-i18n"
-import { RowInterface } from "@/ViewInterface"
+import { RowInterface } from "@/ViewResource"
 import { cn } from "@/ui/cn"
 import { Checkbox } from "@/ui/checkbox"
 import { useNavigate } from "@/ports"
 import { generateLink } from "@/routes/routes"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
+import { useLayout } from "@/layout/useLayout"
+import type { BoardLayoutOptions } from "@/layout/layout"
 import { getRecordTitle } from "@/internal/object/getRecordTitle"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { rememberChildViewOpener } from "@/components/childViewOpener"
@@ -41,12 +43,15 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
   const navigate = useNavigate()
   const id = board.idOf(row)
 
-  const openIn = currentResource.view?.behavior?.openRecordIn
-  const canOpen = !!openIn && permissionResource(resource, ActionList.read)
+  const { openRecord, titleField } = useLayout<BoardLayoutOptions>().options
+  const canRead = usePermission(ActionList.read, row.data)
+  const canUpdate = usePermission(ActionList.update, row.data)
+  const canOpen = !!openRecord && canRead
   const isSelected = board.isSelected(id)
   const isDragged = board.dragging.includes(id)
   const hasSelection = board.selected.length > 0
-  const title = getRecordTitle(row.data, currentResource.view?.titleKey) ?? id
+  const title =
+    getRecordTitle(row.data, titleField ?? currentResource.view?.titleField) ?? id
 
   // A touch, a pen or a mouse: a tap on a phone does not mean what a click
   // means once a selection has started.
@@ -64,7 +69,7 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
   const open = (card: HTMLElement) => {
     if (!canOpen) return
 
-    if (openIn === "window") {
+    if (openRecord === "page") {
       navigate({
         to: generateLink({
           resource,
@@ -165,7 +170,8 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
   return (
     <div
       data-record-card={id}
-      draggable
+      // Dropped in another column, a card updates its record.
+      draggable={canUpdate}
       tabIndex={0}
       role="group"
       aria-label={title}

@@ -1,4 +1,4 @@
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
 import { DumpRowComponent } from "@/views/list/component/dump/DumpRowComponent"
 import { Item, ItemContent } from "@/ui/item"
 

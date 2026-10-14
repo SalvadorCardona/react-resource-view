@@ -1,10 +1,5 @@
 import { ActionList } from "react-data-form"
-import {
-  cardViewOptionFactory,
-  createViewResource,
-  tableViewOptionFactory,
-  ViewResourceContextProvider,
-} from "react-resource-view"
+import { createViewResource, ViewResourceContextProvider, layout } from "react-resource-view"
 import { setInStorage } from "ssr-safe-storage"
 import { PlayCircle } from "lucide-react"
 import { CodeBlock, LiveExample, PageHeader, Section } from "../DocLayout"
@@ -72,31 +67,27 @@ export function seedDemoData(): void {
 /** The resource the demo renders — an ordinary declaration, nothing special. */
 export const articlesResource = createViewResource<Article>("demo_articles", {
   name: "Articles",
-  scope: "docs",
-  view: {
-    name: "Articles",
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        published: { label: "Published" },
-      },
+  storage: "local",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      published: { label: "Published" },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
-    viewVariants: [
-      tableViewOptionFactory({}),
-      cardViewOptionFactory({ grid: 2 }),
-    ],
+  },
+  views: {
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [layout.table(), layout.cards({ columns: 2 })],
+    },
   },
 })
 
 const demoResource = createViewResource("demo", {
   name: "Live demo",
-  scope: "docs",
   icon: PlayCircle,
-  view: {
-    name: "Live demo",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="Live demo"
@@ -128,8 +119,9 @@ const demoResource = createViewResource("demo", {
           <CodeBlock>{setup}</CodeBlock>
           <p>
             Swapping <code>localStorage</code> for a real API is one line: give
-            the resource a <code>path</code>, and{" "}
-            <code>httpRepository</code> takes over.
+            the resource a <code>path</code> instead of{" "}
+            <code>storage: "local"</code>, and <code>httpRepository</code> takes
+            over.
           </p>
         </Section>
       </>
@@ -137,20 +129,22 @@ const demoResource = createViewResource("demo", {
   },
 })
 
-const setup = `// No \`path\`: the views read from localStorage instead of an API.
-export const articlesResource = createViewResource("demo_articles", {
+const setup = `export const articlesResource = createViewResource("demo_articles", {
   name: "Articles",
-  scope: "docs",
-  view: {
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        published: { label: "Published" },
-      },
+  // No \`path\`: the views read from localStorage instead of an API.
+  storage: "local",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      published: { label: "Published" },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
-    viewVariants: [tableViewOptionFactory({}), cardViewOptionFactory({ grid: 2 })],
+  },
+  views: {
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [layout.table(), layout.cards({ columns: 2 })],
+    },
   },
 })`
 

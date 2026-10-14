@@ -1,16 +1,16 @@
-import { ViewResourceInterface } from "@/ViewResourceInterface"
 import { FC, ReactNode } from "react"
-import { ItemTable } from "@/views/list/component/table/ItemTable"
-import { ListTable } from "@/views/list/component/table/ListTable"
-import { RowTable } from "@/views/list/component/table/RowTable"
-
-import { DefaultViewComponent } from "@/views/list/component/DefaultViewComponent"
+import { ResourceDefaults } from "@/ResourceDefinition"
+import { ViewResource } from "@/ViewResource"
 import { ScopeConfig } from "@/scope/scopeInterface"
 
+/** What `ResourceViewProvider` is configured with. */
 export interface ResourceConfigInterface {
-  defaultResource?: Partial<ViewResourceInterface>
   decoratorComponent?: FC<{ children: ReactNode }>
-  resources?: ViewResourceInterface[]
+  /**
+   * The resources of an application without scopes. With `defaultScope`, they
+   * link within it.
+   */
+  resources?: ViewResource[]
   scopes?: ScopeConfig
   defaultScope?: string
   onUnauthorized?: () => void
@@ -19,45 +19,34 @@ export interface ResourceConfigInterface {
   forbiddenFallback?: ReactNode
 }
 
-let config: ResourceConfigInterface = {
-  defaultResource: {
-    view: {
-      itemComponent: ItemTable,
-      listComponent: ListTable,
-      rowComponent: RowTable,
-      viewComponent: DefaultViewComponent,
-    },
-    views: {
-      read: {
-        behavior: {
-          openIn: "window",
-        },
-      },
-      list: {},
-      create: {
-        behavior: {
-          openIn: "window",
-          closeAfterUpdate: false,
-        },
-      },
-      update: {
-        behavior: {
-          openIn: "window",
-        },
-      },
-      delete: {
-        behavior: {
-          openIn: "popup",
-        },
-      },
-    },
-  },
+export interface ResourceViewConfiguration {
+  /**
+   * Merged beneath every resource, deeply, with the shape of a declaration:
+   * `{ views: { update: { open: "drawer" } } }` makes every edit form a drawer
+   * unless a resource says otherwise.
+   */
+  defaults?: ResourceDefaults
 }
 
-export function getResourceConfig(): ResourceConfigInterface {
-  return config
+let defaults: ResourceDefaults = {}
+const listeners = new Set<() => void>()
+
+/**
+ * Sets what every resource inherits. May be called before or after the
+ * resources are declared: those already built are resolved again.
+ */
+export function configureResourceView(configuration: ResourceViewConfiguration): void {
+  defaults = configuration.defaults ?? {}
+  listeners.forEach((listener) => listener())
 }
 
-export function setResourceConfig(newConfig: ResourceConfigInterface): void {
-  config = { ...config, ...newConfig }
+/** The defaults given to {@link configureResourceView}. */
+export function getResourceViewDefaults(): ResourceDefaults {
+  return defaults
+}
+
+/** @internal Called when the defaults change — how built resources follow them. */
+export function onResourceViewDefaultsChange(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }

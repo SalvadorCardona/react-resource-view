@@ -1,11 +1,11 @@
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import capitalizeFirst from "@/utils/capitalizeFirst"
+import { Trans } from "react-mini-i18n"
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs"
 
 export default function ChangeViewOptionComponent() {
   const currentResource = useCurrentViewResourceContext()
-  const viewOptions = currentResource.view.viewVariants
-  if (!viewOptions || viewOptions.length < 2) return <></>
+  const layouts = currentResource.view.layouts
+  if (layouts.length < 2) return <></>
 
   return (
     <>
@@ -21,18 +21,15 @@ export default function ChangeViewOptionComponent() {
         }
       >
         <TabsList>
-          {viewOptions.map((viewOption) => (
-            <TabsTrigger
-              key={"tab-view-" + viewOption["name"]}
-              value={viewOption["id"] ?? "undefined-view"}
-            >
-              {viewOption.icon ? (
+          {layouts.map((layout) => (
+            <TabsTrigger key={"tab-view-" + layout.id} value={layout.id}>
+              {layout.icon ? (
                 <div className={"flex justify-center items-center gap-2"}>
-                  <viewOption.icon className={"text-xl"} />
-                  <span className={"fc"}>{capitalizeFirst(viewOption["name"] ?? "")}</span>
+                  <layout.icon className={"text-xl"} />
+                  <Trans className={"fc"}>{layout.label}</Trans>
                 </div>
               ) : (
-                <>{capitalizeFirst(viewOption["name"] ?? "")}</>
+                <Trans>{layout.label}</Trans>
               )}
             </TabsTrigger>
           ))}

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { generateLink, generateLinkByResource, parseLink } from "./routes"
 import { ActionList } from "react-data-form"
-import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { ViewResource } from "@/ViewResource"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { encodeQuery } from "@/internal/url/urlEncoder"
 
 const fakeResource = {
   "@id": "reset-password-request",
   scope: "auth",
-} as ViewResourceInterface
+} as ViewResource
 
 describe("generateLink", () => {
   it("builds a plain link from a resourceId and an action", () => {

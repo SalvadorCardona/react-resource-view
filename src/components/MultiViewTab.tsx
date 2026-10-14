@@ -7,8 +7,12 @@ import { useNavigate } from "@/ports"
 import { encodeIri, generateLink } from "@/routes/routes"
 import { findResource } from "@/utils/findResource"
 import { ActionList } from "react-data-form"
-import { IconType, SubViewResourceInterface } from "@/ViewInterface"
-import { ViewResourceContextParams } from "@/ViewResourceContext"
+import { IconType } from "@/ViewResource"
+import type { TabContext, TabDefinition } from "@/ResourceDefinition"
+import {
+  ViewResourceContext,
+  ViewResourceContextParams,
+} from "@/ViewResourceContext"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card"
 import { ScrollArea } from "@/ui/scroll-area"
 import { cn } from "@/ui/cn"
@@ -20,44 +24,62 @@ interface ResolvedSubView {
   description?: string
   icon?: IconType
   viewComponent?: FC
-  /** Set when the sub-view points at a resource. */
+  /** Set when the tab points at a resource. */
   viewResourceParams?: ViewResourceContextParams
 }
 
+/** A tab's `filter` or `defaultData`, given the record the tabs are under. */
+function fromParent<T extends object>(
+  value: T | ((context: TabContext) => T) | undefined,
+  parent: ViewResourceContext | undefined
+): T | undefined {
+  if (typeof value !== "function") return value
+  if (!parent) return undefined
+
+  return value({ item: parent.data ?? {}, parent })
+}
+
 /**
- * Normalises one entry of subViewResource.list: resolves the resource, from
- * either `resource` or `resourceId`, derives its slug, name and icon, and
- * prepares the params of
- * a nested ViewResourceContextProvider.
+ * Normalises one tab: resolves its resource, given as the resource or its
+ * identifier, derives its slug, name and icon, and prepares the params of a
+ * nested ViewResourceContextProvider — narrowed to the parent record by the
+ * tab's `filter` and `defaultData`.
  */
-function resolveSubView(
-  subView: SubViewResourceInterface
-): ResolvedSubView | undefined {
-  const { slug, name, description, icon, viewComponent, ...viewResourceParams } =
-    subView
+function resolveTab(tab: TabDefinition): ResolvedSubView | undefined {
+  const { id, label, description, icon, component, action, filter, defaultData } =
+    tab
 
-  const resource = findResource(viewResourceParams)
-  const currentSlug = slug ?? (resource ? encodeIri(resource["@id"]) : undefined)
+  const resource =
+    typeof tab.resource === "string"
+      ? findResource({ resourceId: tab.resource })
+      : tab.resource
+  const slug = id ?? (resource ? encodeIri(resource["@id"]) : undefined)
 
-  if (!currentSlug) {
-    console.warn(
-      "SubViewResource skipped: neither a slug nor a resolvable resource",
-      subView
-    )
+  if (!slug) {
+    console.warn("Tab skipped: neither an id nor a resolvable resource", tab)
     return undefined
   }
 
   return {
-    slug: currentSlug,
-    name: name ?? resource?.name ?? currentSlug,
+    slug,
+    name: label ?? resource?.name ?? slug,
     description,
     icon: icon ?? resource?.icon,
-    viewComponent,
+    viewComponent: component,
     viewResourceParams: resource
       ? {
-          ...viewResourceParams,
           resource,
-          resourceAction: viewResourceParams.resourceAction ?? ActionList.list,
+          resourceAction: action ?? ActionList.list,
+          onInitViewResource: (view, parent) => {
+            const parentFilter = fromParent(filter, parent)
+            const parentData = fromParent(defaultData, parent)
+
+            return {
+              ...view,
+              filter: parentFilter ? { ...view.filter, ...parentFilter } : view.filter,
+              defaultData: parentData ?? view.defaultData,
+            }
+          },
         }
       : undefined,
   }
@@ -70,19 +92,19 @@ export function MultiViewTab() {
   // the width the sub-view itself needs, so the bar comes back there — and it
   // scrolls sideways rather than wrapping onto three lines.
   const isWideScreen = useMediaQuery("(min-width: 768px)")
-  const subViews = currentResource.view?.subViewResource
+  const subViews = currentResource.view?.tabs
   const orientation =
     subViews?.orientation === "vertical" && isWideScreen ? "vertical" : "horizontal"
-  const subViewList = (subViews?.list ?? [])
-    .map(resolveSubView)
+  const subViewList = (subViews?.items ?? [])
+    .map(resolveTab)
     .filter((subView): subView is ResolvedSubView => subView !== undefined)
 
   if (!subViews || subViewList.length === 0) {
     return null
   }
 
-  // Sub-views derive their filters from the parent item through
-  // onInitViewResource, so they wait for it to load before mounting.
+  // Tabs derive their filters from the parent record, so they wait for it to
+  // load before mounting.
   if (currentResource.id && !currentResource.data) {
     return null
   }
@@ -154,12 +176,12 @@ export function MultiViewTab() {
     <div
       className={
         "flex flex-col md:grid md:gap-6 " +
-        (subViews.viewComponent
+        (subViews.aside
           ? "md:grid-cols-[280px_minmax(0,1fr)]"
           : "md:grid-cols-[minmax(0,1fr)]")
       }
     >
-      {subViews.viewComponent && (
+      {subViews.aside && (
         <aside
           className="
             w-full
@@ -167,7 +189,7 @@ export function MultiViewTab() {
             mb-4 md:mb-0
           "
         >
-          <subViews.viewComponent />
+          <subViews.aside />
         </aside>
       )}
       <Tabs
@@ -254,7 +276,7 @@ export function MultiViewTab() {
                 subView.viewResourceParams && (
                   <ViewResourceContextProvider
                     // Remonter la sous-vue quand l'item parent change pour
-                    // re-evaluate onInitViewResource, whose filters come from the parent
+                    // narrow it again: its filters come from the parent
                     key={subView.slug + "-" + (currentResource.id ?? "")}
                     {...subView.viewResourceParams}
                   />

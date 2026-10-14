@@ -1,6 +1,7 @@
 import { Trans } from "react-mini-i18n"
-import { RowComponentPropsInterface, ViewInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { useLayout } from "@/layout/useLayout"
 
 import { DefaultItemComponent } from "@/views/list/component/DefaultItemComponent"
 
@@ -19,12 +20,13 @@ const TECHNICAL_KEYS = ["@id", "@type", "@context", "id", "documentId"]
  * option names differ between the two layouts; both are read here so neither
  * repeats its title and its dates inside the window opening on it.
  */
-interface EventKeysInterface {
-  titleKey?: string
-  dateKey?: string
-  startDateKey?: string
-  endDateKey?: string
-  colorKey?: string
+interface EventFieldsInterface {
+  titleField?: string
+  dateField?: string
+  endDateField?: string
+  startField?: string
+  endField?: string
+  colorField?: string
 }
 
 function hasValue(value: unknown): boolean {
@@ -43,19 +45,20 @@ function hasValue(value: unknown): boolean {
  * stops before the window grows a scrollbar of its own.
  */
 export function PreviewRowComponent({ row }: RowComponentPropsInterface) {
-  const view = useCurrentViewResourceContext().view as ViewInterface &
-    EventKeysInterface
+  const view = useCurrentViewResourceContext().view
+  const options = useLayout<EventFieldsInterface>().options
 
   const data = row?.data
   if (!data) return <Trans>No data yet</Trans>
 
   const hiddenKeys = [
     ...TECHNICAL_KEYS,
-    view.titleKey,
-    view.dateKey,
-    view.startDateKey,
-    view.endDateKey,
-    view.colorKey,
+    options.titleField,
+    options.dateField,
+    options.endDateField,
+    options.startField,
+    options.endField,
+    options.colorField,
   ]
 
   const inputs = view.form?.inputs ?? {}

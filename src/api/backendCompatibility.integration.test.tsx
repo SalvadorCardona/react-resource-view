@@ -6,7 +6,7 @@ import { configureApi, resetApiConfig } from "@/api/apiConfig"
 import { strapiDialect } from "@/api/dialect/strapiDialect"
 import { supabaseDialect } from "@/api/dialect/supabaseDialect"
 import { fastapiDialect } from "@/api/dialect/fastapiDialect"
-import tableViewOptionFactory from "@/views/list/component/table/tableViewOptionFactory"
+import { layout } from "@/layout/layout"
 
 /**
  * The same declared resource, rendered against backends that agree on
@@ -26,11 +26,9 @@ function respondWith(body: unknown, headers: Record<string, string> = {}) {
   }) as unknown as typeof fetch
 }
 
-const view = {
-  name: "Articles",
-  itemsPerPage: 25,
+const declaration = {
   form: { inputs: { title: { label: "Title" } } },
-  viewVariants: [tableViewOptionFactory({})],
+  views: { list: { pageSize: 25, layouts: [layout.table()] } },
 }
 
 afterEach(() => {
@@ -55,9 +53,8 @@ describe("a resource declared once, rendered against Strapi", () => {
     const articles = createViewResource("strapi_articles", {
       path: "articles",
       name: "Articles",
-      scope: "strapi",
       dialect: strapiDialect(),
-      view,
+      ...declaration,
     })
 
     render(
@@ -100,9 +97,8 @@ describe("a resource declared once, rendered against Supabase", () => {
     const articles = createViewResource("supabase_articles", {
       path: "articles",
       name: "Articles",
-      scope: "supabase",
       dialect: supabaseDialect({ apiKey: "anon-key" }),
-      view,
+      ...declaration,
     })
 
     render(
@@ -146,9 +142,8 @@ describe("a resource declared once, rendered against FastAPI", () => {
     const articles = createViewResource("fastapi_articles", {
       path: "articles",
       name: "Articles",
-      scope: "fastapi",
       dialect: fastapiDialect({ pagination: "page-size" }),
-      view,
+      ...declaration,
     })
 
     render(
@@ -184,9 +179,8 @@ describe("a resource declared once, rendered against FastAPI", () => {
     const articles = createViewResource("fastapi_plain_articles", {
       path: "articles",
       name: "Articles",
-      scope: "fastapi_plain",
       dialect: fastapiDialect(),
-      view,
+      ...declaration,
     })
 
     render(

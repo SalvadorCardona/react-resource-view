@@ -9,6 +9,7 @@ import { FilterInterface } from "@/views/list/filter/useFilter"
 import { ApiDialectInterface } from "@/api/apiDialectInterface"
 import { getApiConfig, resolveDialect } from "@/api/apiConfig"
 import { resolveRequestUrl } from "@/api/restRepository"
+import { usePermission } from "@/utils/permissionResource"
 
 /**
  * Downloads the CSV export the dialect described.
@@ -64,11 +65,13 @@ export function ExportButton() {
 
   const view = currentResource.view
   const dialect = resolveDialect(currentResource.resource)
+  const canExport = usePermission("export")
 
   // A backend with no CSV endpoint — Strapi, as it stands — describes no
   // export request, and the button stays out of the way rather than offering
-  // a download that would 404.
-  if (!view?.behavior?.canExport || !dialect.exportRequest) {
+  // a download that would 404. Nor is there anything to export from records
+  // kept in the browser.
+  if (!canExport || !dialect.exportRequest || !currentResource.resource?.path) {
     return null
   }
 
@@ -79,7 +82,7 @@ export function ExportButton() {
     setIsExporting(true)
     try {
       const filter = listViewContext.filterContext?.filter ?? {}
-      const fileName = `${view.name ?? currentResource.resource?.name ?? "export"}.csv`
+      const fileName = `${view.title ?? currentResource.resource?.name ?? "export"}.csv`
       await downloadExport(dialect, path, filter, fileName)
     } catch {
       toast.error(translate("The export failed. Please try again."))

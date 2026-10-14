@@ -3,23 +3,24 @@ import { Button } from "@/ui/button"
 import { generateLink } from "@/routes/routes"
 import { ActionList } from "react-data-form"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
 import { Trans } from "react-mini-i18n"
 import { Link, useNavigate } from "@/ports"
 import { Edit, Eye, Plus, Trash } from "lucide-react"
 import { useBoolean } from "@/internal/useBoolean"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
-import { getResourceConfig } from "@/ResourceConfig"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/ui/drawer"
 import { ScrollArea } from "@/ui/scroll-area"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
-import { useLimit } from "@/hook/useLimit"
+import { useQuota } from "@/hook/useQuota"
+import type { Action } from "@/ResourceDefinition"
 import { useMediaQuery } from "@/internal/browser/useMediaQuery"
 
 export interface ResourceButtonProps extends ViewResourceContextParams {
-  action: ActionList
+  /** `"update"`, or `ActionList.update`. */
+  action: Action
   label?: string | ReactNode
   children?: ReactNode
 }
@@ -43,19 +44,18 @@ export default function ResourceViewButton({
 }: ResourceButtonProps) {
   const router = useNavigate()
   const currentResourceContext = useCurrentViewResourceContext()
-  const currentAction: ActionList = action ?? currentResourceContext.resourceAction
+  const currentAction = (action ?? currentResourceContext.resourceAction) as ActionList
 
   const currentResource = resource ?? currentResourceContext.resource
-  const view = currentResource?.views?.[currentAction] ?? currentResource.view
-
-  const openIn =
-    currentResource?.views?.[currentAction]?.behavior?.openIn ??
-    view?.behavior?.openIn ??
-    getResourceConfig()?.defaultResource?.views?.[currentAction]?.behavior?.openIn
+  const view = currentResource?.views?.[currentAction]
+  const open = view?.open ?? "page"
 
   // A dialog and a drawer are the same decision — the view is drawn over the
   // page instead of replacing it — so everything but the frame is shared.
-  const opensOverThePage = openIn === "popup" || openIn === "drawer"
+  const opensOverThePage = open === "dialog" || open === "drawer"
+  // Whether a save in the overlay closes it: what `afterSave` says, closing
+  // being what a form drawn over the page does unless told otherwise.
+  const closesOnSave = !view?.afterSave || view.afterSave === "close"
 
   const isOpen = useBoolean()
   // A drawer comes in from the side where there is room for it: the right of a
@@ -63,15 +63,14 @@ export default function ResourceViewButton({
   // package sizes against.
   const isWideScreen = useMediaQuery("(min-width: 768px)")
 
-  // Limits only apply to creation. `getLimit` may be synchronous
-  // (comptage local) ou asynchrone (quota via API / abonnement). La limite
-  // The resource's own limit wins; failing that, the one injected at runtime
-  // through the context is used.
-  const limitConfig =
+  // A quota only applies to creation. Its `get` may count synchronously — the
+  // rows already loaded — or ask the API. The resource's own quota wins;
+  // failing that, the one injected at runtime through the context is used.
+  const quotaConfig =
     currentAction === ActionList.create
-      ? (currentResource.limit ?? currentResourceContext?.limit)
+      ? (currentResource.quota ?? currentResourceContext?.quota)
       : undefined
-  const { limit, isReached } = useLimit(limitConfig, currentResourceContext)
+  const { quota, isReached } = useQuota(quotaConfig, currentResourceContext)
 
   const resourceId = currentResource["@id"]
   const currentId = id ?? (data ? getIdFromObject(data) : undefined)
@@ -87,19 +86,26 @@ export default function ResourceViewButton({
   useEffect(() => {
     if (!opensOverThePage) return
     const sub = currentResource.onChange.subscribe(() => {
-      isOpen.setFalse()
+      if (closesOnSave) isOpen.setFalse()
       fetchDataRef.current()
     })
     return () => sub.unsubscribe()
-  }, [currentResource, opensOverThePage])
+  }, [currentResource, opensOverThePage, closesOnSave])
 
-  if (!permissionResource(currentResource, currentAction)) return null
+  // Asked about the record the button acts on, when there is one.
+  const isAllowed = usePermission(
+    currentAction,
+    currentAction === ActionList.create ? undefined : data,
+    currentResource
+  )
 
-  // The creation limit is reached: render the configured fallback, or simply
-  // hide the button when there is none.
-  if (isReached && limit) {
-    const Fallback = limitConfig?.fallback
-    return Fallback ? <Fallback limit={limit} /> : null
+  if (!isAllowed) return null
+
+  // The quota is reached: render the configured fallback, or simply hide the
+  // button when there is none.
+  if (isReached && quota) {
+    const Fallback = quotaConfig?.fallback
+    return Fallback ? <Fallback quota={quota} /> : null
   }
 
   const link = generateLink({
@@ -114,27 +120,24 @@ export default function ResourceViewButton({
   const Icon = ACTION_ICONS[currentAction]
 
   function onClick() {
-    if (openIn === "window") router({ to: link })
+    if (open === "page") router({ to: link })
     else isOpen.setTrue()
   }
 
   const getButtonLabel = () => {
     if (label) return label
-    if (view?.label?.[currentAction]) {
-      return view?.label?.[currentAction]
-    }
 
-    return currentAction
+    return view?.buttonLabel ?? currentAction
   }
 
   const buttonLabel = getButtonLabel()
 
   /* A dialog needs a name — assistive technology announces it, and a form
      opening over a list has to say which record it is about. The view's own
-     `name` is that name; its `description` is not, because every action
+     `title` is that name; its `description` is not, because every action
      inherits the one written for the list and would introduce an edit form
      with the sentence that introduces the table. */
-  const overlayTitle = <Trans>{view?.name ?? currentAction}</Trans>
+  const overlayTitle = <Trans>{view?.title ?? currentAction}</Trans>
 
   const overlayView = (
     <ViewResourceContextProvider
@@ -174,7 +177,7 @@ export default function ResourceViewButton({
           <Trans className="fc">{buttonLabel}</Trans>
         </Button>
       )}
-      {openIn === "popup" && isOpen.value && (
+      {open === "dialog" && isOpen.value && (
         <Dialog
           open={isOpen.value}
           onOpenChange={(e) => {
@@ -193,7 +196,7 @@ export default function ResourceViewButton({
           </DialogContent>
         </Dialog>
       )}
-      {openIn === "drawer" && isOpen.value && (
+      {open === "drawer" && isOpen.value && (
         <Drawer
           open={isOpen.value}
           onOpenChange={(e) => {

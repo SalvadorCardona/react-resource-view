@@ -7,8 +7,9 @@ import isObjectEmpty from "@/internal/object/objectIsEmpty"
 import { cleanValuesInObject } from "@/internal/object/cleanValuesInObject"
 import { useMemo } from "react"
 import { deepMerge } from "@/internal/object/deepMerge"
-import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { ViewResource } from "@/ViewResource"
 import FormGroupProviderFilter from "@/views/list/filter/FormGroupProviderFilter"
+import { toForm } from "@/definition/toForm"
 
 export type FilterInterface = Record<string, any>
 
@@ -31,12 +32,17 @@ const defaultFormFilter: Partial<FormInterface> = {
   },
 }
 
-function getFormFilter(resource: ViewResourceInterface): FormInterface | undefined {
-  return resource?.views?.list?.formFilter ?? undefined
+/** The filter bar of a resource's list — `views.list.filters` without `initial`. */
+export function getFormFilter(resource: ViewResource): FormInterface | undefined {
+  const filters = resource?.views?.list?.filters
+  if (!filters) return undefined
+  const { initial: _initial, ...form } = filters
+
+  return toForm(form)
 }
 
-function getDefaultFilter(resource: ViewResourceInterface): FilterInterface {
-  return resource?.views?.list?.defaultFilter ?? {}
+function getDefaultFilter(resource: ViewResource): FilterInterface {
+  return resource?.views?.list?.filters?.initial ?? {}
 }
 
 export default function useFilter({
@@ -100,9 +106,9 @@ export default function useFilter({
    * "Clear the search" only empties what the user typed. Two kinds of filter
    * survive:
    * - those injected by the context — generated inputs, such as the parent set
-   *   by a sub-view's `onInitViewResource` — which define the scope of the
+   *   by a tab's `filter` — which define the scope of the
    *   list: losing them would show the rows of every company;
-   * - the view's default filters, which are the list's resting state.
+   * - the list's `initial` filters, which are its resting state.
    */
   const resetFilter = (filter: FilterInterface = {}) => {
     const injectedFilter: FilterInterface = {}

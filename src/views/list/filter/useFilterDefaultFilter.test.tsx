@@ -7,13 +7,13 @@ const resource = {
   "@id": "calendar_events",
   views: {
     list: {
-      formFilter: {
+      filters: {
         inputs: {
           title: { label: "Recherche" },
           timeScope: { label: "Trier" },
         },
+        initial: { timeScope: "upcoming" },
       },
-      defaultFilter: { timeScope: "upcoming" },
     },
   },
 }
@@ -31,7 +31,7 @@ vi.mock("@/provider/useCurrentViewResourceContext", () => ({
 const { default: useFilter } =
   await import("@/views/list/filter/useFilter")
 
-describe("useFilter with a view-level defaultFilter", () => {
+describe("useFilter with initial filters", () => {
   it("pre-fills the form with the default filter", () => {
     const { result } = renderHook(() => useFilter({}))
 

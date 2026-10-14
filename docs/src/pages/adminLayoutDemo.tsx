@@ -3,7 +3,6 @@ import { ActionList } from "react-data-form"
 import {
   AdminLayout,
   CurrentResourceContext,
-  createItemMenuWithResource,
   createViewResource,
   ResourceViewProvider,
   ScopeInterface,
@@ -66,43 +65,32 @@ function seed() {
   })
 }
 
-const articlesResource = createViewResource<DemoArticle>(
-  "admin_layout_demo_articles",
-  {
-    name: "Articles",
-    scope: SCOPE,
-    icon: Newspaper,
-    view: {
-      name: "Articles",
-      form: {
-        inputs: {
-          title: { label: "Title", required: true },
-          author: { label: "Author" },
-          published: { label: "Published" },
-        },
-      },
+const articlesResource = createViewResource<DemoArticle>("admin_layout_demo_articles", {
+  name: "Articles",
+  icon: Newspaper,
+  storage: "local",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      published: { label: "Published" },
     },
-  }
-)
+  },
+})
 
 const usersResource = createViewResource<DemoArticle>("admin_layout_demo_users", {
   name: "Users",
-  scope: SCOPE,
   icon: Users,
-  view: {
-    name: "Users",
-    form: { inputs: { title: { label: "Name", required: true } } },
-  },
+  storage: "local",
+  form: { inputs: { title: { label: "Name", required: true } } },
 })
 
 const demoScope: ScopeInterface = {
   name: SCOPE,
   decoratorComponent: AdminLayout,
   resources: [articlesResource, usersResource],
-  menu: [
-    createItemMenuWithResource({ resource: articlesResource, scope: SCOPE }),
-    createItemMenuWithResource({ resource: usersResource, scope: SCOPE }),
-  ],
+  // One entry per resource, named and iconed after it.
+  menu: "auto",
   defaultViewResourceContextParams: {
     resourceId: articlesResource["@id"],
     resourceAction: ActionList.list,
@@ -117,9 +105,10 @@ const demoScope: ScopeInterface = {
  *
  * `configuration.scopes` sets the library's global "current scope" for the
  * duration this widget is mounted (`generateLink` falls back to it when a
- * link names no scope of its own) — every resource here declares its scope
- * explicitly, and the effect below hands it back to `"docs"` on unmount, so
- * the rest of the site is unaffected.
+ * link names no scope of its own) — every resource here is listed in the
+ * scope's `resources`, which ties its links to it, and the effect below hands
+ * the current scope back to `"docs"` on unmount, so the rest of the site is
+ * unaffected.
  *
  * `CurrentResourceContext` is reset to `undefined` around it: without that,
  * the demo would inherit this very doc page as its `parentResource` — a
@@ -148,11 +137,9 @@ export function AdminLayoutLiveDemo() {
 
 const adminDemoResource = createViewResource("admin-layout-demo-page", {
   name: "Admin layout, running",
-  scope: "docs",
   icon: FileText,
-  view: {
-    name: "Admin layout, running",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="Admin layout, running"

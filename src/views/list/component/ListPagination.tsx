@@ -1,6 +1,5 @@
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { Trans } from "react-mini-i18n"
-import { ViewListInterface } from "@/ViewInterface"
 import { Button } from "@/ui/button"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { getCollectionTotal } from "@/api/collection"
@@ -8,17 +7,18 @@ import { getCollectionTotal } from "@/api/collection"
 export default function ListPagination() {
   const listViewContext = useListViewContext()
   const currentResource = useCurrentViewResourceContext()
-  const currentView: ViewListInterface = currentResource.view
+  const currentView = currentResource.view
 
   if (!listViewContext.originalData) {
     return null
   }
 
-  if (currentView && currentView.components?.pagination) {
-    return <currentView.components.pagination />
+  const Pagination = currentView?.components.pagination
+  if (Pagination) {
+    return <Pagination />
   }
 
-  const itemPerPage = currentView.itemsPerPage ?? 30
+  const itemPerPage = currentView.pageSize ?? 30
 
   const currentPage = listViewContext.filterContext.filter["page"] ?? 1
   // An API that reports no total cannot be paged through: better no

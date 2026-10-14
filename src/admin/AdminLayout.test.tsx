@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { act, render, screen } from "@testing-library/react"
-import { createItemMenuWithResource, createViewResource } from "@/index"
+import { createItemMenuWithResource, createViewResource, layout } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
 import { AdminLayout, createAdminLayout } from "@/admin/AdminLayout"
 import { ScopeInterface } from "@/scope/scopeInterface"
@@ -24,46 +24,57 @@ function ArticleList() {
 
 const articlesResource = createViewResource<Article>("admin_articles", {
   name: "Articles",
-  scope: "admin",
-  canRead: true,
-  canUpdate: true,
-  canDelete: true,
-  getItem: async () => ({
-    data: {
-      "@id": "/api/articles/1",
-      "@type": "Article",
-      id: "1",
-      title: "Describing a form as data",
-    },
-  }),
-  getCollection: async () => ({
-    data: {
-      "@id": "admin_articles",
-      "@type": "Collection",
-      member: [],
-      totalItems: 0,
-    },
-  }),
-  view: { name: "Articles", listComponent: ArticleList },
+  storage: "local",
+  permissions: { create: false },
+  repository: {
+    getItem: async () => ({
+      data: {
+        "@id": "/api/articles/1",
+        "@type": "Article",
+        id: "1",
+        title: "Describing a form as data",
+      },
+    }),
+    getCollection: async () => ({
+      data: {
+        "@id": "admin_articles",
+        "@type": "Collection",
+        member: [],
+        totalItems: 0,
+      },
+    }),
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+  },
 })
 
 const usersResource = createViewResource<Article>("admin_users", {
   name: "Users",
-  scope: "admin",
-  getCollection: async () => ({
-    data: { "@id": "admin_users", "@type": "Collection", member: [], totalItems: 0 },
-  }),
-  view: { name: "Users", listComponent: ArticleList },
+  storage: "local",
+  repository: {
+    getCollection: async () => ({
+      data: { "@id": "admin_users", "@type": "Collection", member: [], totalItems: 0 },
+    }),
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+  },
 })
 
 // A board: the one view of the scope that takes the page's whole width.
 const tasksResource = createViewResource<Article>("admin_tasks", {
   name: "Tasks",
-  scope: "admin",
-  getCollection: async () => ({
-    data: { "@id": "admin_tasks", "@type": "Collection", member: [], totalItems: 0 },
-  }),
-  view: { name: "Tasks", listComponent: ArticleList, fullWidth: true },
+  storage: "local",
+  repository: {
+    getCollection: async () => ({
+      data: { "@id": "admin_tasks", "@type": "Collection", member: [], totalItems: 0 },
+    }),
+  },
+  fullWidth: true,
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+  },
 })
 
 const adminScope: ScopeInterface = {
@@ -72,8 +83,8 @@ const adminScope: ScopeInterface = {
   decoratorComponent: AdminLayout,
   resources: [articlesResource, usersResource, tasksResource],
   menu: [
-    createItemMenuWithResource({ resource: articlesResource }),
-    createItemMenuWithResource({ resource: usersResource }),
+    articlesResource,
+    usersResource,
   ],
   defaultViewResourceContextParams: {
     resourceId: articlesResource["@id"],
@@ -108,7 +119,7 @@ async function renderAdmin(
 const helpMenu = [
   { name: "Documentation", href: "https://example.com/docs" },
   { name: "Contact", href: "mailto:support@example.com" },
-  createItemMenuWithResource({ resource: usersResource }),
+  createItemMenuWithResource({ resource: usersResource, scope: "admin" }),
 ]
 
 function mockNarrowScreen() {

@@ -367,17 +367,14 @@ function renderResource({ backend }) {
     : `//   import type { Tables } from "@/api-schema/database.types"
 //   type ${Type} = Tables<"${sample.id}"> & { "@id": string }`
 
-  return `import { ActionList } from "react-data-form"
-import { BookOpen } from "lucide-react"
-import {
-  cardViewOptionFactory,
-  createViewResource,
-  tableViewOptionFactory,
-} from "react-resource-view"
+  return `import { BookOpen } from "lucide-react"
+import { createViewResource, layout } from "react-resource-view"
 
 /**
  * One resource: the list, the detail, the create and edit forms and the
- * delete confirmation of ${sample.path}, from this declaration alone.
+ * delete confirmation of ${sample.path}, from this declaration alone. Every
+ * action is offered; restrict them with \`permissions\` — the API stays where
+ * access is enforced.
  *
  * Written by hand so the project compiles before the API is reachable. Once
  * \`api-schema\` has run, take the type from the schema instead:
@@ -393,20 +390,17 @@ export interface ${Type} {
 export const ${sample.id} = createViewResource<${Type}>("${sample.id}", {
   name: "${sample.name}",
   path: "${sample.path}",
-  scope: "admin",
   icon: BookOpen,
-  view: {
-    name: "${sample.name}",
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-      },
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
     },
-    formFilter: { inputs: { title: { label: "Search" } } },
-    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory()],
   },
   views: {
-    [ActionList.list]: { name: "${sample.name}" },
+    list: {
+      filters: { inputs: { title: { label: "Search" } } },
+      layouts: [layout.table(), layout.cards()],
+    },
   },
 })
 `
@@ -415,27 +409,23 @@ export const ${sample.id} = createViewResource<${Type}>("${sample.id}", {
 function renderScope({ backend, appName }) {
   const { sample } = BACKENDS[backend]
 
-  return `import { ActionList } from "react-data-form"
-import {
-  AdminLayout,
-  createItemMenuWithResource,
-  type ScopeInterface,
-} from "react-resource-view"
+  return `import { AdminLayout, type ScopeInterface } from "react-resource-view"
 import { ${sample.id} } from "@/resources/${sample.id}"
 
 /**
  * The back office: its resources, its menu, and the admin layout around every
- * view. A new resource is declared under src/resources/ and added here.
+ * view. A new resource is declared under src/resources/ and added to
+ * \`resources\` — the menu lists them.
  */
 export const adminScope: ScopeInterface = {
   name: "admin",
   label: ${JSON.stringify(appName)},
   decoratorComponent: AdminLayout,
   resources: [${sample.id}],
-  menu: [createItemMenuWithResource({ resource: ${sample.id}, scope: "admin" })],
+  menu: "auto",
   defaultViewResourceContextParams: {
     resourceId: ${sample.id}["@id"],
-    resourceAction: ActionList.list,
+    resourceAction: "list",
   },
 }
 `

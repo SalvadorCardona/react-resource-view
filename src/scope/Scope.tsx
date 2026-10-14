@@ -10,29 +10,30 @@ import {
 import { Trans } from "react-mini-i18n"
 import { getAuthorizationStatus } from "@/scope/getAuthorizationStatus"
 import { setCurrentScope } from "@/scope/scope"
-import { ScopeConfig, ScopeInterface } from "@/scope/scopeInterface"
+import { ResolvedScope, ScopeConfig } from "@/scope/scopeInterface"
+import { resolveScope } from "@/scope/resolveScope"
 import { PageLoader } from "@/ui/Loader"
 
 type Scope = string | undefined
 
 interface ScopeContextValue {
-  scope: ScopeInterface
+  scope: ResolvedScope
   /** Relance `authorization` du scope, après une connexion ou une déconnexion. */
   recheckAuthorization: () => void
 }
 
 const ScopeContext = createContext<ScopeContextValue | undefined>(undefined)
 
-const scopePromiseCache = new Map<string, Promise<ScopeInterface>>()
+const scopePromiseCache = new Map<string, Promise<ResolvedScope>>()
 
 function getScopePromise(
   scopeName: string,
   configScope: ScopeConfig
-): Promise<ScopeInterface> {
+): Promise<ResolvedScope> {
   let promise = scopePromiseCache.get(scopeName)
   if (!promise) {
     const fn = configScope[scopeName]
-    promise = fn ? fn() : Promise.reject(new Error("Scope not found"))
+    promise = fn ? fn().then(resolveScope) : Promise.reject(new Error("Scope not found"))
     scopePromiseCache.set(scopeName, promise)
   }
   return promise
@@ -46,7 +47,7 @@ type AuthorizationStatus = "pending" | "authorized" | "unauthorized" | "forbidde
  * sans montrer le contenu sous l'autorisation précédente.
  */
 interface AuthorizationCheck {
-  scope: ScopeInterface
+  scope: ResolvedScope
   revision: number
   status: AuthorizationStatus
   error?: unknown
@@ -56,7 +57,7 @@ function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return typeof (value as PromiseLike<unknown> | undefined)?.then === "function"
 }
 
-function AccessDenied() {
+export function AccessDenied() {
   return (
     <div role="alert" className="flex flex-col items-center gap-2 p-10 text-center">
       <p className="text-lg font-medium text-foreground">

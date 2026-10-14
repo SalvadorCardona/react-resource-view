@@ -12,8 +12,8 @@ import { createViewResource } from "@/utils/createViewResource"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
 import { configurePorts, getPorts } from "@/ports"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
-import columnViewOptionFactory from "@/views/list/component/columns/columnViewOptionFactory"
-import { RowComponentPropsInterface, ViewInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
+import { layout, type BoardLayoutOptions } from "@/layout/layout"
 
 const toast = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast, Toaster: () => null }))
@@ -87,11 +87,14 @@ const readStatuses = (id: string) =>
 function renderBoard(
   name: string,
   {
-    behavior,
+    board,
     updateItem,
     params,
+    locked,
   }: {
-    behavior?: ViewInterface["behavior"]
+    board?: Partial<BoardLayoutOptions>
+    /** Titles of the tasks the resource refuses to update. */
+    locked?: string[]
     updateItem?: (item: any) => Promise<any>
     params?: Partial<ViewResourceContextParams>
   } = {}
@@ -100,23 +103,27 @@ function renderBoard(
   seed(id)
   const tasks = createViewResource(id, {
     name: "Tasks",
-    scope: name,
-    canRead: true,
-    canUpdate: true,
-    ...(updateItem ? { updateItem } : {}),
-    view: {
-      name: "Tasks",
-      behavior,
-      form: { inputs: { title: { label: "Title" } } },
-      viewVariants: [
-        columnViewOptionFactory({
-          rowComponent: TaskRow,
-          identifierKey: "status",
-          identifierKeyList: STATUSES,
-        }),
-      ],
+    storage: "local",
+    permissions: {
+      create: false,
+      delete: false,
+      update: ({ item }) => !locked?.includes(item?.title),
     },
-    views: { read: { name: "Task" } },
+    repository: updateItem ? { updateItem } : undefined,
+    form: { inputs: { title: { label: "Title" } } },
+    views: {
+      list: {
+        layouts: [
+          layout.board({
+            groupBy: "status",
+            columns: STATUSES,
+            components: { row: TaskRow },
+            ...board,
+          }),
+        ],
+      },
+      read: { title: "Task" },
+    },
   })
 
   render(
@@ -151,27 +158,27 @@ afterEach(() => {
 
 describe("a click on a card", () => {
   it("opens the record in a drawer written into the URL", async () => {
-    renderBoard("drawer_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("drawer_board", { board: { openRecord: "drawer" } })
 
     fireEvent.click(await screen.findByText("Roast"))
 
     expect(navigate).toHaveBeenCalledWith({
-      to: "/drawer_board/drawer_board_tasks/list/drawer_board_tasks/read/1?variant=column",
+      to: "/drawer_board/drawer_board_tasks/list/drawer_board_tasks/read/1?variant=board",
     })
   })
 
   it("opens a popup at the same kind of URL", async () => {
-    renderBoard("popup_board", { behavior: { openRecordIn: "popup" } })
+    renderBoard("popup_board", { board: { openRecord: "dialog" } })
 
     fireEvent.click(await card("Pack"))
 
     expect(navigate).toHaveBeenCalledWith({
-      to: "/popup_board/popup_board_tasks/list/popup_board_tasks/read/2?variant=column",
+      to: "/popup_board/popup_board_tasks/list/popup_board_tasks/read/2?variant=board",
     })
   })
 
   it("goes to the record's own page when it opens in the window", async () => {
-    renderBoard("window_board", { behavior: { openRecordIn: "window" } })
+    renderBoard("window_board", { board: { openRecord: "page" } })
 
     fireEvent.click(await screen.findByText("Roast"))
 
@@ -181,7 +188,7 @@ describe("a click on a card", () => {
   })
 
   it("opens with Enter, from the keyboard", async () => {
-    renderBoard("keyboard_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("keyboard_board", { board: { openRecord: "drawer" } })
 
     const roast = await card("Roast")
     roast.focus()
@@ -201,7 +208,7 @@ describe("a click on a card", () => {
 
 describe("the controls drawn in a card", () => {
   it("keep their click: the button runs, the card does not open", async () => {
-    renderBoard("cta_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("cta_board", { board: { openRecord: "drawer" } })
 
     const roast = await card("Roast")
     // On the words inside the button, not the button itself: where a real
@@ -213,7 +220,7 @@ describe("the controls drawn in a card", () => {
   })
 
   it("keep their click: a link, or the selection checkbox", async () => {
-    renderBoard("cta_link_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("cta_link_board", { board: { openRecord: "drawer" } })
 
     const roast = await card("Roast")
     fireEvent.click(within(roast).getByText("Spec"))
@@ -227,7 +234,7 @@ describe("the controls drawn in a card", () => {
   })
 
   it("do not include the card's text being selected", async () => {
-    renderBoard("text_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("text_board", { board: { openRecord: "drawer" } })
 
     const title = await screen.findByText("Roast")
     const range = document.createRange()
@@ -244,7 +251,7 @@ describe("the controls drawn in a card", () => {
 
 describe("selecting cards", () => {
   it("adds and removes with Ctrl/Cmd+click, and shows the bar", async () => {
-    renderBoard("ctrl_board", { behavior: { openRecordIn: "drawer" } })
+    renderBoard("ctrl_board", { board: { openRecord: "drawer" } })
 
     fireEvent.click(await card("Roast"), { ctrlKey: true })
     fireEvent.click(await card("Ship"), { metaKey: true })
@@ -283,7 +290,7 @@ describe("selecting cards", () => {
   })
 
   it("can be turned off", async () => {
-    renderBoard("unselectable_board", { behavior: { selectable: false } })
+    renderBoard("unselectable_board", { board: { selectable: false } })
 
     const roast = await card("Roast")
     fireEvent.click(roast, { ctrlKey: true })
@@ -294,6 +301,21 @@ describe("selecting cards", () => {
 })
 
 describe("moving several cards at once", () => {
+  it("neither drags nor moves a card whose record may not be updated", async () => {
+    const id = renderBoard("locked_board", { locked: ["Roast"] })
+
+    expect(await card("Roast")).toHaveAttribute("draggable", "false")
+    expect(await card("Pack")).toHaveAttribute("draggable", "true")
+
+    fireEvent.click(await card("Roast"), { ctrlKey: true })
+    fireEvent.click(await card("Pack"), { ctrlKey: true })
+    fireEvent.click(screen.getByText("Move to…"))
+    fireEvent.click(await screen.findByRole("button", { name: "Done" }))
+
+    await waitFor(() => expect(readStatuses(id).Pack).toBe("done"))
+    expect(readStatuses(id).Roast).toBe("todo")
+  })
+
   it("moves the selection through Move to…", async () => {
     const id = renderBoard("move_board")
 
@@ -396,9 +418,7 @@ describe("moving several cards at once", () => {
 
   it("offers the view's bulk actions on the selection", async () => {
     const onAction = vi.fn()
-    renderBoard("bulk_board", {
-      behavior: { bulkActions: [{ label: "Archive", onAction }] },
-    })
+    renderBoard("bulk_board", { board: { bulkActions: [{ label: "Archive", onAction }] } })
 
     fireEvent.click(await card("Roast"), { ctrlKey: true })
     fireEvent.click(await card("Ship"), { ctrlKey: true })
@@ -424,7 +444,7 @@ describe("the record opened from a card", () => {
 
   it("is drawn in a drawer with a way to edit it", async () => {
     renderBoard("open_drawer_board", {
-      behavior: { openRecordIn: "drawer" },
+      board: { openRecord: "drawer" },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,
@@ -438,13 +458,13 @@ describe("the record opened from a card", () => {
     expect(within(panel).getByText("Task")).toBeInTheDocument()
     expect(within(panel).getByRole("link", { name: /update/i })).toHaveAttribute(
       "href",
-      "/open_drawer_board/open_drawer_board_tasks/list/open_drawer_board_tasks/update/1?variant=column"
+      "/open_drawer_board/open_drawer_board_tasks/list/open_drawer_board_tasks/update/1?variant=board"
     )
   })
 
   it("is drawn in a centred dialog in popup mode, and closes to the board", async () => {
     renderBoard("open_popup_board", {
-      behavior: { openRecordIn: "popup" },
+      board: { openRecord: "dialog" },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,
@@ -460,7 +480,7 @@ describe("the record opened from a card", () => {
 
     await waitFor(() =>
       expect(navigate).toHaveBeenCalledWith({
-        to: "/open_popup_board/open_popup_board_tasks/list?variant=column",
+        to: "/open_popup_board/open_popup_board_tasks/list?variant=board",
       })
     )
   })

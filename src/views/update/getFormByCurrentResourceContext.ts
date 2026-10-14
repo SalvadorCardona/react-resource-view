@@ -1,5 +1,4 @@
 import { FormInterface } from "react-data-form"
-import { ViewUpdateInterface } from "@/ViewInterface"
 import { getFormConfig } from "react-data-form"
 import { ActionList } from "react-data-form"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
@@ -7,7 +6,7 @@ import { ViewResourceContextParams } from "@/ViewResourceContext"
 export default function getFormByCurrentResourceContext(
   currentResource: ViewResourceContextParams
 ): FormInterface | undefined {
-  const action = currentResource.resourceAction as ActionList
+  const action = currentResource.resourceAction as ActionList | undefined
   const resource = currentResource.resource
 
   if (!action || !resource) {
@@ -16,7 +15,7 @@ export default function getFormByCurrentResourceContext(
     )
   }
 
-  const views = resource?.views?.[action] as ViewUpdateInterface<any> | undefined
+  const views = resource?.views?.[action]
 
   if (!views) {
     throw new Error(

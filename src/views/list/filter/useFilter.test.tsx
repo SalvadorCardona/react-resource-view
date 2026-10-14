@@ -7,7 +7,7 @@ const resource = {
   "@id": "admin_company_members",
   views: {
     list: {
-      formFilter: {
+      filters: {
         inputs: {
           name: { label: "Nom" },
         },

@@ -13,8 +13,8 @@ export async function processViewResourceContext(
     // pagination counts by 30 while the API answers 10 at a time is wrong on
     // both counts. An explicit filter still wins.
     const filter =
-      currentView.view?.itemsPerPage !== undefined
-        ? { itemsPerPage: currentView.view.itemsPerPage, ...currentView.filter }
+      currentView.view?.pageSize !== undefined
+        ? { itemsPerPage: currentView.view.pageSize, ...currentView.filter }
         : currentView.filter
 
     const response = await currentView.resource?.getCollection(filter, {

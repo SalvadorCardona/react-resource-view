@@ -1,5 +1,5 @@
 import ItemRender from "@/views/list/ItemRender"
-import { ItemComponentPropsInterface } from "@/ViewInterface"
+import { ItemComponentPropsInterface } from "@/ViewResource"
 
 export function DumpItemComponent({ formInput }: ItemComponentPropsInterface) {
   if (!formInput) return null

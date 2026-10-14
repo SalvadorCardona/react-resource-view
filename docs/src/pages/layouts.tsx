@@ -3,34 +3,33 @@ import { Columns3 } from "lucide-react"
 import { CodeBlock, PageHeader, Section } from "../DocLayout"
 
 const layouts: [string, string][] = [
-  ["tableViewOptionFactory", "Data table, editable in place"],
-  ["cardViewOptionFactory", "Card grid"],
-  ["columnViewOptionFactory", "Columns, grouped by a key"],
-  ["splitViewFactory", "List on the left, details on the right"],
-  ["calendarViewOptionFactory", "Calendar, by day or week"],
-  ["timelineViewOptionFactory", "Timeline, grouped by row"],
-  ["itemViewOptionFactory", "Plain item list"],
+  ["layout.table()", "Data table, editable in place"],
+  ["layout.cards({ columns })", "Card grid"],
+  ["layout.board({ groupBy, columns })", "Kanban board, one column per value"],
+  ["layout.split()", "List on the left, details on the right"],
+  ["layout.calendar({ dateField })", "Calendar, by day, week or month"],
+  ["layout.timeline({ startField, endField })", "Timeline, grouped by row"],
+  ["layout.items()", "Plain item list"],
+  ["layout.custom({ type, components })", "A layout of your own"],
 ]
 
 const layoutsResource = createViewResource("layouts", {
   name: "Layouts",
-  scope: "docs",
   icon: Columns3,
-  view: {
-    name: "Layouts",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="Layouts"
-          intro="A list renders through one of several variants. Declare more than one and the reader picks — their choice is kept in the URL."
+          intro="A list renders through one of several layouts. Declare more than one and the reader picks — their choice is kept in the URL, under the layout's type."
         />
 
-        <Section title="Available variants">
+        <Section title="Available layouts">
           <div className="not-prose overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-border text-left text-muted-foreground">
                 <tr>
-                  <th className="py-2 pr-4 font-medium">Factory</th>
+                  <th className="py-2 pr-4 font-medium">Declaration</th>
                   <th className="py-2 font-medium">Layout</th>
                 </tr>
               </thead>
@@ -52,15 +51,16 @@ const layoutsResource = createViewResource("layouts", {
           intro="It derives its columns from the form's inputs."
         >
           <p>
-            A view declaring no <code>form</code> renders a notice instead of
-            rows. The form is what tells the table which fields exist, what to
-            label them, and how to edit a cell in place.
+            A resource declaring no <code>form</code> renders a notice instead
+            of rows. The form is what tells the table which fields exist, what
+            to label them, and how to edit a cell in place; <code>fields</code>{" "}
+            picks the columns of one layout without writing a second form.
           </p>
         </Section>
 
         <Section
           title="Filters"
-          intro="formFilter declares the filter form; defaultFilter the filters applied as long as the URL carries none of its own."
+          intro="filters.inputs declares the filter form; filters.initial the filters applied as long as the URL carries none of its own."
         >
           <CodeBlock>{filters}</CodeBlock>
           <p>
@@ -75,16 +75,24 @@ const layoutsResource = createViewResource("layouts", {
   },
 })
 
-const variants = `view: {
-  viewVariants: [
-    tableViewOptionFactory({ columns: ["title", "author", "published"] }),
-    cardViewOptionFactory({ grid: 3 }),
-  ],
+const variants = `import { layout } from "react-resource-view"
+
+views: {
+  list: {
+    layouts: [
+      layout.table({ fields: ["title", "author", "published"] }),
+      layout.cards({ columns: 3 }),
+    ],
+  },
 }`
 
-const filters = `view: {
-  formFilter: { inputs: { published: { label: "Published" } } },
-  defaultFilter: { published: true },
+const filters = `views: {
+  list: {
+    filters: {
+      inputs: { published: { label: "Published" } },
+      initial: { published: true },
+    },
+  },
 }`
 
 export default layoutsResource

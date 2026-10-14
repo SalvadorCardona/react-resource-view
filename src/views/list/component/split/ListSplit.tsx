@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { Trans } from "react-mini-i18n"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { cn } from "@/ui/cn"
-import { SplitViewOptionInterface } from "@/views/list/component/split/columnViewOptionFactory"
+import type { SplitLayoutOptions } from "@/layout/layout"
+import { useLayout } from "@/layout/useLayout"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
 import { ActionList } from "react-data-form"
@@ -18,12 +19,11 @@ import { ScrollArea } from "@/ui/scroll-area"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 
 export default function ListSplit({ rows = [] }: ListComponentPropsInterface) {
-  const currentViewOption = useCurrentViewResourceContext()
-    .view as SplitViewOptionInterface
+  const options = useLayout<SplitLayoutOptions>().options
   const navigate = useNavigate()
   const currentResource = useCurrentViewResourceContext()
-  const EmptyComponent = currentViewOption.emptySelected ?? BaseEmptyComponent
-  const action = currentViewOption.resourceAction ?? ActionList.update
+  const EmptyComponent = options.emptyState ?? BaseEmptyComponent
+  const action = options.action ?? ActionList.update
   const [id, setId] = useState(currentResource.id)
 
   const getLink = (id: undefined | string) => {

@@ -1,5 +1,5 @@
 import { ActionList } from "react-data-form"
-import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { ViewResource } from "@/ViewResource"
 import { FilterInterface } from "@/views/list/filter/useFilter"
 import { decodeQuery, encodeQuery } from "@/internal/url/urlEncoder"
 import { JsonLdIri } from "jsonld-item"
@@ -50,9 +50,9 @@ export function generateLinkFromIri({
 function findResourceByPath(
   path: string,
   scope?: string
-): ViewResourceInterface | undefined {
+): ViewResource | undefined {
   const matches = (
-    Object.values(resourceRegistered) as ViewResourceInterface[]
+    Object.values(resourceRegistered) as ViewResource[]
   ).filter((resource) => resource.path === path)
 
   if (matches.length === 0) return undefined
@@ -101,11 +101,13 @@ export function generateLinkFromUri(
   return undefined
 }
 
-export function encodeIri(path: string): string {
-  if (path.startsWith("/")) {
-    return getIdFromIri(path)
+export function encodeIri(path: string | number): string {
+  // An identifier may be a number — Strapi's `id`, a Supabase primary key.
+  const value = String(path)
+  if (value.startsWith("/")) {
+    return getIdFromIri(value)
   }
-  return encodeURIComponent(path)
+  return encodeURIComponent(value)
 }
 
 export function decodeIri(key: string): string {
@@ -120,7 +122,7 @@ export function generateLinkByResource({
   id,
   viewVariantId,
 }: {
-  resource: ViewResourceInterface
+  resource: ViewResource
   resourceAction: ActionList
   filter?: FilterInterface
   defaultData?: Record<string, any>

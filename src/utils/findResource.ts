@@ -1,17 +1,17 @@
-import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { ViewResource } from "@/ViewResource"
 import { getResource, resourceRegistered } from "resource-registry"
 
 interface ParamSearch {
   resourceId?: string
   scope?: string
-  resource?: ViewResourceInterface
+  resource?: ViewResource
 }
 
 export function findResource({
   scope,
   resourceId,
   resource: resourceQuery,
-}: ParamSearch): ViewResourceInterface | undefined {
+}: ParamSearch): ViewResource | undefined {
   if (resourceQuery) {
     return resourceQuery
   }
@@ -35,11 +35,11 @@ export function findResource({
     })
 
     if (scopedResult) {
-      return scopedResult as ViewResourceInterface
+      return scopedResult as ViewResource
     }
   }
 
-  const resource = getResource(resourceId) as ViewResourceInterface
+  const resource = getResource(resourceId) as ViewResource
 
   if (resource) {
     return resource
@@ -49,5 +49,5 @@ export function findResource({
     if (e.id === resourceId || e.alias === resourceId) {
       return true
     }
-  }) as ViewResourceInterface | undefined
+  }) as ViewResource | undefined
 }

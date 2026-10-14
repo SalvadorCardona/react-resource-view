@@ -7,7 +7,7 @@ import { useIsActiveMenuEntry } from "@/admin/useIsActiveMenuEntry"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ResourceViewButton from "@/action/ResourceViewButton"
 import { generateLinkByResource } from "@/routes/routes"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { getRecordTitle } from "@/internal/object/getRecordTitle"
 import { RecordOfAny } from "@/internal/type/RecordOfAny"
@@ -24,13 +24,13 @@ import { ArrowLeft } from "lucide-react"
 export function useAdminPageTitle() {
   const currentResource = useCurrentViewResourceContext()
   const action = currentResource.resourceAction
-  const viewName = currentResource.resource?.views?.[action]?.name
+  const viewName = currentResource.resource?.views?.[action]?.title
   // A record page only: a `read` with no id is a page of its own — a
   // documentation page, an overview — and its data is not a record.
   const record = currentResource.id
     ? (currentResource.data as RecordOfAny | undefined)
     : undefined
-  const recordTitle = getRecordTitle(record, currentResource.view?.titleKey)
+  const recordTitle = getRecordTitle(record, currentResource.view?.titleField)
   const recordId = record
     ? getIdFromObject(record, true, currentResource.resource)
     : undefined
@@ -73,6 +73,7 @@ export function AdminHeader() {
     return () => sub.unsubscribe()
   }, [resource, record, listLink, navigate])
 
+  const canList = usePermission(ActionList.list, undefined, resource)
   const components = currentResource.view?.components
 
   if (components?.navigation) {
@@ -102,7 +103,7 @@ export function AdminHeader() {
     !currentResource.parentResource &&
     listLink &&
     (record || action === ActionList.create) &&
-    permissionResource(resource, ActionList.list)
+    canList
 
   // A record's name is data, not a string of the interface: only the view's
   // own name goes through the translations.

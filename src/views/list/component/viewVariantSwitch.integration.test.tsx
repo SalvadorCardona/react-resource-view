@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { createView, createViewResource } from "@/index"
+import { createViewResource, layout } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 
 /**
  * A list offering several layouts: clicking a tab must swap the rendered
@@ -42,17 +42,20 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 function createArticleResource(id: string, fetchDelay: number) {
   return createViewResource<Article>(id, {
     name: "Articles",
-    scope: "demo",
-    getCollection: async () => {
-      await wait(fetchDelay)
-      return { data: COLLECTION }
+    storage: "local",
+    repository: {
+      getCollection: async () => {
+        await wait(fetchDelay)
+        return { data: COLLECTION }
+      },
     },
-    view: {
-      name: "Articles",
-      viewVariants: [
-        createView({ name: "Alpha", listComponent: AlphaList }),
-        createView({ name: "Beta", listComponent: BetaList }),
-      ],
+    views: {
+      list: {
+        layouts: [
+          layout.custom({ type: "alpha", components: { list: AlphaList } }),
+          layout.custom({ type: "beta", components: { list: BetaList } }),
+        ],
+      },
     },
   })
 }

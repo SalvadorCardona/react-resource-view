@@ -1,10 +1,4 @@
-import { ActionList } from "react-data-form"
-import {
-  cardViewOptionFactory,
-  configurePorts,
-  createViewResource,
-  tableViewOptionFactory,
-} from "react-resource-view"
+import { configurePorts, createViewResource, layout } from "react-resource-view"
 import { setInStorage } from "ssr-safe-storage"
 
 export interface Article {
@@ -54,9 +48,9 @@ const ARTICLES: Article[] = [
 /**
  * Seeds the fixtures the demo reads.
  *
- * With no `path`, the resource falls back to `localStorageRepository`, so the
- * whole demo runs in the browser — no server, which is what a statically hosted
- * page can offer.
+ * The resource declares `storage: "local"` rather than a `path`, so the whole
+ * demo runs in the browser — no server, which is what a statically hosted page
+ * can offer.
  */
 export function seedDemoData(): void {
   setInStorage("demo_articles", {
@@ -83,23 +77,21 @@ export function configureDemoRouting(basePath: string): void {
 
 export const articlesResource = createViewResource<Article>("demo_articles", {
   name: "Articles",
-  scope: "demo",
-  view: {
-    name: "Articles",
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        published: { label: "Published", type: "checkbox" },
-      },
+  storage: "local",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      published: { label: "Published", type: "checkbox" },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
-    viewVariants: [
-      tableViewOptionFactory({ columns: ["title", "author", "published"] }),
-      cardViewOptionFactory({ grid: 3 }),
-    ],
   },
   views: {
-    [ActionList.list]: { name: "Articles" },
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [
+        layout.table({ fields: ["title", "author", "published"] }),
+        layout.cards({ columns: 3 }),
+      ],
+    },
   },
 })

@@ -1,5 +1,5 @@
 import { TableCell, TableRow } from "@/ui/table"
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
 import { Trans } from "react-mini-i18n"
 import { getFormInputsFromForm } from "react-data-form"
 import getIdFromObject from "@/internal/id/getIdFromObject"

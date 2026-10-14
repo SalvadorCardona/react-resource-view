@@ -7,7 +7,7 @@ import {
 } from "@/ui/table"
 import ListPagination from "@/views/list/component/ListPagination"
 import { getFormInputsFromForm } from "react-data-form"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { Trans } from "react-mini-i18n"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { createForm } from "react-data-form"

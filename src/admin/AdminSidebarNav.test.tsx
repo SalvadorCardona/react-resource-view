@@ -7,7 +7,7 @@ import {
   RouterProvider,
   useRouterState,
 } from "@tanstack/react-router"
-import { createItemMenuWithResource, createViewResource, parseLink } from "@/index"
+import { createViewResource, parseLink, layout } from "@/index"
 import { configurePorts, getPorts } from "@/ports"
 import { tanstackAdapter } from "@/tanstack"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
@@ -32,24 +32,22 @@ const collection = (id: string) => async () => ({
 
 function crud(id: string, name: string) {
   return createViewResource<Row>(id, {
-    name,
-    scope: "admin",
-    canRead: true,
-    canUpdate: true,
-    canCreate: true,
+  name,
+  storage: "local",
+  permissions: { delete: false },
+  repository: {
     getItem: async () => ({
       data: { "@id": `/api/${id}/1`, "@type": name, id: "1", name: "Ada" },
     }),
     getCollection: collection(id),
-    view: { name, listComponent: () => <div /> },
-  })
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: () => <div /> } })] },
+  },
+})
 }
 
-const overviewResource = createViewResource<Row>("admin_overview", {
-  name: "Overview",
-  scope: "admin",
-  view: { name: "Overview", viewComponent: () => <p>At a glance</p> },
-})
+const overviewResource = createViewResource<Row>("admin_overview", { name: "Overview", components: { view: () => <p>At a glance</p> } })
 const usersResource = crud("admin_users", "Users")
 const postsResource = crud("admin_posts", "Posts")
 const commentsResource = crud("admin_comments", "Comments")
@@ -66,13 +64,13 @@ const loadAdminScope = async (): Promise<ScopeInterface> => ({
     resourceAction: ActionList.list,
   },
   menu: [
-    createItemMenuWithResource({ resource: overviewResource }),
-    createItemMenuWithResource({ resource: usersResource }),
+    overviewResource,
+    usersResource,
     {
       name: "Blog",
       items: [
-        createItemMenuWithResource({ resource: postsResource }),
-        createItemMenuWithResource({ resource: commentsResource }),
+        postsResource,
+        commentsResource,
       ],
     },
   ],
