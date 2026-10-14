@@ -81,3 +81,44 @@ describe("ResourceViewButton, opened in a drawer", () => {
     expect(document.querySelector("[data-swipe-axis='y']")).not.toBeNull()
   })
 })
+
+describe("ResourceViewButton, the link to the full page", () => {
+  const expandLink = () => screen.queryByRole("link", { name: "Open in full page" })
+
+  it("is in the header of a dialog, and leads to the same view on its page", async () => {
+    const resource = resourceWith({ open: "dialog" })
+    render(<ResourceViewButton action="update" resource={resource} id="12" />)
+    await userEvent.click(screen.getByRole("button"))
+
+    expect(expandLink()).toHaveAttribute("title", "Open in full page")
+    expect(expandLink()?.getAttribute("href")).toMatch(
+      new RegExp(`/${resource["@id"]}/update/12$`)
+    )
+  })
+
+  it("is in the header of a drawer too", async () => {
+    await openOverlay({ open: "drawer" })
+
+    expect(expandLink()).toBeInTheDocument()
+  })
+
+  it("is left out with `expandable: false`", async () => {
+    await openOverlay({ open: "dialog", expandable: false })
+
+    expect(expandLink()).toBeNull()
+  })
+
+  it("is left out of a deletion, which has no page worth opening", async () => {
+    render(
+      <ResourceViewButton
+        action="delete"
+        resource={resourceWith({})}
+        id="12"
+      />
+    )
+    await userEvent.click(screen.getByRole("button"))
+
+    expect(screen.getByTestId("view")).toBeInTheDocument()
+    expect(expandLink()).toBeNull()
+  })
+})

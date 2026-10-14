@@ -334,6 +334,20 @@
       "hint": "a view has no `id` or `icon` of its own: the resource's `icon` is used; a layout takes `id` and `icon`."
     },
     {
+      "id": "RV1-VIEW-010",
+      "area": "views",
+      "title": "A dialog or a drawer of `read` and `update` links to its full page (`expandable`)",
+      "kind": "semantic",
+      "from": "no way from a dialog or a drawer to the view's page",
+      "to": "views.<action>.expandable, layout.board({ expandable })",
+      "codemod": false,
+      "manual": "Nothing to rewrite. `read` and `update` opened with `open: \"dialog\"` or `\"drawer\"` — and the records a board opens with `openRecord` — now show an \"Open in full page\" link beside the close button; `create` and `delete` do not. Declare `expandable: false` on a view (or on `layout.board()`) to take it away, `expandable: true` to add it to `create`.",
+      "why": "A window too narrow for its record had to be closed, and the record found again by hand.",
+      "before": "views: { read: { open: \"drawer\" } }\n// 0.x: no way to the record's page from the drawer",
+      "after": "views: { read: { open: \"drawer\" } } // \"Open in full page\" in its header\nviews: { read: { open: \"drawer\", expandable: false } } // as in 0.x",
+      "note": "The link is a real link (`<a href>`): Ctrl/Cmd+click opens the page in a new tab. It keeps the layout of the list it was opened from."
+    },
+    {
       "id": "RV1-BEHAV-001",
       "area": "behavior",
       "title": "`behavior` disappears: each option moves to where it has an effect",
@@ -1196,6 +1210,20 @@
         }
       ],
       "hint": "this key is built by `createViewResource` and cannot be declared."
+    },
+    {
+      "id": "RV1-DATA-006",
+      "area": "data",
+      "title": "Writes are drawn before the API answers (`optimistic`)",
+      "kind": "semantic",
+      "from": "every write waits for the API before the list changes",
+      "to": "optimistic: true (the default), views.create|update|delete.optimistic",
+      "codemod": false,
+      "manual": "Nothing to rewrite, but the perceived behaviour changes: a saved form, a deleted row, a cell edited in place, a card moved and the writes of `bulkActions` made through their `mutation` argument show in the list before the API answers — a created row appears, marked as being saved, before it has an id. A refusal puts the row back with a toast; a form keeps the API's violations on its fields. Declare `optimistic: false` at the root of a resource, or on one action (`views.delete: { optimistic: false }`) where the list must wait for the server — an in-place edit and a card moved are updates.",
+      "why": "Every write waited for the API before anything moved, and only the board's drag and drop did otherwise.",
+      "before": "createViewResource(\"tasks\", { path: \"/api/tasks\" })\n// 0.x: a deleted row stays until the API has answered",
+      "after": "createViewResource(\"tasks\", {\n  path: \"/api/tasks\",\n  views: { delete: { optimistic: false } }, // as in 0.x, for deletions\n})",
+      "note": "The API's answer replaces the guess as soon as it comes (generated id, computed fields); several writes to one record show the last one; a list read again while a write is in flight — a realtime push — keeps the row as written. `useResourceMutation(resource)` gives an application's own actions the same optimism and rollback; `BulkActionInterface.onAction` receives it as its second argument."
     },
     {
       "id": "RV1-SCOPE-001",

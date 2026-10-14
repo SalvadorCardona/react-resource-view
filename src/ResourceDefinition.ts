@@ -369,6 +369,23 @@ interface OpenableViewDefinition {
    * from the bottom on a phone. A direct link always opens the page.
    */
   open?: OpenMode
+  /**
+   * In a dialog or a drawer, an "Open in full page" link beside the close
+   * button — a real link, so Ctrl/Cmd+click opens a new tab. Defaults to
+   * `true` for `read` and `update`, whose content may be long, `false` for
+   * `create` and `delete`.
+   */
+  expandable?: boolean
+}
+
+interface OptimisticViewDefinition {
+  /**
+   * Draw the result of this action before the API answers, and put things
+   * back if it refuses. Defaults to the resource's `optimistic`, itself
+   * `true`. `views.delete.optimistic: false` waits for the API before a row
+   * goes.
+   */
+  optimistic?: boolean
 }
 
 /** `views.read` */
@@ -379,7 +396,10 @@ export interface ReadViewDefinition<Item = any, Write extends object = Item & ob
 
 /** `views.create` */
 export interface CreateViewDefinition<Item = any, Write extends object = Item & object>
-  extends CommonViewOptions<Item, Write>, ActionViewOptions, OpenableViewDefinition {
+  extends CommonViewOptions<Item, Write>,
+    ActionViewOptions,
+    OpenableViewDefinition,
+    OptimisticViewDefinition {
   afterSave?: AfterSave<Item>
 }
 
@@ -391,7 +411,10 @@ export interface UpdateViewDefinition<Item = any, Write extends object = Item & 
 
 /** `views.delete` */
 export interface DeleteViewDefinition<Item = any, Write extends object = Item & object>
-  extends CommonViewOptions<Item, Write>, ActionViewOptions, OpenableViewDefinition {}
+  extends CommonViewOptions<Item, Write>,
+    ActionViewOptions,
+    OpenableViewDefinition,
+    OptimisticViewDefinition {}
 
 export interface ViewsDefinition<Item = any, Write extends object = Item & object> {
   list?: ListViewDefinition<Item, Write>
@@ -435,6 +458,14 @@ export interface ResourceDefinition<Item = any, Write extends object = Item & ob
    * dialect).
    */
   realtime?: boolean
+  /**
+   * Draw every write — a form saved, a row deleted, a cell edited in place, a
+   * card moved — before the API answers: the row changes at once, the API's
+   * answer replaces it when it comes, and a refusal puts it back with a
+   * message. Defaults to `true`; `views.<action>.optimistic` decides per
+   * action (an in-place edit and a card moved are updates).
+   */
+  optimistic?: boolean
 
   /** What the users may do. Everything, unless restricted here. */
   permissions?: Permissions<Item>

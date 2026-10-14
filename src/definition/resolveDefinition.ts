@@ -142,6 +142,8 @@ export function resolveViews(
         className: merged.className,
         titleField: merged.titleField,
         open: own.open ?? (action === "delete" ? "dialog" : "page"),
+        expandable: own.expandable ?? (action === "read" || action === "update"),
+        optimistic: own.optimistic ?? definition.optimistic ?? defaults?.optimistic ?? true,
         afterSave: own.afterSave,
         form: toForm(form),
         components: {

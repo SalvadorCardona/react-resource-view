@@ -9,6 +9,7 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 import { useLayout } from "@/layout/useLayout"
 import type { BoardLayoutOptions } from "@/layout/layout"
 import { BoardInterface } from "@/views/list/component/columns/useBoard"
+import { useResourceMutation } from "@/hook/useResourceMutation"
 
 /**
  * The bar that comes up as soon as a card of the board is selected: how many
@@ -20,6 +21,8 @@ export function BoardSelectionBar({ board }: { board: BoardInterface }) {
   const bulkActions = useLayout<BoardLayoutOptions>().options.bulkActions ?? []
   const [isMoveOpen, setIsMoveOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
+  // Handed to the bulk actions, so what they write is drawn at once too.
+  const mutation = useResourceMutation(currentResource.resource)
 
   const count = board.selected.length
   if (!count) return null
@@ -34,7 +37,10 @@ export function BoardSelectionBar({ board }: { board: BoardInterface }) {
   const runAction = async (action: (typeof bulkActions)[number]) => {
     setIsRunning(true)
     try {
-      await action.onAction(selectedRows.map((row) => row.data))
+      await action.onAction(
+        selectedRows.map((row) => row.data),
+        mutation
+      )
       board.clear()
     } catch (e) {
       console.error(e)

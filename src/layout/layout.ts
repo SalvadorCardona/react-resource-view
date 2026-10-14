@@ -141,6 +141,11 @@ export interface BoardLayoutOptions<Item = any> {
    */
   openRecord?: OpenMode
   /**
+   * Whether the drawer or the dialog a card opens links to the record's full
+   * page. Defaults to the `expandable` of the view it opens.
+   */
+  expandable?: boolean
+  /**
    * Whether cards can be selected — checkbox, Ctrl/Cmd+click, Shift+click, a
    * long press on a phone — and moved together. Defaults to `true`.
    */
@@ -320,6 +325,7 @@ function board<Item = any>(
         "groupBy",
         "columns",
         "openRecord",
+        "expandable",
         "selectable",
         "bulkActions",
         "titleField",
