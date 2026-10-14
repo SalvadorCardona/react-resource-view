@@ -22,18 +22,26 @@ create and edit forms, and the delete confirmation, wired to the API and to the
 URL.
 
 ```tsx
-import { createViewResource, ResourceView } from "react-resource-view"
-import { tableViewOptionFactory } from "react-resource-view"
+import { createViewResource, layout } from "react-resource-view"
 
-const articles = createViewResource("articles", {
-  path: "/api/articles",
+const articles = createViewResource<Article>("articles", {
   name: "Articles",
-  view: {
-    form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
-    viewVariants: [tableViewOptionFactory()],
+  path: "/api/articles",
+  form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
+  views: {
+    list: { layouts: [layout.table(), layout.cards({ columns: 3 })] },
   },
 })
 ```
+
+That is the whole declaration: a list with its buttons, a detail page, create
+and edit forms and a delete confirmation — every action offered unless
+`permissions` restricts it, every field name checked against `Article`.
+
+> **Upgrading from 0.x?** 1.0 rewrote the declaration:
+> `npx react-resource-view migrate` rewrites yours,
+> [MIGRATION-1.0.md](MIGRATION-1.0.md) lists every change, and
+> [`migrations/1.0.json`](migrations/1.0.json) the same list as data.
 
 Built on [`react-data-form`](https://github.com/SalvadorCardona/react-data-form)
 for the forms. Which API answers, and how it spells a page or a filter, is a
@@ -131,10 +139,8 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "articles", // → /api/articles
   name: "Articles",
-  view: {
-    form: { inputs: { title: { label: "Title" } } },
-    itemsPerPage: 25,
-  },
+  form: { inputs: { title: { label: "Title" } } },
+  views: { list: { pageSize: 25 } },
 })
 ```
 
@@ -163,7 +169,7 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "articles", // → /rest/v1/articles
   name: "Articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })
 ```
 
@@ -190,7 +196,7 @@ configureApi({
 const items = createViewResource("items", {
   path: "items", // → /items, /items/{id}
   name: "Items",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })
 ```
 
@@ -253,7 +259,7 @@ configureApi({
 const books = createViewResource("books", {
   path: "/api/books", // → /api/books?page=0&size=20, /api/books/{id}
   name: "Books",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })
 ```
 
@@ -279,7 +285,7 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "/api/articles", // → /api/articles/?page=1&page_size=30, /api/articles/{id}/
   name: "Articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })
 ```
 
@@ -315,13 +321,13 @@ const invoices = createViewResource("invoices", {
 They are written once, in the package's own vocabulary, and the dialect
 translates them:
 
-| Key                 | Means              | Strapi                 | Supabase          | FastAPI                     | Django                      |
-| ------------------- | ------------------ | ---------------------- | ----------------- | --------------------------- | --------------------------- |
-| `page`              | 1-based page       | `pagination[page]`     | `offset`          | `skip` (or `page`)          | `page`                      |
-| `itemsPerPage`      | rows per page      | `pagination[pageSize]` | `limit`           | `limit` (or `size`)         | `page_size` (or `limit`)    |
-| `order`             | `{ title: "asc" }` | `sort[0]=title:asc`    | `order=title.asc` | `order_by=title` (`-title`) | `ordering=title` (`-title`) |
-| `title: "hello"`    | a field            | `filters[title][$eq]`  | `title=eq.hello`  | `title=hello`               | `title=hello`               |
-| `status: ["a","b"]` | any of             | `filters[status][$in]` | `status=in.(a,b)` | `status=a&status=b`         | `status=a&status=b`         |
+| Key                 | Means                                 | Strapi                 | Supabase          | FastAPI                     | Django                      |
+| ------------------- | ------------------------------------- | ---------------------- | ----------------- | --------------------------- | --------------------------- |
+| `page`              | 1-based page                          | `pagination[page]`     | `offset`          | `skip` (or `page`)          | `page`                      |
+| `itemsPerPage`      | rows per page (`views.list.pageSize`) | `pagination[pageSize]` | `limit`           | `limit` (or `size`)         | `page_size` (or `limit`)    |
+| `order`             | `{ title: "asc" }`                    | `sort[0]=title:asc`    | `order=title.asc` | `order_by=title` (`-title`) | `ordering=title` (`-title`) |
+| `title: "hello"`    | a field                               | `filters[title][$eq]`  | `title=eq.hello`  | `title=hello`               | `title=hello`               |
+| `status: ["a","b"]` | any of                                | `filters[status][$in]` | `status=in.(a,b)` | `status=a&status=b`         | `status=a&status=b`         |
 
 A value spelled as an object carries its own operator through untouched —
 `{ title: { $containsi: "hell" } }` on Strapi, `{ createdAt: { gte: "2024-01-01" } }`
@@ -331,8 +337,8 @@ on Supabase.
 
 A dialect is one object — `buildRequest`, `readCollection`, `readItem`,
 `getId`, `getIdentifier`, `normalizeError` — and `ApiDialectInterface` is
-exported to implement it. A resource that brings its own `getCollection`,
-`getItem` and the rest still bypasses all of this, as it always could.
+exported to implement it. A resource that brings its own `repository: {
+getCollection, getItem, … }` still bypasses all of this, as it always could.
 
 ### Typing resources from OpenAPI
 
@@ -373,7 +379,9 @@ type Article = components["schemas"]["Article.jsonld"]
 
 const articles = createViewResource<Article>("articles", {
   path: "/api/articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  // `inputs`, `titleField`, `layout.board({ groupBy })`… are checked against
+  // Article: a field that does not exist is a TypeScript error.
+  form: { inputs: { title: { label: "Title" } } },
 })
 ```
 
@@ -517,7 +525,10 @@ const adminScope: ScopeInterface = {
   name: "admin",
   label: "Back office",
   decoratorComponent: createAdminLayout({ logo: <MyLogo />, topBarEnd: <UserMenu /> }),
-  menu: [createItemMenuWithResource({ resource: tasks })],
+  // The one place a resource's scope is written: its links lead here.
+  resources: [tasks, users],
+  // One entry per resource; or a list mixing resources, links and groups.
+  menu: "auto",
 }
 ```
 
@@ -534,19 +545,18 @@ createAdminLayout({
 ```
 
 Views sit in a column of constrained width; a board, a calendar or a wide table
-takes the whole page with `fullWidth` — on the resource's `view`, on one action
-of `views`, or on a single list variant, the most specific one winning:
+takes the whole page with `fullWidth` — at the root of the resource, on one
+action of `views`, or on a single layout, the most specific one winning:
 
 ```ts
-createViewResource("tasks", {
-  view: {
-    fullWidth: true,
-    viewVariants: [
-      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
-    ],
+createViewResource<Task>("tasks", {
+  path: "/api/tasks",
+  fullWidth: true,
+  views: {
+    list: { layouts: [layout.board({ groupBy: "status", columns: STATUSES })] },
+    // The forms keep the column.
+    update: { fullWidth: false },
   },
-  // The forms keep the column.
-  views: { [ActionList.update]: { fullWidth: false } },
 })
 ```
 
@@ -556,48 +566,110 @@ goes through the navigation, the slots and the theme; the
 [playground](https://cardona.digital/react-resource-view/playground/?view=admin/admin_tasks/list)
 runs on it, its task board full width.
 
-## Layouts
+## The declaration
 
-A list renders through one of several variants, chosen with a factory:
+What is common to every action sits at the root of the resource; what belongs
+to one action sits in `views.<action>`, and the two are merged deeply — a view
+only says what differs:
 
-| Factory                     | Layout                                 |
-| --------------------------- | -------------------------------------- |
-| `tableViewOptionFactory`    | Data table, editable in place          |
-| `cardViewOptionFactory`     | Card grid                              |
-| `columnViewOptionFactory`   | Columns, grouped by a key              |
-| `splitViewFactory`          | List on the left, details on the right |
-| `calendarViewOptionFactory` | Calendar, by day or week               |
-| `timelineViewOptionFactory` | Timeline, grouped by row               |
-| `itemViewOptionFactory`     | Plain item list                        |
-
-Several variants can coexist on one resource; the view keeps the reader's
-choice in the URL.
-
-### Boards: opening, selecting, moving
-
-A card of a `columnViewOptionFactory` board opens the record when the view says
-where, and several cards move together:
-
-```tsx
-columnViewOptionFactory({
-  identifierKey: "status",
-  identifierKeyList: STATUSES,
-  behavior: {
-    // "drawer" | "popup" | "window"; unset, a card opens nothing.
-    openRecordIn: "drawer",
-    // On by default.
-    selectable: true,
-    // Beside "Move to…", in the bar a selection brings up.
-    bulkActions: [{ label: "Archive", onAction: (records) => archive(records) }],
+```ts
+export const tasks = createViewResource<Task>("tasks", {
+  name: "Tasks",
+  icon: ListTodo,
+  path: "/api/tasks",
+  fullWidth: true,
+  // Everything is allowed by default: only restrictions are declared.
+  permissions: {
+    delete: ({ item }) => item?.status !== "done",
+  },
+  form: { inputs: TASK_FIELDS }, // shared by create, update and read
+  views: {
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [
+        layout.board({
+          groupBy: "status",
+          columns: TASK_STATUSES,
+          openRecord: "drawer",
+        }),
+        layout.table({ fields: ["title", "status", "dueDate"] }),
+      ],
+    },
+    update: { fullWidth: false, open: "dialog", afterSave: "close" },
   },
 })
 ```
 
+| Key                                                            | Where                                      | What it does                                                                                           |
+| -------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `name`, `icon`                                                 | root                                       | The menu, the titles (derived: "Tasks", "Edit — Tasks"), the breadcrumb                                |
+| `path`                                                         | root                                       | The API path — or `storage: "local"` to keep the records in the browser, or a `repository`             |
+| `permissions`                                                  | root                                       | `"all"` (default), `"readonly"`, a list of actions, or one boolean / function per action               |
+| `hooks`                                                        | root                                       | `beforeList`, `beforeRead`, `beforeCreate`, `beforeUpdate`, `beforeDelete`, `afterSave`, `afterDelete` |
+| `realtime`                                                     | root                                       | Reloads the views when the API pushes a change (Mercure)                                               |
+| `quota`                                                        | root                                       | How many records may be created: `{ get: (ctx) => ({ current, max }), fallback }`                      |
+| `form`, `fullWidth`, `titleField`, `components`, `description` | root or `views.<action>`                   | Merged deeply, the action winning; `inputs: { notes: false }` removes a field                          |
+| `title`, `buttonLabel`                                         | `views.<action>`                           | The view's title, when the derived one will not do; the text of its button                             |
+| `open`                                                         | `views.read`, `create`, `update`, `delete` | `"page"`, `"dialog"` or `"drawer"`                                                                     |
+| `afterSave`                                                    | `views.create`, `update`                   | `"close"`, `"stay"`, `"reload"` or `{ redirect: (item) => string }`                                    |
+| `tabs`                                                         | `views.read`, `update`                     | Sub-views under the record: `{ items: [{ resource, filter: ({ item }) => … }] }`                       |
+| `layouts`, `filters`, `pageSize`, `rowActions`                 | `views.list`                               | How the list is drawn, filtered, paged, and what its rows offer                                        |
+
+In development, `createViewResource` checks the declaration: a key it does not
+read, a 0.x key or a resource with no data source throws an error that says how
+to write it.
+
+### Permissions
+
+They decide what the interface offers — the API stays where access is enforced.
+A refused action hides its buttons and protects its route: `/books/update/1`
+draws the scope's `forbiddenFallback` instead of the form. A function is told
+the record, and may answer asynchronously; the answers are cached per record
+while a list is on screen. In a component, `usePermission("delete", record)`.
+
+## Layouts
+
+A list renders through one or several layouts, from the `layout` namespace:
+
+| Declaration                                 | Layout                                 |
+| ------------------------------------------- | -------------------------------------- |
+| `layout.table()`                            | Data table, editable in place          |
+| `layout.cards({ columns })`                 | Card grid                              |
+| `layout.board({ groupBy, columns })`        | Kanban board, one column per value     |
+| `layout.split()`                            | List on the left, details on the right |
+| `layout.calendar({ dateField })`            | Calendar, by day, week or month        |
+| `layout.timeline({ startField, endField })` | Timeline, grouped by row               |
+| `layout.items()`                            | Plain item list                        |
+| `layout.custom({ type, components })`       | A layout of your own                   |
+
+Several layouts can coexist on one resource; the view keeps the reader's choice
+in the URL, under the layout's type (`?variant=board`) — a label of its own
+(`label: "Kanban"`) does not change it. Every layout takes `fields` (the
+columns, the lines of a card), `label`, `icon`, `fullWidth` and `components`.
+
+### Boards: opening, selecting, moving
+
+A card of a board opens the record when the board says where, and several cards
+move together:
+
+```tsx
+layout.board({
+  groupBy: "status",
+  columns: STATUSES,
+  // "drawer" | "dialog" | "page"; unset, a card opens nothing.
+  openRecord: "drawer",
+  // On by default.
+  selectable: true,
+  // Beside "Move to…", in the bar a selection brings up.
+  bulkActions: [{ label: "Archive", onAction: (records) => archive(records) }],
+})
+```
+
 - **Opening** — the whole card is clickable and reachable with Tab, Enter opens
-  it. `drawer` and `popup` show the record's `read` view over the board, with a
+  it. `drawer` and `dialog` show the record's `read` view over the board, with a
   way to edit it, and write it into the URL as a child view
   (`…/tasks/list/tasks/read/12`): the link can be shared and Back closes it.
-  `window` goes to the record's page through `generateLink`.
+  `page` goes to the record's page through `generateLink`.
 - **Controls first** — a button, a link, a menu, a checkbox or a drag handle in
   the card keeps its click (or anything marked `data-card-control`); selecting
   text does not open the card either.
@@ -609,24 +681,24 @@ columnViewOptionFactory({
 
 ### A layout of your own
 
-A variant is a `createView` call over three components, so the eighth layout is
-a single file — and one command writes it:
+A layout is a `layout.custom()` call over three components, so the ninth layout
+is a single file — and one command writes it:
 
 ```bash
 npx react-resource-view create-view-variant Heatmap --dir src/views
 ```
 
 Run it bare and it asks for the name and the directory. It writes
-`src/views/heatmapViewFactory.tsx`: the list, row and item components, the
-factory that declares them, and the options interface to extend. Nothing is
-registered anywhere — declare the factory in `viewVariants` beside the built-in
-ones:
+`src/views/heatmapLayout.tsx`: the list, row and item components, the function
+that declares them, and the options interface to extend — read back in the
+components with `useLayout().options`. Nothing is registered anywhere — declare
+it in `layouts` beside the built-in ones:
 
 ```ts
-import heatmapViewFactory from "./views/heatmapViewFactory"
+import heatmapLayout from "./views/heatmapLayout"
 
-view: {
-  viewVariants: [tableViewOptionFactory(), heatmapViewFactory()],
+views: {
+  list: { layouts: [layout.table(), heatmapLayout()] },
 }
 ```
 
@@ -638,15 +710,19 @@ takes the generated file apart, and runs one.
 
 ## Filters
 
-`formFilter` declares the filter form, and `defaultFilter` the filters applied
-as long as the URL carries none of its own. Both are written in the package's
-own vocabulary; the [dialect](#filters-pages-and-sorts) translates them for the
-API:
+`filters.inputs` declares the filter form, and `filters.initial` the filters
+applied as long as the URL carries none of its own. Both are written in the
+package's own vocabulary; the [dialect](#filters-pages-and-sorts) translates
+them for the API:
 
 ```ts
-view: {
-  formFilter: { inputs: { published: { label: "Published" } } },
-  defaultFilter: { published: true },
+views: {
+  list: {
+    filters: {
+      inputs: { published: { label: "Published" } },
+      initial: { published: true },
+    },
+  },
 }
 ```
 

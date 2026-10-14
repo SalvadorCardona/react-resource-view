@@ -26,6 +26,14 @@ import { encodeQuery } from "@/internal/url/urlEncoder"
 import { cleanValuesInObject } from "@/internal/object/cleanValuesInObject"
 import { getLdIri, JsonLdIriAble } from "jsonld-item"
 import { resolveDialect } from "@/api/apiConfig"
+import {
+  PermissionCache,
+  PermissionCacheContext,
+  usePermissionState,
+} from "@/utils/permissionResource"
+import { useForbiddenFallback } from "@/provider/useForbiddenFallback"
+import { PageLoader } from "@/ui/Loader"
+import { ActionList } from "react-data-form"
 
 export interface CurrentViewResourceContextParams extends ViewResourceContextParams {
   decoratorComponent?: FC<{ children: ReactNode }>
@@ -99,7 +107,9 @@ export default function ViewResourceContextProvider({
   const [isLoading, setIsLoading] = useState<boolean>(needFetch)
   const [error, setError] = useState<boolean>(false)
   const fetchTokenRef = useRef(0)
-  const fetchInThisTickRef = useRef<Promise<void> | null>(null)
+  const fetchInThisTickRef = useRef<{ promise: Promise<void>; token: number } | null>(
+    null
+  )
   const isFirstFilterEffectRef = useRef(true)
 
   if (!viewResource.view) {
@@ -116,10 +126,12 @@ export default function ViewResourceContextProvider({
     }
 
     const token = ++fetchTokenRef.current
+    console.log('DBG load', viewResource.resource['@id'], viewResource.resourceAction, token)
     setIsLoading(true)
 
     try {
       const viewProcessed = await processViewResourceContext(viewResource)
+      console.log('DBG got', viewResource.resource['@id'], token, fetchTokenRef.current, viewProcessed.data)
       if (token !== fetchTokenRef.current) return
 
       // A request brings back rows, nothing else. Writing the whole context
@@ -137,14 +149,19 @@ export default function ViewResourceContextProvider({
 
   // Every button of a list hears the same save and asks for the same rows:
   // the calls made in one go share a single request.
+  // A request the effect's cleanup has since invalidated — React's strict mode
+  // mounts, cleans up and mounts again in one go — is not shared: its rows
+  // would be dropped on arrival, and the list would stay empty.
   const fetchData = () => {
-    if (fetchInThisTickRef.current) return fetchInThisTickRef.current
-    const fetching = loadData()
-    fetchInThisTickRef.current = fetching
+    const shared = fetchInThisTickRef.current
+    if (shared && shared.token === fetchTokenRef.current) return shared.promise
+    const promise = loadData()
+    const current = { promise, token: fetchTokenRef.current }
+    fetchInThisTickRef.current = current
     queueMicrotask(() => {
-      fetchInThisTickRef.current = null
+      if (fetchInThisTickRef.current === current) fetchInThisTickRef.current = null
     })
-    return fetching
+    return promise
   }
 
   // Only a dialect that knows a push channel names one. Strapi and Supabase
@@ -153,9 +170,7 @@ export default function ViewResourceContextProvider({
     viewResource.resource?.path ?? viewResource.resource?.["@id"]
   )
 
-  useMercure(realtimeTopic, !!viewResource.view?.behavior?.eventSourced).onChange(
-    fetchData
-  )
+  useMercure(realtimeTopic, !!viewResource.resource.realtime).onChange(fetchData)
 
   useEffect(() => {
     if (needFetch) {
@@ -174,18 +189,17 @@ export default function ViewResourceContextProvider({
     fetchData()
   }, [viewResource.filter])
 
-  const ViewDecorator =
-    viewResource?.resource?.decoratorComponent ?? DefaultDecorator
-  const View = viewResource.view.viewComponent
+  const currentViewWithVariant = withLayout(viewResource)
+  const components = currentViewWithVariant.view.components
+  const ViewDecorator = components.wrapper ?? DefaultDecorator
+  const View = components.view
 
-  if (!View) {
-    throw new Error("View is undefined")
-  }
-
-  const currentViewWithVariant = {
-    ...viewResource,
-    ...currentVariantView(viewResource),
-  }
+  // The answers of the permissions asked while this data is on screen: a
+  // list of fifty rows asks once per row and action, and asks again once the
+  // rows are loaded again.
+  const permissionCache = usePermissionCache(viewResource.data)
+  const access = useRouteAccess(currentViewWithVariant, error, permissionCache)
+  const forbiddenFallback = useForbiddenFallback()
 
   const handleSetSelect = (item: JsonLdIriAble) => {
     const iri = getLdIri(item)
@@ -219,53 +233,96 @@ export default function ViewResourceContextProvider({
         isSelected,
       }}
     >
-      <MetaResourceComponent />
-      <Decorator>
-        <ViewDecorator>
-          {viewResource?.view?.components?.top && (
-            <viewResource.view.components.top />
-          )}
-          <View />
-          <MultiViewTab />
-          {viewResourceContextParams.childViewResource && (
-            <ChildViewResourceDialog
-              childViewResource={viewResourceContextParams.childViewResource}
-            />
-          )}
-          {viewResource?.view?.components?.bottom && (
-            <viewResource.view.components.bottom />
-          )}
-        </ViewDecorator>
-      </Decorator>
+      <PermissionCacheContext value={permissionCache}>
+        <MetaResourceComponent />
+        <Decorator>
+          <ViewDecorator>
+            {access === "allowed" ? (
+              <>
+                {components.top && <components.top />}
+                <View />
+                <MultiViewTab />
+                {viewResourceContextParams.childViewResource && (
+                  <ChildViewResourceDialog
+                    childViewResource={viewResourceContextParams.childViewResource}
+                  />
+                )}
+                {components.bottom && <components.bottom />}
+              </>
+            ) : access === "pending" ? (
+              <PageLoader isLoading={true} />
+            ) : (
+              forbiddenFallback
+            )}
+          </ViewDecorator>
+        </Decorator>
+      </PermissionCacheContext>
     </CurrentResourceContext>
   )
 }
 
-function currentVariantView(
-  currentResource: ViewResourceContext
-): ViewResourceContext {
-  if (
-    currentResource.view?.viewVariants &&
-    currentResource.view.viewVariants.length > 0
-  ) {
-    const idViewVariant = currentResource.viewVariant
-    const currentDefaultViewOption = currentResource.view.viewVariants[0]
-    const currentDefaultView =
-      currentResource.view.viewVariants.find(
-        (viewOption) => viewOption.id === idViewVariant
-      ) ?? currentDefaultViewOption
+/**
+ * The context with the list's layout on screen merged into its view: the
+ * layout's form, width and components win over the action's.
+ */
+function withLayout(context: ViewResourceContext): ViewResourceContext {
+  const layouts = context.view?.layouts ?? []
+  if (layouts.length === 0) return context
 
-    return {
-      ...currentResource,
-      view: {
-        ...currentResource.view,
-        ...currentDefaultView,
-        // The view's human-readable name — the page title — must not be lost
-        // par l'identifiant du variant (ex. "card").
-        name: currentResource.view.name ?? currentDefaultView.name,
-      },
-    } as CurrentViewResourceContext
+  const layout =
+    layouts.find((candidate) => candidate.id === context.viewVariant) ?? layouts[0]
+
+  return {
+    ...context,
+    layout,
+    view: {
+      ...context.view,
+      form: layout.form ?? context.view.form,
+      fullWidth: layout.fullWidth ?? context.view.fullWidth,
+      components: { ...context.view.components, ...layout.components },
+    },
+  }
+}
+
+/** A cache of permission answers, emptied whenever `data` changes. */
+function usePermissionCache(data: unknown): PermissionCache {
+  const [state, setState] = useState(() => ({ data, cache: new Map() }))
+  if (state.data !== data) {
+    // Replaced during the render, as React allows for state derived from
+    // props: the rows on screen are never checked against the old answers.
+    const next = { data, cache: new Map() }
+    setState(next)
+    return next.cache
   }
 
-  return currentResource
+  return state.cache
+}
+
+/**
+ * Whether the action on screen is allowed — a refused action protects its
+ * route, not only its button. A permission that depends on the record waits
+ * for it to be loaded.
+ */
+function useRouteAccess(
+  context: ViewResourceContext,
+  failed: boolean,
+  cache: PermissionCache
+) {
+  const action = context.resourceAction
+  const needsRecord =
+    action !== ActionList.list && action !== ActionList.create && Boolean(context.id)
+  const permission = context.resource.permissions?.[action]
+  // A record that could not be loaded is not waited for: the rule is asked
+  // without it, and the view says what went wrong.
+  const waitsForRecord =
+    needsRecord && typeof permission === "function" && !context.data && !failed
+
+  return usePermissionState(
+    action,
+    needsRecord ? context.data : undefined,
+    context.resource,
+    context,
+    waitsForRecord,
+    cache
+  )
 }

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, Suspense } from "react"
+import { ReactNode, Suspense } from "react"
 
 import { ResourceConfigInterface } from "@/ResourceConfig"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
@@ -7,17 +7,13 @@ import { useResolvedViewParams } from "@/provider/useResolvedViewParams"
 import { ScopeProvider, useScopeContext } from "@/scope/Scope"
 import { ViewResourceContextParams } from "../ViewResourceContext"
 import { PageLoader } from "@/ui/Loader"
+import { ResourceViewConfigurationContext } from "@/provider/ResourceViewConfigurationContext"
+import { adoptResources } from "@/scope/resolveScope"
 
 export interface CurrentResourceFactoryComponentPropsInterface {
   viewResourceContextParams?: ViewResourceContextParams
   configuration?: ResourceConfigInterface
   children?: ReactNode
-}
-
-const ResourceContext = createContext<ResourceViewProviderContext>({})
-
-interface ResourceViewProviderContext {
-  configuration?: ResourceConfigInterface
 }
 
 export default function ResourceViewProvider({
@@ -67,6 +63,12 @@ function ResourceViewProviderInner({
   const scopeContext = useScopeContext()
   const viewResourceContextParams = useResolvedViewParams(parentParams)
 
+  // An application without scopes still names one for its links: the
+  // resources it was given link within it.
+  const scopeName =
+    viewResourceContextParams.scope ?? parentParams?.scope ?? configuration?.defaultScope
+  if (scopeName) adoptResources(scopeName, configuration?.resources)
+
   const decorator =
     configuration?.decoratorComponent ?? scopeContext?.scope?.decoratorComponent
   const hasResource = !!(
@@ -74,7 +76,7 @@ function ResourceViewProviderInner({
   )
 
   return (
-    <ResourceContext value={{ configuration }}>
+    <ResourceViewConfigurationContext value={{ configuration }}>
       {hasResource ? (
         <ViewResourceContextProvider
           key={
@@ -90,6 +92,6 @@ function ResourceViewProviderInner({
         children
       )}
       <Toaster />
-    </ResourceContext>
+    </ResourceViewConfigurationContext>
   )
 }

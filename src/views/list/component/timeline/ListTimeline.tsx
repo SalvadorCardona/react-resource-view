@@ -18,12 +18,9 @@ import { Trans } from "react-mini-i18n"
 import {
   ListComponentPropsInterface,
   RowInterface,
-} from "@/ViewInterface"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import {
-  TimelineGroupInterface,
-  TimelineViewOptionInterface,
-} from "@/views/list/component/timeline/timelineViewOptionFactory"
+} from "@/ViewResource"
+import type { TimelineGroupInterface, TimelineLayoutOptions } from "@/layout/layout"
+import { useLayout } from "@/layout/useLayout"
 import { EventPreview } from "@/views/list/component/preview/EventPreview"
 import { formatEventPeriod } from "@/views/list/component/preview/formatEventPeriod"
 import getIdFromObject from "@/internal/id/getIdFromObject"
@@ -77,9 +74,9 @@ function assignLanes(entries: { start: Date; end: Date }[]): number[] {
 
 function defaultResolveGroupForRow(
   data: Record<string, any>,
-  groupKey: string
+  groupBy: string
 ): TimelineGroupInterface | undefined {
-  const raw = data?.[groupKey]
+  const raw = data?.[groupBy]
   if (!raw) return undefined
 
   if (typeof raw === "string") {
@@ -97,17 +94,17 @@ function defaultResolveGroupForRow(
 }
 
 export default function ListTimeline({ rows = [] }: ListComponentPropsInterface) {
-  const currentResourceContext = useCurrentViewResourceContext()
-  const view = currentResourceContext.view as TimelineViewOptionInterface
+  const options = useLayout<TimelineLayoutOptions>().options
 
-  const startDateKey = view.startDateKey ?? "startDate"
-  const endDateKey = view.endDateKey ?? "endDate"
-  const groupKey = view.groupKey
-  const statusKey = view.statusKey ?? "state"
-  const showUnassigned = view.showUnassigned !== false
+  const startField = options.startField ?? "startDate"
+  const endField = options.endField ?? "endDate"
+  const groupBy = options.groupBy
+  const statusField = options.statusField ?? "state"
+  const showUnassigned = options.showUnassigned !== false
+  const { resolveGroups, resolveGroupForRow } = options
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
-  const [daysToShow, setDaysToShow] = useState<number>(view.daysToShow ?? 14)
+  const [daysToShow, setDaysToShow] = useState<number>(options.daysToShow ?? 14)
 
   const viewStart = useMemo(
     () => startOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() }),
@@ -127,14 +124,14 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
     return rows
       .map((row) => {
         const data = row.data as Record<string, any>
-        const start = parseDate(data?.[startDateKey])
+        const start = parseDate(data?.[startField])
         if (!start) return null
-        const end = parseDate(data?.[endDateKey]) ?? start
+        const end = parseDate(data?.[endField]) ?? start
         const groupResolver =
-          view.resolveGroupForRow ??
-          (groupKey
+          resolveGroupForRow ??
+          (groupBy
             ? (item: Record<string, any>) =>
-                defaultResolveGroupForRow(item, groupKey)
+                defaultResolveGroupForRow(item, groupBy)
             : undefined)
         const group = groupResolver?.(data)
         return { row, data, start, end, group }
@@ -150,11 +147,11 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
           group: TimelineGroupInterface | undefined
         } => entry !== null
       )
-  }, [rows, startDateKey, endDateKey, groupKey, view.resolveGroupForRow])
+  }, [rows, startField, endField, groupBy, resolveGroupForRow])
 
   const groups = useMemo<TimelineGroupInterface[]>(() => {
-    if (view.resolveGroups) {
-      return view.resolveGroups(rows as RowInterface<Record<string, any>>[])
+    if (resolveGroups) {
+      return resolveGroups(rows as RowInterface<Record<string, any>>[])
     }
 
     const seen = new Map<string, TimelineGroupInterface>()
@@ -166,7 +163,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
     return Array.from(seen.values()).sort((a, b) =>
       a.label.localeCompare(b.label, getDateLocale().code)
     )
-  }, [view.resolveGroups, rows, rowsWithDates])
+  }, [resolveGroups, rows, rowsWithDates])
 
   const unassignedRows = useMemo(
     () => rowsWithDates.filter((entry) => !entry.group),
@@ -287,7 +284,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
         <div className="min-w-max">
           <div className="flex sticky top-0 z-20 bg-card border-b">
             <div className="w-40 md:w-52 flex-shrink-0 px-3 py-2 font-medium text-sm border-r bg-muted/50 sticky left-0 z-30">
-              <Trans>{view.groupsLabel ?? (groupKey ? "Groups" : "Bookings")}</Trans>
+              <Trans>{options.groupsLabel ?? (groupBy ? "Groups" : "Bookings")}</Trans>
             </div>
             <div className="flex flex-1">
               {days.map((day, idx) => (
@@ -328,9 +325,9 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
                 days={days}
                 entries={groupEntries}
                 calculateBarPosition={calculateBarPosition}
-                statusKey={statusKey}
-                colorByStatus={view.colorByStatus}
-                titleKey={view.titleKey}
+                statusField={statusField}
+                colorByStatus={options.colorByStatus}
+                titleField={options.titleField}
               />
             )
           })}
@@ -338,14 +335,14 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
           {showUnassigned && unassignedRows.length > 0 && (
             <TimelineRow
               key={"row-" + UNASSIGNED_GROUP_ID}
-              label={view.unassignedLabel ?? "Unassigned"}
+              label={options.unassignedLabel ?? "Unassigned"}
               sublabel={`${unassignedRows.length} entries`}
               days={days}
               entries={unassignedRows}
               calculateBarPosition={calculateBarPosition}
-              statusKey={statusKey}
-              colorByStatus={view.colorByStatus}
-              titleKey={view.titleKey}
+              statusField={statusField}
+              colorByStatus={options.colorByStatus}
+              titleField={options.titleField}
               dashed
             />
           )}
@@ -396,10 +393,10 @@ interface TimelineRowProps {
     startsBeforeView: boolean
     endsAfterView: boolean
   } | null
-  statusKey?: string
-  /** Bar colour per value of `statusKey`. Any CSS colour, variables included. */
+  statusField?: string
+  /** Bar colour per value of `statusField`. Any CSS colour, variables included. */
   colorByStatus?: Record<string, string>
-  titleKey?: string
+  titleField?: string
   dashed?: boolean
 }
 
@@ -409,9 +406,9 @@ function TimelineRow({
   days,
   entries,
   calculateBarPosition,
-  statusKey,
+  statusField,
   colorByStatus,
-  titleKey,
+  titleField,
   dashed = false,
 }: TimelineRowProps) {
   const isToday = (date: Date) => isSameDay(date, new Date())
@@ -478,13 +475,13 @@ function TimelineRow({
 
         <div className="absolute inset-0 px-0.5">
           {visibleEntries.map(({ entry, position }, idx) => {
-            const title = getTitle(entry.data, titleKey)
+            const title = getTitle(entry.data, titleField)
             const lane = laneAssignments[idx]
             const top = verticalPadding + lane * (laneHeight + laneGap)
             // The view declares a colour per status; without one every bar
             // falls back to the primary wash it has always used.
-            const status = statusKey
-              ? (entry.data as Record<string, unknown>)[statusKey]
+            const status = statusField
+              ? (entry.data as Record<string, unknown>)[statusField]
               : undefined
             const color =
               colorByStatus && typeof status === "string"

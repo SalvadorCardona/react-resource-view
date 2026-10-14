@@ -1,0 +1,17 @@
+{
+  "//": "Type-checks the playground's declarations as `migrate` rewrites them, against the 1.0 types of src/. Run by `pnpm run typecheck`.",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "paths": {
+      "react-resource-view": ["../../../src/index.ts"],
+      "@/demo/playground/adminData": ["./stubs/playground/adminData.ts"],
+      "@/demo/playground/shared": ["./after/shared.ts"],
+      "@/demo/playground/resources/*": ["./after/resources/*"],
+      "@/demo/playground/*": ["./stubs/playground/components.ts"],
+      "@/demo/builder/*": ["./stubs/builder/builder.ts"],
+      "@/*": ["../../../src/*"]
+    }
+  },
+  "include": ["after/**/*", "stubs/**/*"]
+}

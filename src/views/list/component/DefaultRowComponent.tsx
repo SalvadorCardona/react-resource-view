@@ -1,4 +1,4 @@
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { FormInputInterface } from "react-data-form"
 
@@ -8,7 +8,7 @@ export function DefaultRowComponent({ row }: RowComponentPropsInterface) {
   const data = row?.data ?? {}
   const dataKeys = Object.keys(data)
   const currentResource = useCurrentViewResourceContext()
-  const CurrentRowComponent = currentResource.view.rowComponent
+  const CurrentRowComponent = currentResource.view.components.row
 
   if (CurrentRowComponent) {
     return <CurrentRowComponent row={row} />

@@ -43,11 +43,9 @@ function CurrentUrl() {
 
 const routingResource = createViewResource("routing", {
   name: "Routing",
-  scope: "docs",
   icon: Route,
-  view: {
-    name: "Routing",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="Routing"

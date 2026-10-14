@@ -29,7 +29,7 @@ export function ListHeader() {
   // A nested list — a sub-view tab, a resource embedded in another view — is
   // already introduced by whatever contains it, which writes its name and its
   // description. Saying it a second time here would only say it twice.
-  const introduced = !currentResource.parentResource && Boolean(view?.name)
+  const introduced = !currentResource.parentResource && Boolean(view?.title)
 
   return (
     <div
@@ -49,7 +49,7 @@ export function ListHeader() {
           )}
           <div className="min-w-0">
             <h2 className="fc truncate text-base font-semibold tracking-tight">
-              <Trans>{view.name}</Trans>
+              <Trans>{view.title}</Trans>
             </h2>
             {view.description && (
               <p className="fc text-sm text-muted-foreground">

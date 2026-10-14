@@ -3,7 +3,8 @@
  * react-resource-view — command line.
  *
  * Two commands: `init` starts a whole project on an API (see ./init.mjs), and
- * `create-view-variant` writes a view variant where the reader wants it.
+ * `create-view-variant` writes a layout of one's own where the reader wants
+ * it, and `migrate` rewrites 0.x declarations into 1.0.
  *
  * Both are templates rather than a framework — which is why the command line
  * has no dependency and no build step. It is shipped as it is written, and
@@ -16,8 +17,9 @@ import { createInterface } from "node:readline/promises"
 import { pathToFileURL } from "node:url"
 import { stdin, stdout } from "node:process"
 import { runInit } from "./init.mjs"
+import { runMigrate } from "./migrate.mjs"
 
-const COMMANDS = ["create-view-variant", "view-variant"]
+const COMMANDS = ["create-view-variant", "view-variant", "create-layout"]
 
 /** `init`, under the names someone reaching for a starter would type. */
 const INIT_COMMANDS = ["init", "create", "new"]
@@ -37,14 +39,17 @@ Commands
   init [directory]              Start a project on your API: API Platform,
                                 Spring Boot, Supabase, Strapi, FastAPI or any
                                 REST API. See \`init --help\`.
-  create-view-variant [name]    Write a view variant — below.
+  create-view-variant [name]    Write a layout of your own — below.
+  migrate [paths…]              Rewrite 0.x declarations into 1.0. See
+                                \`migrate --help\`.
 
 Usage
   npx react-resource-view init [directory] [options]
   npx react-resource-view create-view-variant [name] [options]
+  npx react-resource-view migrate [paths…] [options]
 
 Arguments
-  name                 The variant's name, as the layout switcher shows it
+  name                 The layout's name, as the layout switcher shows it
                        ("Heatmap", "Kanban board"). Asked for when omitted.
 
 Options
@@ -85,10 +90,10 @@ export function toCamelCase(value) {
 }
 
 /**
- * The id the variant answers to in the URL.
+ * The id the layout answers to in the URL.
  *
- * `createView` slugs the name the same way, so the CLI can tell the reader the
- * address their variant will live at without the package being loaded.
+ * The generated file passes it as the layout's `type`, so the CLI can tell the
+ * reader the address their layout will live at.
  */
 export function toSlug(value) {
   return toWords(value)
@@ -101,17 +106,17 @@ export function toSlug(value) {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The variant, as a single file.
+ * The layout, as a single file.
  *
  * Everything the file needs is exported by the package, so what lands in the
- * project is readable on its own: three components, one factory, and the
- * comments that say which of them draws what.
+ * project is readable on its own: three components, one function building the
+ * layout, and the comments that say which of them draws what.
  */
 export function renderViewVariant({ name, icon = "LayoutGrid", jsx = false }) {
   const Pascal = toPascalCase(name)
   const camel = toCamelCase(name)
   const slug = toSlug(name)
-  const optionsInterface = `${Pascal}ViewInterface`
+  const optionsInterface = `${Pascal}Options`
 
   /** A type annotation, dropped when the target is JavaScript. */
   const t = (annotation) => (jsx ? "" : annotation)
@@ -119,54 +124,47 @@ export function renderViewVariant({ name, icon = "LayoutGrid", jsx = false }) {
   const typeImports = jsx
     ? ""
     : `  type ItemComponentPropsInterface,
+  type LayoutOptions,
   type ListComponentPropsInterface,
   type RowComponentPropsInterface,
-  type ViewInterface,
 `
 
   const optionsBlock = jsx
-    ? `/**
- * The options this variant takes, on top of everything a view accepts.
- *
- * They are passed to the factory and read back from the view — see \`dense\`
- * below, which is there to be replaced by your own.
- */
-`
+    ? ""
     : `/**
- * The options this variant takes, on top of everything a view accepts.
- *
- * Anything declared here can be passed to the factory and read back from the
- * view. \`dense\` is an example: replace it with your own.
+ * The options of this layout, on top of those every layout takes (\`id\`,
+ * \`label\`, \`fields\`…). They are read back with \`useLayout().options\`.
+ * \`dense\` is an example: replace it with your own.
  */
-export interface ${optionsInterface} extends ViewInterface {
+export interface ${optionsInterface} {
   dense?: boolean
 }
 
 `
 
   return `/**
- * ${name} — a view variant for react-resource-view.
+ * ${name} — a layout for react-resource-view.
  *
- * A variant is a view with three rendering slots, and nothing else:
+ * A layout draws a list with three components, and nothing else:
  *
- *   listComponent  draws the whole collection
- *   rowComponent   draws one record
- *   itemComponent  draws one field of a record
+ *   list  draws the whole collection
+ *   row   draws one record
+ *   item  draws one field of a record
  *
  * Declare it beside the built-in ones and the reader gets a switcher; the
  * choice travels in the URL as "${slug}".
  *
- *   viewVariants: [tableViewOptionFactory(), ${camel}ViewFactory()]
+ *   views: { list: { layouts: [layout.table(), ${camel}Layout()] } }
  */
 // Any component taking a \`className\` does for an icon; lucide-react is what
 // the package's own layouts use — \`npm i lucide-react\` if you have not got it.
 import { ${icon} } from "lucide-react"
 import {
-  createView,
   ItemRender,
+  layout,
   ListPagination,
   ListResourceViewButton,
-  useCurrentViewResourceContext,
+  useLayout,
 ${typeImports}} from "react-resource-view"
 
 ${optionsBlock}/**
@@ -213,13 +211,11 @@ export function ${Pascal}Row({ row }${t(": RowComponentPropsInterface")}) {
  * The whole collection.
  *
  * \`rows\` is what the current page holds, already filtered and paginated.
- * \`useCurrentViewResourceContext\` gives the rest: the resource, the loading
- * state, the filters, and the view this variant was declared with — your own
- * options included.
+ * \`useLayout\` gives this layout's own options; \`useCurrentViewResourceContext\`
+ * the rest — the resource, the loading state, the filters.
  */
 export function ${Pascal}List({ rows = [] }${t(": ListComponentPropsInterface")}) {
-  const view = useCurrentViewResourceContext().view${t(` as ${optionsInterface}`)}
-  const dense = view?.dense ?? false
+  const { dense = false } = useLayout${t(`<${optionsInterface}>`)}().options
 
   if (!rows.length) {
     return (
@@ -257,29 +253,28 @@ export function ${Pascal}List({ rows = [] }${t(": ListComponentPropsInterface")}
 }
 
 /**
- * The factory.
+ * The layout.
  *
- * \`createView\` fills in the id — the slug of the name — and whatever the
- * application configured as its default components. What is passed after it
- * wins, so a resource can still override any of it on the spot:
+ * Whatever is passed wins over what is written here, so a resource can still
+ * adjust it on the spot:
  *
- *   ${camel}ViewFactory({ name: "Compact", dense: true, itemsPerPage: 50 })
+ *   ${camel}Layout({ label: "Compact", dense: true })
  */
-export default function ${camel}ViewFactory(
-  args${t(`?: Partial<${optionsInterface}>`)}${jsx ? " = {}" : ""}
-)${t(`: ${optionsInterface}`)} {
-  const defaultArgs${t(`: Partial<${optionsInterface}>`)} = {
-    dense: false,
-    ...args,
-  }
-
-  return createView({
-    name: "${name}",
+export default function ${camel}Layout(
+  { dense = false, components, ...options }${t(`: LayoutOptions & ${optionsInterface}`)} = {}
+) {
+  return layout.custom({
+    type: "${slug}",
+    label: "${name}",
     icon: ${icon},
-    listComponent: ${Pascal}List,
-    rowComponent: ${Pascal}Row,
-    itemComponent: ${Pascal}Item,
-    ...defaultArgs,
+    ...options,
+    components: {
+      list: ${Pascal}List,
+      row: ${Pascal}Row,
+      item: ${Pascal}Item,
+      ...components,
+    },
+    options: { dense },
   })
 }
 `
@@ -369,16 +364,16 @@ export function parseCliArgs(argv) {
   if (options.name !== undefined && !toWords(options.name).length) {
     return {
       ...options,
-      error: `"${options.name}" has no letter or digit in it, so it cannot name a variant.`,
+      error: `"${options.name}" has no letter or digit in it, so it cannot name a layout.`,
     }
   }
 
   return options
 }
 
-/** The file the variant goes into, and how to talk about it. */
+/** The file the layout goes into, and how to talk about it. */
 export function resolveTarget({ name, dir, jsx = false, cwd = process.cwd() }) {
-  const fileName = `${toCamelCase(name)}ViewFactory.${jsx ? "jsx" : "tsx"}`
+  const fileName = `${toCamelCase(name)}Layout.${jsx ? "jsx" : "tsx"}`
   const directory = isAbsolute(dir) ? dir : resolve(cwd, dir)
   const path = join(directory, fileName)
 
@@ -413,6 +408,10 @@ async function ask(question, fallback) {
 }
 
 export async function run(argv, { cwd = process.cwd(), log = console.log } = {}) {
+  if (argv[0] === "migrate") {
+    return runMigrate(argv.slice(1), { cwd, log })
+  }
+
   if (INIT_COMMANDS.includes(argv[0])) {
     const interactive = stdin.isTTY && stdout.isTTY
     return runInit(argv.slice(1), { cwd, log, ask: interactive ? ask : undefined })
@@ -444,9 +443,9 @@ export async function run(argv, { cwd = process.cwd(), log = console.log } = {})
       console.error(`A name is needed.\n\n${USAGE}`)
       return 1
     }
-    name = await ask("Name of the variant? (e.g. Heatmap)", "")
+    name = await ask("Name of the layout? (e.g. Heatmap)", "")
     if (!toWords(name).length) {
-      console.error("A variant needs a name with a letter in it.")
+      console.error("A layout needs a name with a letter in it.")
       return 1
     }
   }
@@ -477,7 +476,7 @@ export async function run(argv, { cwd = process.cwd(), log = console.log } = {})
   await mkdir(dirname(target.path), { recursive: true })
   await writeFile(target.path, content, "utf8")
 
-  const camel = `${toCamelCase(name)}ViewFactory`
+  const camel = `${toCamelCase(name)}Layout`
 
   log(`Created ${target.relativePath}
 
@@ -485,11 +484,9 @@ Declare it on a resource, and the reader gets a switcher:
 
   import ${camel} from "./${camel}"
 
-  view: {
-    viewVariants: [tableViewOptionFactory(), ${camel}()],
-  }
+  views: { list: { layouts: [layout.table(), ${camel}()] } },
 
-The variant answers to "${toSlug(name)}" in the URL.
+The layout answers to "${toSlug(name)}" in the URL.
 Documentation: https://cardona.digital/react-resource-view/docs/resource-view/custom-variant`)
 
   return 0

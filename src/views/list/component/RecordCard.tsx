@@ -1,11 +1,10 @@
 import { ReactNode } from "react"
 import { cn } from "@/ui/cn"
-import { RowInterface } from "@/ViewInterface"
+import { RowInterface } from "@/ViewResource"
 import ListResourceViewButton, {
   useRowActions,
 } from "@/action/ListResourceViewButton"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import { permissionResource } from "@/utils/permissionResource"
+import { useAllowedActions } from "@/utils/permissionResource"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 
 export interface RecordCardProps {
@@ -32,12 +31,10 @@ export function RecordCard({
   className,
   children,
 }: RecordCardProps) {
-  const { resource } = useCurrentViewResourceContext()
   // A resource permitting none of the row's actions would otherwise be given a
   // separator with nothing under it, and the padding below it.
-  const hasActions = useRowActions().some((action) =>
-    permissionResource(resource, action)
-  )
+  const rowActions = useRowActions()
+  const hasActions = useAllowedActions(rowActions, row.data).length > 0
 
   return (
     <div

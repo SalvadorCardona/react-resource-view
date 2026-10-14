@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
-import { createViewResource } from "@/index"
+import { createViewResource, layout } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { ActionList } from "react-data-form"
 
 /**
@@ -36,39 +36,43 @@ function ArticleList({ rows = [] }: ListComponentPropsInterface) {
 function nested(id: string, name: string) {
   return createViewResource<Article>(id, {
     name,
-    scope: "tabs",
-    getCollection: async () => ({ data: collection(id) }),
-    view: { name, listComponent: ArticleList },
+    storage: "local",
+    repository: { getCollection: async () => ({ data: collection(id) }) },
+    views: {
+      list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+    },
   })
 }
 
 const commentsResource = nested("tabs_comments", "Comments")
 const invoicesResource = nested("tabs_invoices", "Invoices and receipts")
 
-const subViewList = [
-  { resourceId: "tabs_comments", resourceAction: ActionList.list },
-  { resourceId: "tabs_invoices", resourceAction: ActionList.list },
-]
+const subViewList = [{ resource: "tabs_comments" }, { resource: "tabs_invoices" }]
 
 const barResource = createViewResource<Article>("tabs_posts", {
   name: "Posts",
-  scope: "tabs",
-  getCollection: async () => ({ data: collection("tabs_posts") }),
-  view: {
-    name: "Posts",
-    listComponent: ArticleList,
-    subViewResource: { list: subViewList },
+  storage: "local",
+  repository: { getCollection: async () => ({ data: collection("tabs_posts") }) },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+    // The record itself is not what is tested: only the tabs under it.
+    read: { tabs: { items: subViewList }, components: { view: () => null } },
   },
 })
 
 const menuResource = createViewResource<Article>("tabs_companies", {
   name: "Companies",
-  scope: "tabs",
-  getCollection: async () => ({ data: collection("tabs_companies") }),
-  view: {
-    name: "Companies",
-    listComponent: ArticleList,
-    subViewResource: { orientation: "vertical", list: subViewList },
+  storage: "local",
+  repository: {
+    getCollection: async () => ({ data: collection("tabs_companies") }),
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+    // The record itself is not what is tested: only the tabs under it.
+    read: {
+      tabs: { orientation: "vertical", items: subViewList },
+      components: { view: () => null },
+    },
   },
 })
 
@@ -79,12 +83,17 @@ function Summary() {
 // The left column of a record beside the default, scrolling bar.
 const summaryResource = createViewResource<Article>("tabs_accounts", {
   name: "Accounts",
-  scope: "tabs",
-  getCollection: async () => ({ data: collection("tabs_accounts") }),
-  view: {
-    name: "Accounts",
-    listComponent: ArticleList,
-    subViewResource: { viewComponent: Summary, list: subViewList },
+  storage: "local",
+  repository: {
+    getCollection: async () => ({ data: collection("tabs_accounts") }),
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+    // The record itself is not what is tested: only the tabs under it.
+    read: {
+      tabs: { aside: Summary, items: subViewList },
+      components: { view: () => null },
+    },
   },
 })
 
@@ -105,7 +114,12 @@ const phone = () => screenWidth(375)
 function renderView(resourceId: string) {
   return render(
     <ResourceViewProvider
-      viewResourceContextParams={{ scope: "tabs", resourceId }}
+      // Tabs hang off a record: they are declared on its `read` view.
+      viewResourceContextParams={{
+        scope: "tabs",
+        resourceId,
+        resourceAction: ActionList.read,
+      }}
       configuration={{
         resources: [
           barResource,

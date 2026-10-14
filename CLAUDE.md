@@ -34,7 +34,7 @@ pnpm run dev           # tsdown en mode watch
 pnpm run build          # build de la librairie (dist/)
 pnpm run test           # vitest run
 pnpm run lint            # eslint .
-pnpm run typecheck        # tsc --noEmit
+pnpm run typecheck        # tsc --noEmit, puis les fixtures du codemod (cli/__fixtures__/playground)
 pnpm run ci                # typecheck puis lint puis test puis build, dans cet ordre (ordre CI)
 ```
 
@@ -52,13 +52,20 @@ ci-dessous) : ils ne se lancent pas avec les commandes ci-dessus.
 ## Arborescence utile
 
 - `src/` — code de la librairie, organisé par domaine : `action/` (boutons
-  d'action), `api/` (repository REST, dialectes), `components/`, `hook/`,
-  `internal/` (utilitaires non exportés), `menu/`, `provider/` (contextes
-  React), `routes/`, `scope/`, `tanstack/` (adaptateur `@tanstack/react-router`,
-  point d'entrée séparé), `ui/`, `utils/`, `views/` (une vue par action CRUD :
-  `list`, `read`, `update`, `remove`).
+  d'action), `api/` (repository REST, dialectes), `components/`,
+  `definition/` (fusion, résolution et validation en dev d'une déclaration),
+  `hook/`, `internal/` (utilitaires non exportés), `layout/` (le namespace
+  `layout.*` et `useLayout`), `menu/`, `provider/` (contextes React), `routes/`,
+  `scope/`, `tanstack/` (adaptateur `@tanstack/react-router`, point d'entrée
+  séparé), `ui/`, `utils/`, `views/` (une vue par action CRUD : `list`, `read`,
+  `update`, `remove`). `ResourceDefinition.ts` = ce qu'on écrit,
+  `ViewResource.ts` = ce que la lib construit.
 - `cli/` — commande `react-resource-view` (Node ESM pur, pas de build, pas de
-  types DOM navigateur).
+  types DOM navigateur) : `init`, `create-view-variant`, `migrate` (codemod
+  0.x → 1.0, `cli/migrate.mjs`, fixtures dans `cli/__fixtures__/playground`).
+- `migrations/1.0.json` — la liste des breaking changes 0.x → 1.0 en données ;
+  lue par le codemod. `MIGRATION-1.0.md` en est la version rédigée,
+  `docs/rfc/1.0-declaration.md` le raisonnement.
 - `website/` — site public déployé (landing page + playground), projet
   autonome avec son propre `package.json` et son propre `pnpm-lock.yaml` ; il
   installe `react-resource-view` depuis npm, pas depuis ce dépôt.
@@ -68,6 +75,49 @@ ci-dessous) : ils ne se lancent pas avec les commandes ci-dessus.
 - `diagrams/` — source du diagramme d'architecture
   (`react-resource-view.architecture.json`) et images générées, publiées sur
   le site et dans le README.
+
+## Syntaxe de déclaration (1.0) — la seule référence
+
+```ts
+import { createViewResource, layout } from "react-resource-view"
+
+export const tasks = createViewResource<Task>("tasks", {
+  name: "Tasks", // titres dérivés : "Tasks", "Edit — Tasks"…
+  icon: ListTodo,
+  path: "/api/tasks", // ou storage: "local", ou repository: { … }
+  permissions: { delete: ({ item }) => item?.status !== "done" }, // tout est autorisé par défaut
+  hooks: { beforeCreate: (data, { viewResourceContext }) => data },
+  form: { inputs: TASK_FIELDS }, // commun à toutes les actions
+  views: {
+    list: {
+      filters: {
+        inputs: { title: { label: "Search" } },
+        initial: { status: "todo" },
+      },
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES }),
+        layout.table(),
+      ],
+      rowActions: ["read", "update", "delete"],
+    },
+    update: {
+      open: "dialog",
+      afterSave: "close",
+      form: { inputs: { notes: false } },
+    },
+  },
+})
+```
+
+- Racine = commun à toutes les actions (`form`, `fullWidth`, `titleField`,
+  `components`, `description`) ; `views.<action>` = propre à une action ;
+  fusion profonde racine → action → layout (`false` retire un input, `null`
+  un composant).
+- Le scope déclare ses ressources (`resources: [...]`, `menu: "auto"`) : une
+  ressource ne déclare plus de `scope`.
+- Plus de `view`, `behavior`, `canXxx`, `xxxViewOptionFactory`, `preXxx`,
+  `limit`, `subViewResource` : voir `MIGRATION-1.0.md`. En dev,
+  `createViewResource` lève une erreur avec la réécriture de toute clé 0.x.
 
 ## Conventions
 
@@ -105,6 +155,14 @@ ci-dessous) : ils ne se lancent pas avec les commandes ci-dessus.
 - `vitest.setup.ts` polyfille `window.matchMedia` et `EventSource`, absents
   de jsdom mais utilisés par les composants responsives au montage — les
   retirer fait échouer les tests silencieusement plutôt que clairement.
+- `migrations/1.0.json`, `src/definition/legacyKeys.ts` (les clés 0.x que la
+  validation en dev reconnaît) et `MIGRATION-1.0.md` disent la même chose ;
+  des tests vérifient qu'ils restent alignés. Les fixtures `after/` du codemod
+  se régénèrent avec `UPDATE_FIXTURES=1 pnpm vitest run cli/migrate.test.ts`.
+- `website/` est encore écrit en 0.x tant que la 1.0 n'est pas publiée sur
+  npm : après publication, `npx react-resource-view migrate website/src` (les
+  ressources du playground migrées sont déjà dans
+  `cli/__fixtures__/playground/after/`).
 - Un changeset créé avec `pnpm changeset` n'est pas commité automatiquement
   (`commit: false` dans `.changeset/config.json`) : il faut l'ajouter au
   commit soi-même. Le bump de version et la publication npm sont ensuite

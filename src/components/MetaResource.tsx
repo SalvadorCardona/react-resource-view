@@ -9,7 +9,7 @@ export default function MetaResourceComponent() {
   // no `window` while rendering on a server, and a page whose metadata throws
   // renders nothing at all — which is precisely the markup a crawler reads.
   const { pathname } = getPorts().navigation.useLocation()
-  const viewName = currentResource?.view?.name ?? appName
+  const viewName = currentResource?.view?.title ?? appName
   const pageTitle = viewName === appName ? viewName : `${viewName} · ${appName}`
   const canonical = `${appUrl}${pathname}`
 

@@ -3,3 +3,4 @@ coverage
 pnpm-lock.yaml
 website
 .claude
+cli/__fixtures__

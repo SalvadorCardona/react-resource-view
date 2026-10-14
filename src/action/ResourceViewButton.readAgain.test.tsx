@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { act, render, screen, waitFor } from "@testing-library/react"
 import { ActionList } from "react-data-form"
-import { createPubSub } from "coooking-pubsub"
-import type { ViewResourceInterface } from "@/ViewResourceInterface"
+import { createViewResource } from "@/utils/createViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ViewResourceContextProvider from "@/provider/ViewResourceContextProvider"
 
@@ -44,22 +43,17 @@ function Cards() {
   )
 }
 
+let count = 0
+
 function createIdeas() {
   const getCollection = vi.fn(async (filter?: { status?: "A" | "B" }) => ({
-    data: { member: rows[filter?.status ?? "A"] },
+    data: { member: rows[filter?.status ?? "A"] } as never,
   }))
-  const resource = {
-    "@id": "ideas",
-    "@type": "view-resource",
-    resourceBuild: true,
-    canUpdate: true,
-    views: {
-      [ActionList.list]: { viewComponent: Cards },
-      [ActionList.update]: { behavior: { openIn: "popup" } },
-    },
-    onChange: createPubSub(),
-    getCollection,
-  } as unknown as ViewResourceInterface
+  const resource = createViewResource(`ideas_${++count}`, {
+  storage: "local",
+  repository: { getCollection },
+  views: { list: { components: { view: Cards } }, update: { open: "dialog" } },
+})
 
   return { resource, getCollection }
 }

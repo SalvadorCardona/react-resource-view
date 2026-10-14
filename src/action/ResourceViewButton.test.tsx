@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
 import { ActionList } from "react-data-form"
-import type { ViewResourceInterface } from "@/ViewResourceInterface"
+import { createViewResource } from "@/utils/createViewResource"
+import type { UpdateViewDefinition } from "@/ResourceDefinition"
 
 // What the dialog wraps is a whole view context; the button's own decision is
 // what the dialog is called, which is all this file is about.
@@ -21,30 +22,27 @@ vi.mock("@/ports", async (importOriginal) => ({
 
 const { default: ResourceViewButton } = await import("@/action/ResourceViewButton")
 
-function resourceWith(view: object): ViewResourceInterface {
-  return {
-    "@id": "items",
-    canUpdate: true,
-    // The list's own sentence, which every action inherits.
-    view: { description: "Everything the shop sells." },
-    views: { [ActionList.update]: view },
-    onChange: { subscribe: () => ({ unsubscribe: () => {} }) },
-  } as unknown as ViewResourceInterface
+let count = 0
+
+function resourceWith(update: UpdateViewDefinition) {
+  return createViewResource(`button_items_${++count}`, {
+  storage: "local",
+  // The list's own sentence, which every action inherits.
+  description: "Everything the shop sells.",
+  views: { update: { ...update } },
+})
 }
 
-async function openOverlay(view: object) {
+async function openOverlay(view: UpdateViewDefinition) {
   render(
     <ResourceViewButton action={ActionList.update} resource={resourceWith(view)} />
   )
   await userEvent.click(screen.getByRole("button"))
 }
 
-describe("ResourceViewButton, opened in a popup", () => {
+describe("ResourceViewButton, opened in a dialog", () => {
   it("names the dialog after the view", async () => {
-    await openOverlay({
-      name: "Reprice a bag",
-      behavior: { openIn: "popup" },
-    })
+    await openOverlay({ title: "Reprice a bag", open: "dialog" })
 
     expect(
       screen.getByRole("heading", { name: "Reprice a bag" })
@@ -53,9 +51,9 @@ describe("ResourceViewButton, opened in a popup", () => {
 
   it("does not introduce a form with the sentence written for the list", async () => {
     await openOverlay({
-      name: "Reprice a bag",
+      title: "Reprice a bag",
       description: "Everything the shop sells.",
-      behavior: { openIn: "popup" },
+      open: "dialog",
     })
 
     expect(screen.queryByText("Everything the shop sells.")).toBeNull()
@@ -64,10 +62,7 @@ describe("ResourceViewButton, opened in a popup", () => {
 
 describe("ResourceViewButton, opened in a drawer", () => {
   it("slides the view in rather than replacing the page", async () => {
-    await openOverlay({
-      name: "Reprice a bag",
-      behavior: { openIn: "drawer" },
-    })
+    await openOverlay({ title: "Reprice a bag", open: "drawer" })
 
     expect(
       screen.getByRole("heading", { name: "Reprice a bag" })
@@ -81,10 +76,7 @@ describe("ResourceViewButton, opened in a drawer", () => {
    * asserted here.
    */
   it("comes up from the bottom on a narrow screen", async () => {
-    await openOverlay({
-      name: "Reprice a bag",
-      behavior: { openIn: "drawer" },
-    })
+    await openOverlay({ title: "Reprice a bag", open: "drawer" })
 
     expect(document.querySelector("[data-swipe-axis='y']")).not.toBeNull()
   })

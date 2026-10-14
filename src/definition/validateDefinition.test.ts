@@ -1,0 +1,278 @@
+import { describe, expect, it, vi } from "vitest"
+import { createViewResource } from "@/utils/createViewResource"
+import { layout } from "@/layout/layout"
+import { inspectDefinition } from "@/definition/validateDefinition"
+
+/**
+ * In development a declaration is checked: a key nothing reads, a 0.x key, a
+ * resource with nowhere to read its data from — each said, with how to write
+ * it, instead of nothing happening.
+ */
+
+const messagesOf = (definition: Record<string, any>, name = "Tasks") =>
+  inspectDefinition("tasks", definition, name).map(
+    ({ level, path, message }) => `${level} ${path}: ${message}`
+  )
+
+describe("the development checks of createViewResource", () => {
+  it("throws, listing every problem at once", () => {
+    expect(() =>
+      createViewResource("validate_tasks", {
+        storage: "local",
+        // @ts-expect-error — a 0.x key (and, below, a typo: one error per object)
+        canRead: true,
+        fullWdith: true,
+      })
+    ).toThrow(
+      /createViewResource\("validate_tasks"\): 2 problems in the declaration/
+    )
+  })
+
+  it("gives the 1.0 rewrite of a 0.x key, with its migration id", () => {
+    expect(messagesOf({ storage: "local", canDelete: false })).toEqual([
+      expect.stringContaining(
+        "error (root): `canDelete` is a 0.x key (RV1-PERM-001): declare `permissions` instead"
+      ),
+    ])
+    expect(messagesOf({ storage: "local", view: {} })[0]).toContain("RV1-VIEW-001")
+    expect(messagesOf({ storage: "local", preCreate: () => ({}) })[0]).toContain(
+      "hooks: { beforeList, beforeRead, beforeCreate"
+    )
+  })
+
+  it("rewrites each option of a 0.x `behavior`", () => {
+    const messages = messagesOf({
+      storage: "local",
+      views: { update: { behavior: { openIn: "popup", closeAfterUpdate: true } } },
+    })
+
+    expect(messages).toContainEqual(
+      expect.stringContaining(
+        "views.update: `behavior` is a 0.x key (RV1-BEHAV-001)"
+      )
+    )
+    expect(messages).toContainEqual(
+      expect.stringContaining(
+        'views.update.behavior: `openIn` (RV1-BEHAV-002): `open: "page" | "dialog" | "drawer"`'
+      )
+    )
+    expect(messages).toContainEqual(
+      expect.stringContaining(
+        "views.update.behavior: `closeAfterUpdate` (RV1-BEHAV-003)"
+      )
+    )
+  })
+
+  it("suggests the closest key for a typo", () => {
+    expect(messagesOf({ storage: "local", fullWdith: true })).toEqual([
+      "error (root): `fullWdith` does not exist here — did you mean `fullWidth`?",
+    ])
+    expect(messagesOf({ storage: "local", views: { lsit: {} } })).toEqual([
+      "error views: `lsit` does not exist here — did you mean `list`?",
+    ])
+  })
+
+  it("says where a key belongs when it is written at the wrong level", () => {
+    expect(messagesOf({ storage: "local", layouts: [] })).toEqual([
+      "error (root): `layouts` does not belong here: it goes in views.list.layouts.",
+    ])
+    expect(
+      messagesOf({ storage: "local", views: { list: { afterSave: "close" } } })
+    ).toEqual([
+      "error views.list: `afterSave` does not belong here: it goes in views.create.afterSave or views.update.afterSave.",
+    ])
+    expect(
+      messagesOf({ storage: "local", views: { list: { tabs: { items: [] } } } })
+    ).toEqual([
+      "error views.list: `tabs` does not belong here: it goes in views.read.tabs or views.update.tabs.",
+    ])
+  })
+
+  it("refuses a resource with nowhere to read its data from", () => {
+    expect(messagesOf({ name: "Tasks" })).toEqual([
+      expect.stringContaining(
+        'error (root): no data source. Declare `path: "/api/…"` to talk to the API, or `storage: "local"`'
+      ),
+    ])
+    expect(messagesOf({ components: { view: () => null } })).toEqual([])
+    expect(
+      messagesOf({
+        repository: {
+          getCollection: vi.fn(),
+          getItem: vi.fn(),
+          createItem: vi.fn(),
+          updateItem: vi.fn(),
+          removeItem: vi.fn(),
+        },
+      })
+    ).toEqual([])
+  })
+
+  it("refuses a resource kept both behind an API and in the browser", () => {
+    expect(messagesOf({ path: "/api/tasks", storage: "local" })).toEqual([
+      'error (root): `path` and `storage: "local"` both say where the data lives: keep one.',
+    ])
+  })
+
+  it("refuses two layouts answering to the same URL id", () => {
+    expect(
+      messagesOf({
+        storage: "local",
+        views: {
+          list: { layouts: [layout.table(), layout.table({ label: "Compact" })] },
+        },
+      })
+    ).toEqual([
+      'error views.list.layouts: two layouts answer to the URL id "table": give one of them an `id`.',
+    ])
+  })
+
+  it("refuses a permission that is not an action", () => {
+    expect(messagesOf({ storage: "local", permissions: { delte: false } })).toEqual([
+      'error permissions: "delte" is not an action — did you mean "delete"?',
+    ])
+    expect(messagesOf({ storage: "local", permissions: "read-only" })).toEqual([
+      'error permissions: "read-only" is not a permission shortcut: "all" or "readonly".',
+    ])
+  })
+
+  it("warns about a title the view would get anyway", () => {
+    expect(
+      messagesOf({ storage: "local", views: { update: { title: "Edit — Tasks" } } })
+    ).toEqual([
+      'warning views.update.title: "Edit — Tasks" is the title this view gets anyway: the line can go.',
+    ])
+  })
+
+  it("only warns about it, and still builds the resource", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const resource = createViewResource("validate_warned", {
+      name: "Tasks",
+      storage: "local",
+      views: { list: { title: "Tasks" } },
+    })
+
+    expect(resource.views.list.title).toBe("Tasks")
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("views.list.title"))
+    warn.mockRestore()
+  })
+})
+
+describe("the development checks of layout.*", () => {
+  it("refuses a board that does not know what to group by", () => {
+    expect(() =>
+      // @ts-expect-error — `groupBy` and `columns` are missing
+      layout.board({})
+    ).toThrow(/a board needs `groupBy`[\s\S]*a board needs `columns`/)
+  })
+
+  it("rewrites a 0.x option of a layout", () => {
+    expect(() =>
+      // @ts-expect-error — a 0.x option
+      layout.board({ identifierKey: "status", columns: [] })
+    ).toThrow(
+      "`identifierKey` is a 0.x key (RV1-LAYOUT-004): this option of `layout.board` was renamed: `identifierKey` → `groupBy`"
+    )
+    expect(() =>
+      // @ts-expect-error — a 0.x option
+      layout.board({ groupBy: "status", columns: [], openRecordIn: "drawer" })
+    ).toThrow("did you mean `layout.board({ openRecord })`?")
+    // @ts-expect-error — a 0.x option
+    expect(() => layout.cards({ grid: 3 })).toThrow("`grid` → `columns`")
+    // @ts-expect-error — a 0.x option
+    expect(() => layout.table({ name: "Table" })).toThrow("RV1-LAYOUT-009")
+  })
+
+  it("suggests the closest option for a typo", () => {
+    // @ts-expect-error — a typo
+    expect(() => layout.calendar({ dateFeild: "dueDate" })).toThrow(
+      "`dateFeild` does not exist here — did you mean `dateField`?"
+    )
+  })
+})
+
+describe("the types of a declaration", () => {
+  // Never run: the development checks would refuse what follows, which is the
+  // point — the type checker refuses it first.
+  const neverRun = (declare: () => void) => declare
+
+  interface Task {
+    "@id": string
+    id: string
+    title: string
+    status: "todo" | "done"
+  }
+
+  it("tells a permission which record it is asked about", () => {
+    neverRun(() => {
+      createViewResource<Task>("typed_permissions", {
+        storage: "local",
+        permissions: {
+          delete: ({ item }) => item?.status !== "done",
+          update: async ({ item }) => Boolean(item?.title),
+        },
+      })
+      createViewResource<Task>("typed_permissions_wrong", {
+        storage: "local",
+        // @ts-expect-error — not a field of Task
+        permissions: { delete: ({ item }) => item?.state !== "done" },
+      })
+    })
+  })
+
+  it("offers each action only what has an effect there", () => {
+    neverRun(() => {
+      createViewResource<Task>("typed_views", {
+        storage: "local",
+        titleField: "title",
+        views: {
+          list: { pageSize: 50, rowActions: ["read", "delete"] },
+          create: { open: "drawer", afterSave: "close" },
+          update: { afterSave: { redirect: (task) => `/tasks/${task.id}` } },
+          read: { tabs: { items: [{ resource: "comments" }] } },
+        },
+      })
+      createViewResource<Task>("typed_views_wrong", {
+        storage: "local",
+        // @ts-expect-error — not a field of Task
+        titleField: "name",
+        views: {
+          // @ts-expect-error — a list has no `afterSave`
+          list: { afterSave: "close" },
+          // @ts-expect-error — a deletion has no tabs
+          delete: { tabs: { items: [] } },
+          // @ts-expect-error — `window` is now `page`
+          update: { open: "window" },
+        },
+      })
+    })
+  })
+
+  it("checks the field names of a form against the item", () => {
+    neverRun(() => {
+      createViewResource<Task>("typed_form", {
+        storage: "local",
+        form: { inputs: { title: { label: "Title" }, status: false } },
+      })
+    })
+  })
+})
+
+describe("the 0.x keys the checks recognise", () => {
+  it("are those of migrations/1.0.json, with the same rewrite", async () => {
+    const { changes } = (await import("../../migrations/1.0.json")).default as {
+      changes: { id: string; hint?: string; detect?: { in: string; key: string }[] }[]
+    }
+    const { LEGACY_HINTS, LEGACY_KEYS } = await import("@/definition/legacyKeys")
+
+    const fromJson = changes.flatMap((change) =>
+      change.hint
+        ? (change.detect ?? []).map((detect) => [detect.in, detect.key, change.id])
+        : []
+    )
+    expect(LEGACY_KEYS).toEqual(fromJson)
+    for (const change of changes) {
+      if (change.hint && change.detect) expect(LEGACY_HINTS[change.id]).toBe(change.hint)
+    }
+  })
+})

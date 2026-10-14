@@ -1,10 +1,10 @@
 import ListPagination from "@/views/list/component/ListPagination"
 import { Trans } from "react-mini-i18n"
-import { CardViewOptionInterface } from "@/views/list/component/card/cardViewOptionFactory"
+import type { CardsLayoutOptions } from "@/layout/layout"
+import { useLayout } from "@/layout/useLayout"
 import { cn } from "@/ui/cn"
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
-import { ListComponentPropsInterface } from "@/ViewInterface"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { ListComponentPropsInterface } from "@/ViewResource"
 
 import { RecordCard } from "@/views/list/component/RecordCard"
 
@@ -21,11 +21,11 @@ const GRID_CLASSES: Record<number, string> = {
 }
 
 export function ListCard({ rows = [] }: ListComponentPropsInterface) {
-  const view = useCurrentViewResourceContext().view as CardViewOptionInterface
+  const { columns } = useLayout<CardsLayoutOptions>().options
   const viewContext = useListViewContext()
 
   if (!viewContext.data) return <Trans>No data yet</Trans>
-  const grid = view?.grid ?? 4
+  const grid = columns ?? 4
 
   return (
     <div className={"w-full"}>

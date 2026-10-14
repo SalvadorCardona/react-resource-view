@@ -4,7 +4,6 @@ import ResourceViewButton, {
 import { ButtonGroup } from "@/ui/button-group"
 import { ActionList } from "react-data-form"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import { getResourceConfig } from "@/ResourceConfig"
 
 /**
  * What a row offers unless the view says otherwise.
@@ -30,20 +29,17 @@ export function useRowActions(
   resource?: ResourceButtonProps["resource"]
 ): ActionList[] {
   const currentResourceContext = useCurrentViewResourceContext()
+  const declared =
+    resource?.views?.list?.rowActions ??
+    currentResourceContext?.resource?.views?.list?.rowActions
 
-  return (
-    resource?.view?.behavior?.rowActions ??
-    currentResourceContext?.view?.behavior?.rowActions ??
-    getResourceConfig()?.defaultResource?.views?.[ActionList.list]?.behavior
-      ?.rowActions ??
-    DEFAULT_ROW_ACTIONS
-  )
+  return (declared as ActionList[] | undefined) ?? DEFAULT_ROW_ACTIONS
 }
 
 /**
  * The buttons at the end of a row.
  *
- * Which ones are drawn is the view's decision — `behavior.rowActions` — because
+ * Which ones are drawn is the list's decision — `views.list.rowActions` — because
  * it depends on what the row already does. A table whose cells are editable in
  * place needs no read button, and three buttons are three buttons' worth of
  * width taken from the columns. Permissions are applied by each button, so an

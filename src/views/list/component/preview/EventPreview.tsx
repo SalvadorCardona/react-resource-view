@@ -1,11 +1,10 @@
-import { IconType, RowInterface } from "@/ViewInterface"
+import { IconType, RowInterface } from "@/ViewResource"
 import { PopoverDescription, PopoverHeader, PopoverTitle } from "@/ui/popover"
 import { ScrollArea } from "@/ui/scroll-area"
 import ListResourceViewButton, {
   useRowActions,
 } from "@/action/ListResourceViewButton"
-import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
-import { permissionResource } from "@/utils/permissionResource"
+import { useAllowedActions } from "@/utils/permissionResource"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 
 export interface EventPreviewProps {
@@ -39,12 +38,10 @@ export function EventPreview({
   color,
   icon: Icon,
 }: EventPreviewProps) {
-  const { resource } = useCurrentViewResourceContext()
   // A resource permitting none of the row's actions would otherwise be given a
   // separator with nothing under it.
-  const hasActions = useRowActions().some((action) =>
-    permissionResource(resource, action)
-  )
+  const rowActions = useRowActions()
+  const hasActions = useAllowedActions(rowActions, row.data).length > 0
 
   return (
     <div data-slot="event-preview" className="flex min-w-0 flex-col gap-3">

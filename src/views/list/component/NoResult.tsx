@@ -1,7 +1,6 @@
 import { Search } from "lucide-react"
 import { Card, CardContent } from "@/ui/card"
 import { useListViewContext } from "@/views/list/provider/useListViewContext"
-import { ViewListInterface } from "@/ViewInterface"
 import { FC } from "react"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import ResourceViewButton from "@/action/ResourceViewButton"
@@ -11,7 +10,7 @@ import { getCollectionItems, getCollectionTotal } from "@/api/collection"
 export function NoResult() {
   const listViewContext = useListViewContext()
   const currentResource = useCurrentViewResourceContext()
-  const currentView: ViewListInterface = currentResource.view
+  const currentView = currentResource.view
   const collection = listViewContext?.originalData
   const resource = currentResource.resource
 
@@ -30,8 +29,9 @@ export function NoResult() {
     return null
   }
 
-  if (currentView && currentView.components?.noResult) {
-    return <currentView.components.noResult />
+  const Empty = currentView?.components.empty
+  if (Empty) {
+    return <Empty />
   }
 
   return <NoResultComponent />

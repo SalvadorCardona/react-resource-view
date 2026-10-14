@@ -7,14 +7,17 @@ import getFormByCurrentResourceContext from "@/views/update/getFormByCurrentReso
 import { FormBuiltInterface, FormInterface } from "react-data-form"
 import { ActionList } from "react-data-form"
 import { toast } from "sonner"
-import { ViewResourceContextParams } from "@/ViewResourceContext"
+import {
+  ViewResourceContext,
+  ViewResourceContextParams,
+} from "@/ViewResourceContext"
 import { deepCopy } from "@/internal/object/deepCopy"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import { generateLink } from "@/routes/routes"
 import { useNavigate } from "@/ports"
 import { resolveViewResourceContext } from "@/utils/resolveViewResourceContext"
 import { findResource } from "@/utils/findResource"
-import { ViewResourceInterface } from "@/ViewResourceInterface"
+import { ViewResource } from "@/ViewResource"
 import { translate } from "react-mini-i18n"
 
 export interface formByResourceInputsInterface<DataProps extends object = object> {
@@ -40,10 +43,6 @@ export default function useFormByResource<DataMain extends object = object>({
     currentResource.resourceAction ?? (id ? ActionList.update : ActionList.create)
   const view =
     currentResource.view ?? resolveViewResourceContext(currentResource).view
-  const closeAfterUpdate = view?.behavior?.closeAfterUpdate ?? false
-  const redirectToAfterUpdate = view?.behavior?.redirectToAfterUpdate ?? false
-
-  const refreshDataAfterUpdate = view?.behavior?.refreshDataAfterUpdate ?? false
   /**
    * A form drawn over the page — in a dialog or in a drawer — has nowhere to
    * send anyone.
@@ -55,12 +54,12 @@ export default function useFormByResource<DataMain extends object = object>({
    * user gets for filling in three fields is a screen they never asked for.
    * The dialog closes itself on the resource's `onChange` instead.
    */
-  const opensOverThePage =
-    view?.behavior?.openIn === "popup" || view?.behavior?.openIn === "drawer"
+  const opensOverThePage = view?.open === "dialog" || view?.open === "drawer"
+  const afterSave = view?.afterSave ?? (opensOverThePage ? "close" : "stay")
   const resource = findResource({
     resourceId: currentResource.resourceId as string,
     resource: currentResource.resource,
-  }) as ViewResourceInterface
+  }) as ViewResource
 
   const currentForm = deepCopy(
     form ??
@@ -89,9 +88,10 @@ export default function useFormByResource<DataMain extends object = object>({
       const fetcher = currentResource.resource?.getItem
 
       if (fetcher) {
-        const response = await fetcher({
-          id: id as string,
-        })
+        const response = await fetcher(
+          { id: id as string },
+          { viewResourceContext: currentResource as ViewResourceContext }
+        )
 
         return response.data as DataMain
       }
@@ -114,11 +114,15 @@ export default function useFormByResource<DataMain extends object = object>({
         newDataWithId.id = idInObjet
       }
 
+      // The view context goes with the write, so the resource's hooks know
+      // which screen it comes from.
+      const context = { viewResourceContext: currentResource as ViewResourceContext }
+
       try {
         const response =
           action === ActionList.create && !idInObjet
-            ? await resource?.createItem(newDataWithId)
-            : await resource?.updateItem(newDataWithId)
+            ? await resource?.createItem(newDataWithId, context)
+            : await resource?.updateItem(newDataWithId, context)
         toast.success(formContext.form?.label?.success, {
           description: translate("Your changes have been saved"),
         })
@@ -129,19 +133,31 @@ export default function useFormByResource<DataMain extends object = object>({
 
         onUpdated?.(response.data as DataMain)
 
-        if (refreshDataAfterUpdate) {
+        if (typeof afterSave === "object") {
+          router({ to: afterSave.redirect(response.data) })
+
+          return response.data
+        }
+
+        if (afterSave === "reload") {
           formContext.updateData(response.data)
         }
 
-        if (redirectToAfterUpdate) {
+        // Closing a form drawn on its own page goes back to the list; over a
+        // page, the button that opened it closes it.
+        if (afterSave === "close" && !opensOverThePage) {
           router({
-            to: redirectToAfterUpdate,
+            to: generateLink({
+              resourceId: resource?.["@id"] as string,
+              resourceAction: ActionList.list,
+              scope: resource?.scope,
+            }),
           })
 
           return response.data
         }
 
-        if (action === ActionList.create && !closeAfterUpdate && !opensOverThePage) {
+        if (action === ActionList.create && afterSave === "stay" && !opensOverThePage) {
           router({
             to: generateLink({
               id: getIdFromObject(response.data, false, resource) as string,

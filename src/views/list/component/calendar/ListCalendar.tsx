@@ -36,17 +36,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
 import {
   ListComponentPropsInterface,
   RowInterface,
-} from "@/ViewInterface"
+} from "@/ViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { getDateLocale, getWeekStartsOn } from "@/ports"
 import { EventPreview } from "@/views/list/component/preview/EventPreview"
 import { formatEventPeriod } from "@/views/list/component/preview/formatEventPeriod"
-import {
-  CalendarViewMode,
-  CalendarViewOptionInterface,
-} from "@/views/list/component/calendar/calendarViewOptionFactory"
+import type { CalendarLayoutOptions, CalendarMode } from "@/layout/layout"
+import { useLayout } from "@/layout/useLayout"
 import getIdFromObject from "@/internal/id/getIdFromObject"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
 import { ActionList } from "react-data-form"
 import { useBoolean } from "@/internal/useBoolean"
 import ResourceViewButton from "@/action/ResourceViewButton"
@@ -183,20 +181,17 @@ function layoutDayEvents(
 
 export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
   const currentResourceContext = useCurrentViewResourceContext()
-  const view = currentResourceContext.view as CalendarViewOptionInterface
-  const dateKey = view.dateKey ?? "dueDate"
-  const initialMode: CalendarViewMode = view.mode ?? "month"
-  const hourStart = view.hourStart ?? 7
-  const hourEnd = view.hourEnd ?? 21
+  const options = useLayout<CalendarLayoutOptions>().options
+  const dateKey = options.dateField ?? "dueDate"
+  const initialMode: CalendarMode = options.mode ?? "month"
+  const hourStart = options.hourStart ?? 7
+  const hourEnd = options.hourEnd ?? 21
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
-  const [mode, setMode] = useState<CalendarViewMode>(initialMode)
+  const [mode, setMode] = useState<CalendarMode>(initialMode)
   const [createDate, setCreateDate] = useState<Date | null>(null)
   const createModal = useBoolean(false)
-  const canCreate = permissionResource(
-    currentResourceContext.resource,
-    ActionList.create
-  )
+  const canCreate = usePermission(ActionList.create)
 
   const openCreate = (date: Date) => {
     if (!canCreate) return
@@ -214,7 +209,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
         if (!start) return null
         const end = getRowEnd(
           row as RowInterface<Record<string, unknown>>,
-          view.endDateKey,
+          options.endDateField,
           start
         )
         return { row, start, end }
@@ -223,7 +218,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
         (entry): entry is { row: RowInterface; start: Date; end: Date } =>
           entry !== null
       )
-  }, [rows, dateKey, view.endDateKey])
+  }, [rows, dateKey, options.endDateField])
 
   const getRowsForDate = (date: Date) =>
     rowsWithDate.filter((entry) => isSameDay(entry.start, date))
@@ -313,7 +308,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
 
         <Tabs
           value={mode}
-          onValueChange={(value) => setMode(value as CalendarViewMode)}
+          onValueChange={(value) => setMode(value as CalendarMode)}
         >
           <TabsList>
             <TabsTrigger value="day" className="gap-1.5">
@@ -681,16 +676,16 @@ function CalendarEvent({
   entry: DayWithRows
   showTime?: boolean
 }) {
-  const view = useCurrentViewResourceContext().view as CalendarViewOptionInterface
+  const options = useLayout<CalendarLayoutOptions>().options
   const title = getRowTitle(
     entry.row as RowInterface<Record<string, unknown>>,
-    view.titleKey
+    options.titleField
   )
   const color = getRowColor(
     entry.row as RowInterface<Record<string, unknown>>,
-    view.colorKey
+    options.colorField
   )
-  const Icon = view.getIcon?.(entry.row as RowInterface<Record<string, unknown>>)
+  const Icon = options.getIcon?.(entry.row as RowInterface<Record<string, unknown>>)
 
   const style = color ? { backgroundColor: color + "30", color } : undefined
 
@@ -741,15 +736,15 @@ function PositionedEvent({
   entry: DayWithRows
   compact: boolean
 }) {
-  const view = useCurrentViewResourceContext().view as CalendarViewOptionInterface
+  const options = useLayout<CalendarLayoutOptions>().options
   const title = getRowTitle(
     entry.row as RowInterface<Record<string, unknown>>,
-    view.titleKey
+    options.titleField
   )
   const color =
-    getRowColor(entry.row as RowInterface<Record<string, unknown>>, view.colorKey) ??
+    getRowColor(entry.row as RowInterface<Record<string, unknown>>, options.colorField) ??
     "var(--primary)"
-  const Icon = view.getIcon?.(entry.row as RowInterface<Record<string, unknown>>)
+  const Icon = options.getIcon?.(entry.row as RowInterface<Record<string, unknown>>)
 
   return (
     <Popover>

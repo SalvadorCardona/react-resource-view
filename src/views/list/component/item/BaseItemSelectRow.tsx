@@ -1,4 +1,4 @@
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
 import { BaseJsonLdItemInterface } from "jsonld-item"
 import { ReactNode } from "react"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"

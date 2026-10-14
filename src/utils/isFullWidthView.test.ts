@@ -1,26 +1,28 @@
 import { describe, expect, it } from "vitest"
 import { ActionList } from "react-data-form"
 import { createViewResource } from "@/utils/createViewResource"
-import columnViewOptionFactory from "@/views/list/component/columns/columnViewOptionFactory"
-import tableViewOptionFactory from "@/views/list/component/table/tableViewOptionFactory"
 import { isFullWidthView } from "@/utils/isFullWidthView"
+import { layout } from "@/layout/layout"
 
-const narrowResource = createViewResource("full_width_narrow", {
-  view: { name: "Narrow" },
-})
+const narrowResource = createViewResource("full_width_narrow", { name: "Narrow", storage: "local" })
 
 const wideResource = createViewResource("full_width_wide", {
-  view: { name: "Wide", fullWidth: true },
-  views: { [ActionList.update]: { name: "Edit", fullWidth: false } },
+  name: "Wide",
+  storage: "local",
+  fullWidth: true,
+  views: { update: { title: "Edit", fullWidth: false } },
 })
 
 const boardOnlyResource = createViewResource("full_width_board_only", {
-  view: {
-    name: "Tasks",
-    viewVariants: [
-      columnViewOptionFactory({ id: "board", fullWidth: true }),
-      tableViewOptionFactory({ id: "table" }),
-    ],
+  name: "Tasks",
+  storage: "local",
+  views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: [], fullWidth: true }),
+        layout.table(),
+      ],
+    },
   },
 })
 
@@ -59,13 +61,16 @@ describe("isFullWidthView", () => {
   })
 
   it("lets a variant win over the resource's view, both ways", () => {
-    const resource = createViewResource("full_width_variant_wins", {
-      view: {
-        fullWidth: true,
-        viewVariants: [
-          tableViewOptionFactory({ id: "table" }),
-          columnViewOptionFactory({ id: "board", fullWidth: false }),
-        ],
+      const resource = createViewResource("full_width_variant_wins", {
+      storage: "local",
+      fullWidth: true,
+      views: {
+        list: {
+          layouts: [
+            layout.table(),
+            layout.board({ groupBy: "status", columns: [], fullWidth: false }),
+          ],
+        },
       },
     })
     const list = { resource, resourceAction: ActionList.list }

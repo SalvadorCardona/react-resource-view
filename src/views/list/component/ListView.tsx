@@ -7,19 +7,14 @@ import { FormElement } from "react-data-form"
 import { NoResult } from "@/views/list/component/NoResult"
 import { Button } from "@/ui/button"
 import { CircleX } from "lucide-react"
-import { ViewResourceInterface } from "@/ViewResourceInterface"
-import { FormInterface } from "react-data-form"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 import { ListHeader } from "@/views/list/component/ListHeader"
+import { getFormFilter } from "@/views/list/filter/useFilter"
 import {
   ListFilterBar,
   listFilterFormClassName,
 } from "@/views/list/component/ListFilterBar"
-
-function getFormFilter(resource: ViewResourceInterface): FormInterface | undefined {
-  return resource?.views?.list?.formFilter ?? undefined
-}
 
 export default function ListView() {
   return (
@@ -97,11 +92,11 @@ function ListComponent({ rows = [] }: ListComponentPropsInterface) {
 
   const currentResource = useCurrentViewResourceContext()
 
-  if (!view.rowComponent) {
+  if (!view.components.row) {
     return <>List component is undefined</>
   }
 
-  const ListComponent = currentResource.view.listComponent
+  const ListComponent = currentResource.view.components.list
   if (ListComponent) {
     return <ListComponent rows={rows} />
   }

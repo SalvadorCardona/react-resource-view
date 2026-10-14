@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { setHours, setMinutes } from "date-fns"
-import { calendarViewOptionFactory, createViewResource } from "@/index"
+import { createViewResource, layout } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
 
 /**
@@ -57,9 +57,10 @@ const ROASTS: Roast[] = [
 
 function createRoastsResource(id: string, canUpdate: boolean) {
   return createViewResource<Roast>(id, {
-    name: "Roasts",
-    scope: "preview",
-    canUpdate,
+  name: "Roasts",
+  storage: "local",
+  permissions: { read: false, create: false, update: canUpdate, delete: false },
+  repository: {
     getCollection: async () => ({
       data: {
         "@id": id,
@@ -68,32 +69,33 @@ function createRoastsResource(id: string, canUpdate: boolean) {
         totalItems: ROASTS.length,
       },
     }),
-    view: {
-      name: "Roasts",
-      form: {
-        inputs: {
-          batch: { label: "Batch" },
-          origin: { label: "Origin" },
-          roaster: { label: "Roaster" },
-          status: { label: "Status" },
-          weight: { label: "Kilograms" },
-          profile: { label: "Profile" },
-          notes: { label: "Notes" },
-          startAt: { label: "Starts at" },
-          endAt: { label: "Ends at" },
-        },
-      },
-      viewVariants: [
-        calendarViewOptionFactory({
-          name: "Calendar",
+  },
+  form: {
+    inputs: {
+      batch: { label: "Batch" },
+      origin: { label: "Origin" },
+      roaster: { label: "Roaster" },
+      status: { label: "Status" },
+      weight: { label: "Kilograms" },
+      profile: { label: "Profile" },
+      notes: { label: "Notes" },
+      startAt: { label: "Starts at" },
+      endAt: { label: "Ends at" },
+    },
+  },
+  views: {
+    list: {
+      layouts: [
+        layout.calendar({
           mode: "day",
-          dateKey: "startAt",
-          endDateKey: "endAt",
-          titleKey: "batch",
+          dateField: "startAt",
+          endDateField: "endAt",
+          titleField: "batch",
         }),
       ],
     },
-  })
+  },
+})
 }
 
 const roastsResource = createRoastsResource("preview_roasts", true)

@@ -6,8 +6,8 @@ import { configureApi, resetApiConfig } from "@/api/apiConfig"
 import { strapiDialect } from "@/api/dialect/strapiDialect"
 import { supabaseDialect } from "@/api/dialect/supabaseDialect"
 import { ApiDialectInterface } from "@/api/apiDialectInterface"
-import columnViewOptionFactory from "@/views/list/component/columns/columnViewOptionFactory"
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
+import { layout } from "@/layout/layout"
 
 const toast = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast, Toaster: () => null }))
@@ -51,15 +51,16 @@ function TaskRow({ row }: RowComponentPropsInterface) {
   return <span>{row?.data?.title}</span>
 }
 
-const view = {
-  name: "Tasks",
-  viewVariants: [
-    columnViewOptionFactory({
-      rowComponent: TaskRow,
-      identifierKey: "status",
-      identifierKeyList: STATUSES,
-    }),
-  ],
+const views = {
+  list: {
+    layouts: [
+      layout.board({
+        groupBy: "status",
+        columns: STATUSES,
+        components: { row: TaskRow },
+      }),
+    ],
+  },
 }
 
 function renderBoard(scope: string, resourceId: string, resource: unknown) {
@@ -134,8 +135,8 @@ describe("a board kept in the local repository", () => {
     seed("local_board_tasks")
     const tasks = createViewResource("local_board_tasks", {
       name: "Tasks",
-      scope: "local_board",
-      view,
+      storage: "local",
+      views,
     })
     renderBoard("local_board", "local_board_tasks", tasks)
 
@@ -153,8 +154,8 @@ describe("a board kept in the local repository", () => {
     seed("local_same_tasks")
     const tasks = createViewResource("local_same_tasks", {
       name: "Tasks",
-      scope: "local_same",
-      view,
+      storage: "local",
+      views,
     })
     renderBoard("local_same", "local_same_tasks", tasks)
     const before = localStorage.getItem("local_same_tasks")
@@ -181,9 +182,8 @@ describe("a board kept behind a REST backend", () => {
     const tasks = createViewResource(`${name}_tasks`, {
       path,
       name: "Tasks",
-      scope: name,
       dialect,
-      view,
+      views,
     })
     renderBoard(name, `${name}_tasks`, tasks)
 

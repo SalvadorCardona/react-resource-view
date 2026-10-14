@@ -48,11 +48,11 @@ describe("naming a variant", () => {
     }
   })
 
-  it("names the file after the factory it exports", () => {
+  it("names the file after the layout it exports", () => {
     const target = resolveTarget({ name: "Heatmap", dir: "src/views", cwd: "/app" })
 
-    expect(target.path).toBe("/app/src/views/heatmapViewFactory.tsx")
-    expect(target.relativePath).toBe("src/views/heatmapViewFactory.tsx")
+    expect(target.path).toBe("/app/src/views/heatmapLayout.tsx")
+    expect(target.relativePath).toBe("src/views/heatmapLayout.tsx")
   })
 
   it("writes JavaScript when asked to", () => {
@@ -63,7 +63,7 @@ describe("naming a variant", () => {
       cwd: "/app",
     })
 
-    expect(target.fileName).toBe("heatmapViewFactory.jsx")
+    expect(target.fileName).toBe("heatmapLayout.jsx")
   })
 })
 
@@ -105,20 +105,19 @@ describe("the command line", () => {
 })
 
 describe("the generated file", () => {
-  it("exports a factory, its components and its options", () => {
+  it("exports a layout, its components and its options", () => {
     const file = renderViewVariant({ name: "Kanban board", icon: "Columns3" })
 
     expect(file).toContain(`import { Columns3 } from "lucide-react"`)
-    expect(file).toContain(
-      "export interface KanbanBoardViewInterface extends ViewInterface"
-    )
+    expect(file).toContain("export interface KanbanBoardOptions")
     expect(file).toContain("export function KanbanBoardList")
     expect(file).toContain("export function KanbanBoardRow")
     expect(file).toContain("export function KanbanBoardItem")
-    expect(file).toContain("export default function kanbanBoardViewFactory")
-    expect(file).toContain(`name: "Kanban board"`)
+    expect(file).toContain("export default function kanbanBoardLayout")
+    expect(file).toContain("layout.custom(")
+    expect(file).toContain(`label: "Kanban board"`)
     // The id the reader will find in the URL.
-    expect(file).toContain(`"kanban-board"`)
+    expect(file).toContain(`type: "kanban-board"`)
   })
 
   it("drops the types when the target is JavaScript", () => {
@@ -126,7 +125,7 @@ describe("the generated file", () => {
 
     expect(file).not.toContain("interface")
     expect(file).not.toContain(": ListComponentPropsInterface")
-    expect(file).toContain("export default function heatmapViewFactory")
+    expect(file).toContain("export default function heatmapLayout")
   })
 })
 
@@ -142,13 +141,13 @@ describe("running the command", () => {
     )
 
     expect(code).toBe(0)
-    const written = await readFile(join(workspace, "heatmapViewFactory.tsx"), "utf8")
-    expect(written).toContain("export default function heatmapViewFactory")
-    expect(lines.join("\n")).toContain("viewVariants")
+    const written = await readFile(join(workspace, "heatmapLayout.tsx"), "utf8")
+    expect(written).toContain("export default function heatmapLayout")
+    expect(lines.join("\n")).toContain("layouts: [")
   })
 
   it("does not overwrite a file it did not write, unless forced", async () => {
-    const path = join(workspace, "existingViewFactory.tsx")
+    const path = join(workspace, "existingLayout.tsx")
     await writeFile(path, "// mine\n", "utf8")
 
     const refused = await run(
@@ -163,7 +162,7 @@ describe("running the command", () => {
       { cwd: workspace, log: () => {} }
     )
     expect(forced).toBe(0)
-    expect(await readFile(path, "utf8")).toContain("existingViewFactory")
+    expect(await readFile(path, "utf8")).toContain("existingLayout")
   })
 
   it("prints the file rather than writing it on a dry run", async () => {
@@ -174,9 +173,9 @@ describe("running the command", () => {
     )
 
     expect(code).toBe(0)
-    expect(lines.join("\n")).toContain("export default function dryViewFactory")
+    expect(lines.join("\n")).toContain("export default function dryLayout")
     await expect(
-      readFile(join(workspace, "dryViewFactory.tsx"), "utf8")
+      readFile(join(workspace, "dryLayout.tsx"), "utf8")
     ).rejects.toThrow()
   })
 })
@@ -199,23 +198,25 @@ describe("what the command produced", () => {
   ]
 
   it("renders a resource declared with it", async () => {
-    const path = join(workspace, "spotlightViewFactory.tsx")
+    const path = join(workspace, "spotlightLayout.tsx")
     await writeFile(path, renderViewVariant({ name: "Spotlight" }), "utf8")
 
-    const spotlightViewFactory = (await import(/* @vite-ignore */ path)).default
+    const spotlightLayout = (await import(/* @vite-ignore */ path)).default
 
     const resource = createViewResource<Article>("cli_articles", {
       name: "Articles",
-      scope: "cli",
-      getCollection: async () => ({
-        data: {
-          "@id": "cli_articles",
-          "@type": "Collection",
-          member: ARTICLES,
-          totalItems: ARTICLES.length,
-        },
-      }),
-      view: { name: "Articles", viewVariants: [spotlightViewFactory()] },
+      repository: {
+        getCollection: async () => ({
+          data: {
+            "@id": "cli_articles",
+            "@type": "Collection",
+            member: ARTICLES,
+            totalItems: ARTICLES.length,
+          },
+        }),
+      },
+      storage: "local",
+      views: { list: { layouts: [spotlightLayout()] } },
     })
 
     render(

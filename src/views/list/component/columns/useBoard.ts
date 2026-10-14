@@ -3,10 +3,11 @@ import { toast } from "sonner"
 import { translate } from "react-mini-i18n"
 import { BaseJsonLdItemInterface } from "jsonld-item"
 import { ValueOptionInterface } from "react-data-form"
-import { RowInterface } from "@/ViewInterface"
+import { RowInterface } from "@/ViewResource"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import getIdentityFromObject from "@/internal/id/getIdentityFromObject"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { permissionResource } from "@/utils/permissionResource"
 import {
   draggedIds,
   selectRange,
@@ -106,9 +107,23 @@ export function useBoard({
   }, [selected.length])
 
   const moveTo = async (ids: string[], value: unknown) => {
-    const moving = ids
+    const candidates = ids
       .map((id) => byId.get(id))
       .filter((row): row is RowInterface => !!row?.data && columnOf(row) !== value)
+    // Moving a card is updating its record: a record the resource refuses to
+    // update stays in its column.
+    const answers = candidates.map((row) =>
+      permissionResource(resource, "update", {
+        item: row.data,
+        context: currentResource.viewResource,
+      })
+    )
+    // Waited for only when a rule answers later: the cards move at once
+    // otherwise.
+    const allowed = answers.every((answer) => typeof answer === "boolean")
+      ? (answers as boolean[])
+      : await Promise.all(answers)
+    const moving = candidates.filter((_, index) => allowed[index])
     // Dropped back where they were: there is nothing to save, nor to announce.
     if (!moving.length) return
 

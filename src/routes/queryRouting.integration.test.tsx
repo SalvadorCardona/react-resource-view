@@ -35,11 +35,8 @@ const seed = () =>
 // renders a notice instead of rows.
 const resource = createViewResource<Article>("demo_articles", {
   name: "Articles",
-  scope: "demo",
-  view: {
-    name: "Articles",
-    form: { inputs: { title: { label: "Title" } } },
-  },
+  storage: "local",
+  form: { inputs: { title: { label: "Title" } } },
 })
 
 afterEach(() => {

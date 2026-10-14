@@ -9,7 +9,7 @@ import { useScopeContext } from "@/scope/Scope"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { useAdminPageTitle } from "@/admin/AdminHeader"
 import { generateLinkByResource } from "@/routes/routes"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
 
 /**
  * Top bar of the admin layout: the sidebar toggle (or the logo, in mobile,
@@ -41,6 +41,7 @@ export function AdminBreadcrumb() {
   const resource = currentResource.resource
   const action = currentResource.resourceAction
   const { viewName, record, recordTitle, recordId } = useAdminPageTitle()
+  const canList = usePermission(ActionList.list, undefined, resource)
 
   if (!resource) return null
 
@@ -57,7 +58,7 @@ export function AdminBreadcrumb() {
   const linksToList =
     Boolean(page) &&
     !currentResource.parentResource &&
-    permissionResource(resource, ActionList.list)
+    canList
 
   const current = "block truncate font-medium text-foreground"
 

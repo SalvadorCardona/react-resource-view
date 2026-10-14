@@ -29,7 +29,7 @@ describe("MetaResourceComponent", () => {
 
     const html = renderToStaticMarkup(
       <CurrentResourceContext.Provider
-        value={{ view: { name: "Annuaire" } } as never}
+        value={{ view: { title: "Annuaire" } } as never}
       >
         <MetaResourceComponent />
       </CurrentResourceContext.Provider>
@@ -47,7 +47,7 @@ describe("MetaResourceComponent", () => {
     try {
       const html = renderToStaticMarkup(
         <CurrentResourceContext.Provider
-          value={{ view: { name: "Annuaire" } } as never}
+          value={{ view: { title: "Annuaire" } } as never}
         >
           <MetaResourceComponent />
         </CurrentResourceContext.Provider>

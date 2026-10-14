@@ -9,9 +9,11 @@ export default [
     // `website/` is a standalone project with its own toolchain and its own
     // dependencies, none of which are installed by this package. `.claude/`
     // holds agent skills restored from `skills-lock.json` — third-party code
-    // this package neither writes nor ships.
+    // this package neither writes nor ships. The fixtures of `migrate` are
+    // declarations as a project writes them, 0.x ones included.
     ignores: [
       "dist/**",
+      "cli/__fixtures__/**",
       "docs/dist/**",
       "website/**",
       ".claude/**",

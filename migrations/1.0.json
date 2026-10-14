@@ -1,0 +1,1324 @@
+{
+  "$comment": "react-resource-view 0.x → 1.0. One entry per breaking change. Read by `npx react-resource-view migrate`, by the development checks of createViewResource, and written for tools and AIs: apply `from` → `to`; `codemod: false` entries need the `manual` step.",
+  "package": "react-resource-view",
+  "from": "0.15",
+  "to": "1.0.0",
+  "kinds": {
+    "rename": "same notion, new name — mechanical",
+    "move": "same notion, another place in the declaration",
+    "merge": "several keys become one",
+    "remove": "the key has no replacement — it had no effect, or is built by the library",
+    "semantic": "the behaviour changes; read `manual`"
+  },
+  "changes": [
+    {
+      "id": "RV1-PERM-001",
+      "area": "permissions",
+      "title": "canRead, canList, canCreate, canUpdate, canDelete become one `permissions` object",
+      "kind": "merge",
+      "from": [
+        "canRead",
+        "canList",
+        "canCreate",
+        "canUpdate",
+        "canDelete"
+      ],
+      "to": "permissions",
+      "codemod": true,
+      "manual": null,
+      "why": "Five keys for one notion, denied by default and silently: a resource declared without them showed a list with no button at all. One object, allowed by default, says only what is restricted.",
+      "before": "createViewResource<Order>(\"orders\", {\n  path: \"/api/orders\",\n  canRead: true,\n  canUpdate: true,\n})",
+      "after": "createViewResource<Order>(\"orders\", {\n  path: \"/api/orders\",\n  permissions: { create: false, delete: false, export: false },\n})",
+      "note": "The codemod keeps what a 0.x declaration offered: an action it did not declare was refused, so it is written `false` — only the refusals are written, everything else being allowed. `\"readonly\"` is used when it fits. Without a `path` there is nothing to export, so `export` is left out. A declaration that named no permission at all is left to the 1.0 default and reported (RV1-PERM-002).",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "canRead"
+        },
+        {
+          "in": "resource",
+          "key": "canList"
+        },
+        {
+          "in": "resource",
+          "key": "canCreate"
+        },
+        {
+          "in": "resource",
+          "key": "canUpdate"
+        },
+        {
+          "in": "resource",
+          "key": "canDelete"
+        }
+      ],
+      "hint": "declare `permissions` instead — everything is allowed by default, so only restrictions are written: `permissions: { delete: false }`, `permissions: \"readonly\"` or `permissions: [\"list\", \"read\"]`."
+    },
+    {
+      "id": "RV1-PERM-002",
+      "area": "permissions",
+      "title": "Everything is allowed by default",
+      "kind": "semantic",
+      "from": "evaluateAccess(undefined) === false",
+      "to": "allowed unless restricted",
+      "codemod": false,
+      "manual": "A 0.x resource that declared no `canXxx` at all offered no read, create, update or delete button; in 1.0 it offers them all. The codemod lists these resources (it does not guess): add `permissions` to those that were meant to be read-only.",
+      "why": "The interface's permissions only decide what is offered; the API is where access is enforced. A deny-by-default protected nothing and broke the first experience — the README example had no button.",
+      "before": "createViewResource(\"books\", { path: \"/api/books\" })\n// 0.x: a list with no read, edit or delete button",
+      "after": "createViewResource(\"books\", { path: \"/api/books\" })\n// 1.0: every action offered; restrict with `permissions`",
+      "note": "Where a declaration named at least one `canXxx`, the codemod writes the refusals it implied (RV1-PERM-001)."
+    },
+    {
+      "id": "RV1-PERM-003",
+      "area": "permissions",
+      "title": "`canList` is read for the list (it was ignored)",
+      "kind": "semantic",
+      "from": "canList",
+      "to": "permissions.list",
+      "codemod": true,
+      "manual": "Check the lists of resources that declared `canList` differently from `canRead`: the list now follows `canList`, and a refused list protects its page.",
+      "why": "Bug: `permissionResource` answered the list with `canRead`, so `canList` had no effect.",
+      "before": "canRead: true,\ncanList: false,",
+      "after": "permissions: { list: false },",
+      "note": "0.x never refused a list page — `canRead` only hid the read buttons and the way back to the list — so the codemod writes `list: false` only when `canList` said so."
+    },
+    {
+      "id": "RV1-PERM-004",
+      "area": "permissions",
+      "title": "`behavior.canExport` becomes `permissions.export`",
+      "kind": "move",
+      "from": "view.behavior.canExport",
+      "to": "permissions.export",
+      "codemod": true,
+      "manual": null,
+      "why": "The export is a permission like the others; it sat in `behavior`, away from them.",
+      "before": "view: { behavior: { canExport: true } }",
+      "after": "permissions: { export: true } // or nothing: allowed by default",
+      "note": "The export button still only shows when the resource has a `path` and its dialect describes an export request.",
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "canExport"
+        }
+      ],
+      "hint": "the export is a permission: `permissions: { export: true }` at the root of the resource — and it is allowed by default when the dialect can export."
+    },
+    {
+      "id": "RV1-PERM-005",
+      "area": "permissions",
+      "title": "Permission functions receive the record and may be asynchronous",
+      "kind": "semantic",
+      "from": "() => boolean",
+      "to": "({ action, item, context }) => boolean | Promise<boolean>",
+      "codemod": false,
+      "manual": "Nothing to change: a function ignoring its argument still works. Use `item` to write rules such as \"a finished task cannot be deleted\".",
+      "why": "A rule about one record was impossible to write, and the scope's `authorization` was already asynchronous: one model now.",
+      "before": "canDelete: () => isAdmin(),",
+      "after": "permissions: {\n  delete: ({ item }) => isAdmin() && item?.status !== \"done\",\n},",
+      "note": "Asynchronous answers are cached per action and record for the time a list is on screen, so a list of 50 rows asks once per row and action."
+    },
+    {
+      "id": "RV1-PERM-006",
+      "area": "permissions",
+      "title": "A refused action also protects its route",
+      "kind": "semantic",
+      "from": "buttons hidden only",
+      "to": "route shows the forbidden fallback",
+      "codemod": false,
+      "manual": "Check the pages reached by a direct link: `/admin/books/update/1` with `update` refused now shows the scope's `forbiddenFallback` instead of the form.",
+      "why": "A refused action only hid its button: typing the URL still opened the form.",
+      "before": "// canUpdate: false — /books/update/1 still drew the form",
+      "after": "// permissions: { update: false } — /books/update/1 draws the forbidden fallback",
+      "note": "The fallback is the scope's `forbiddenFallback`, then the configuration's, then a built-in \"Access denied\"."
+    },
+    {
+      "id": "RV1-PERM-007",
+      "area": "permissions",
+      "title": "`permissionResource(resource, action, { item, context })` may return a promise; `usePermission` added",
+      "kind": "semantic",
+      "from": "permissionResource(resource, action): boolean",
+      "to": "permissionResource(resource, action, { item, context }): boolean | Promise<boolean>",
+      "codemod": false,
+      "manual": "Calls that used the result as a boolean must handle a promise when a permission is asynchronous — in a component, use `usePermission(action, item)`.",
+      "why": "A permission can now depend on the record and answer asynchronously.",
+      "before": "if (permissionResource(resource, ActionList.update)) { … }",
+      "after": "const canUpdate = usePermission(\"update\", item) // false while pending",
+      "note": null
+    },
+    {
+      "id": "RV1-VIEW-001",
+      "area": "views",
+      "title": "`view` disappears: what it held goes to the root of the resource or to `views.list`",
+      "kind": "move",
+      "from": "view",
+      "to": "(root) | views.list",
+      "codemod": true,
+      "manual": null,
+      "why": "`view` and `views` differed by one letter, and `view` was typed as a list: `itemsPerPage` and `formFilter` were offered as defaults for every action.",
+      "before": "view: {\n  name: \"Tasks\",\n  fullWidth: true,\n  form: { inputs: TASK_FIELDS },\n  formFilter: { inputs: { title: { label: \"Search\" } } },\n  viewVariants: [tableViewOptionFactory({ name: \"Table\" })],\n},",
+      "after": "fullWidth: true,\nform: { inputs: TASK_FIELDS },\nviews: {\n  list: {\n    filters: { inputs: { title: { label: \"Search\" } } },\n    layouts: [layout.table()],\n  },\n},",
+      "note": "`view.name` is dropped when it repeats the resource's `name`, and becomes `views.list.title` otherwise.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "view"
+        }
+      ],
+      "hint": "`view` is gone. What is common to every action goes to the root of the resource (`form`, `fullWidth`, `components`, `titleField`, `description`, `className`); what belongs to the list goes to `views.list` (`layouts`, `filters`, `pageSize`, `rowActions`)."
+    },
+    {
+      "id": "RV1-VIEW-002",
+      "area": "views",
+      "title": "`views[ActionList.update]` becomes `views.update`",
+      "kind": "rename",
+      "from": "views[ActionList.x]",
+      "to": "views.x",
+      "codemod": true,
+      "manual": null,
+      "why": "The keys are plain strings, offered by the autocompletion; there is nothing to import.",
+      "before": "views: { [ActionList.update]: { … } }",
+      "after": "views: { update: { … } }",
+      "note": "`ActionList.update` is still accepted wherever an action is expected."
+    },
+    {
+      "id": "RV1-VIEW-003",
+      "area": "views",
+      "title": "`name` of a view becomes `title`, and is derived when not declared",
+      "kind": "rename",
+      "from": "views.x.name",
+      "to": "views.x.title",
+      "codemod": true,
+      "manual": null,
+      "why": "The name was declared three times (`name`, `view.name`, `views.list.name`) while the titles were already derived.",
+      "before": "views: { [ActionList.update]: { name: \"Edit a task\" } }",
+      "after": "views: { update: { title: \"Edit a task\" } }",
+      "note": "In development, a `title` identical to the derived one is reported.",
+      "detect": [
+        {
+          "in": "view",
+          "key": "name"
+        }
+      ],
+      "hint": "a view's title is `title`, and it is derived from the resource's `name` (\"Edit — Tasks\") — declare it only to say something else."
+    },
+    {
+      "id": "RV1-VIEW-004",
+      "area": "views",
+      "title": "`label` becomes `views.<action>.buttonLabel`",
+      "kind": "move",
+      "from": "view.label.<action>",
+      "to": "views.<action>.buttonLabel",
+      "codemod": true,
+      "manual": null,
+      "why": "An object indexed by action inside a view that is already an action: `views.update.label.create` meant nothing. It only ever labelled buttons.",
+      "before": "view: { label: { create: \"New task\" } }",
+      "after": "views: { create: { buttonLabel: \"New task\" } }",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "label"
+        }
+      ],
+      "hint": "the text of an action's button is `views.<action>.buttonLabel: \"…\"`."
+    },
+    {
+      "id": "RV1-VIEW-005",
+      "area": "views",
+      "title": "Root and action are merged deeply",
+      "kind": "semantic",
+      "from": "{ ...view, ...views[action] }",
+      "to": "deep merge root → action → layout",
+      "codemod": false,
+      "manual": "A `views.<action>` that restated a whole object (`components`, `form`, `behavior`) to change one key can now say only that key. One that relied on the shallow merge to *drop* inherited keys must now remove them explicitly: `inputs: { notes: false }`, `components: { top: null }`.",
+      "why": "`views.update.behavior.closeAfterUpdate` erased the whole `view.behavior`, `openIn` included; the same held for `form`, `components` and `label`.",
+      "before": "view: { form: { inputs: FIELDS } },\nviews: { [ActionList.update]: { form: { inputs: { ...FIELDS, notes: undefined } } } }",
+      "after": "form: { inputs: FIELDS },\nviews: { update: { form: { inputs: { notes: false } } } }",
+      "note": "Arrays (`layouts`, `rowActions`, `valueOptions`) and functions are replaced, not merged."
+    },
+    {
+      "id": "RV1-VIEW-006",
+      "area": "views",
+      "title": "`itemsPerPage` becomes `views.list.pageSize`",
+      "kind": "rename",
+      "from": "view.itemsPerPage",
+      "to": "views.list.pageSize",
+      "codemod": true,
+      "manual": null,
+      "why": "A word that belongs to no backend (`itemsPerPage` is API Platform's).",
+      "before": "view: { itemsPerPage: 50 }",
+      "after": "views: { list: { pageSize: 50 } }",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "itemsPerPage"
+        }
+      ],
+      "hint": "the page size is `views.list.pageSize`."
+    },
+    {
+      "id": "RV1-VIEW-007",
+      "area": "views",
+      "title": "`formFilter` and `defaultFilter` become `views.list.filters` with `initial`",
+      "kind": "merge",
+      "from": [
+        "view.formFilter",
+        "view.defaultFilter"
+      ],
+      "to": "views.list.filters",
+      "codemod": true,
+      "manual": null,
+      "why": "The two notions go together and lived apart.",
+      "before": "view: {\n  formFilter: { inputs: { status: STATUS_INPUT } },\n  defaultFilter: { status: \"open\" },\n}",
+      "after": "views: {\n  list: {\n    filters: { inputs: { status: STATUS_INPUT }, initial: { status: \"open\" } },\n  },\n}",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "formFilter"
+        },
+        {
+          "in": "view",
+          "key": "defaultFilter"
+        }
+      ],
+      "hint": "the filters are `views.list.filters: { inputs, initial }` — the filter form and the values applied before any is chosen."
+    },
+    {
+      "id": "RV1-VIEW-008",
+      "area": "views",
+      "title": "`titleKey` becomes `titleField`",
+      "kind": "rename",
+      "from": "titleKey",
+      "to": "titleField",
+      "codemod": true,
+      "manual": null,
+      "why": "One suffix for every field option: `titleField`, `dateField`, `colorField`, `statusField`.",
+      "before": "view: { titleKey: \"email\" }",
+      "after": "titleField: \"email\"",
+      "note": "Typed against the resource's item: a typo is a TypeScript error.",
+      "detect": [
+        {
+          "in": "view",
+          "key": "titleKey"
+        }
+      ],
+      "hint": "the field naming a record is `titleField` (at the root of the resource, or on a layout)."
+    },
+    {
+      "id": "RV1-VIEW-009",
+      "area": "views",
+      "title": "A view no longer declares `id` or `icon`",
+      "kind": "remove",
+      "from": [
+        "view.id",
+        "view.icon"
+      ],
+      "codemod": true,
+      "manual": null,
+      "why": "Neither had an effect on a view.",
+      "before": "icon: ListTodo,\nview: { id: \"tasks\", icon: ListTodo },",
+      "after": "icon: ListTodo, // the resource's icon is the one the views use",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "id"
+        },
+        {
+          "in": "view",
+          "key": "icon"
+        }
+      ],
+      "hint": "a view has no `id` or `icon` of its own: the resource's `icon` is used; a layout takes `id` and `icon`."
+    },
+    {
+      "id": "RV1-BEHAV-001",
+      "area": "behavior",
+      "title": "`behavior` disappears: each option moves to where it has an effect",
+      "kind": "remove",
+      "from": "view.behavior",
+      "to": "(several)",
+      "codemod": true,
+      "manual": null,
+      "why": "One type shared by the five actions: `closeAfterUpdate` could be written on a list and `bulkActions` on a form, without error and without effect.",
+      "before": "views: { [ActionList.update]: { behavior: { openIn: \"popup\", closeAfterUpdate: true } } }",
+      "after": "views: { update: { open: \"dialog\" } } // closing after a save is what a dialog does",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "behavior"
+        }
+      ],
+      "hint": "`behavior` is gone: `openIn` → `open`, `closeAfterUpdate`/`refreshDataAfterUpdate`/`redirectToAfterUpdate` → `afterSave`, `rowActions` → `views.list.rowActions`, `canExport` → `permissions.export`, `eventSourced` → `realtime` (root), `openRecordIn`/`selectable`/`bulkActions` → `layout.board({ openRecord, selectable, bulkActions })`."
+    },
+    {
+      "id": "RV1-BEHAV-002",
+      "area": "behavior",
+      "title": "`openIn` becomes `open`: `window` → `page`, `popup` → `dialog`",
+      "kind": "rename",
+      "from": "behavior.openIn",
+      "to": "views.<action>.open",
+      "codemod": true,
+      "manual": null,
+      "why": "`window` did not mean a new tab and `popup` evoked the browser: the new values describe what is seen. `openIn` was also too close to `openRecordIn`.",
+      "before": "behavior: { openIn: \"popup\" }",
+      "after": "open: \"dialog\"",
+      "note": null,
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "openIn"
+        }
+      ],
+      "hint": "`open: \"page\" | \"dialog\" | \"drawer\"` on the action's view (`window` is now `page`, `popup` is `dialog`).",
+      "map": {
+        "openIn": "open"
+      },
+      "values": {
+        "window": "page",
+        "popup": "dialog",
+        "drawer": "drawer"
+      }
+    },
+    {
+      "id": "RV1-BEHAV-003",
+      "area": "behavior",
+      "title": "`closeAfterUpdate`, `refreshDataAfterUpdate`, `redirectToAfterUpdate` become one `afterSave`",
+      "kind": "merge",
+      "from": [
+        "behavior.closeAfterUpdate",
+        "behavior.refreshDataAfterUpdate",
+        "behavior.redirectToAfterUpdate"
+      ],
+      "to": "views.create|update.afterSave",
+      "codemod": true,
+      "manual": "Check forms that combined these options: they could contradict each other, `afterSave` keeps one (redirect, then reload, then close).",
+      "why": "Three options that could contradict each other; a union makes a contradiction impossible, and the redirection can depend on the saved record.",
+      "before": "behavior: { closeAfterUpdate: true }\nbehavior: { refreshDataAfterUpdate: true }\nbehavior: { redirectToAfterUpdate: \"/done\" }",
+      "after": "afterSave: \"close\"\nafterSave: \"reload\"\nafterSave: { redirect: () => \"/done\" }",
+      "note": "`closeAfterUpdate: false` is the default and is dropped. Defaults: `close` in a dialog or a drawer, `stay` on a page (after a creation, the page moves to the new record, as in 0.x).",
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "closeAfterUpdate"
+        },
+        {
+          "in": "behavior",
+          "key": "refreshDataAfterUpdate"
+        },
+        {
+          "in": "behavior",
+          "key": "redirectToAfterUpdate"
+        }
+      ],
+      "hint": "what follows a save is `afterSave: \"close\" | \"stay\" | \"reload\" | { redirect: (item) => string }` on `views.create` or `views.update`."
+    },
+    {
+      "id": "RV1-BEHAV-004",
+      "area": "behavior",
+      "title": "`rowActions` moves to `views.list.rowActions`, as strings",
+      "kind": "move",
+      "from": "view.behavior.rowActions",
+      "to": "views.list.rowActions",
+      "codemod": true,
+      "manual": null,
+      "why": "Only the list has rows.",
+      "before": "views: { [ActionList.list]: { behavior: { rowActions: [ActionList.read, ActionList.update] } } }",
+      "after": "views: { list: { rowActions: [\"read\", \"update\"] } }",
+      "note": "`ActionList.read` is still accepted.",
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "rowActions"
+        }
+      ],
+      "hint": "the buttons of a row are `views.list.rowActions: [\"read\", \"update\", \"delete\"]`."
+    },
+    {
+      "id": "RV1-BEHAV-005",
+      "area": "behavior",
+      "title": "`eventSourced` becomes `realtime` at the root of the resource",
+      "kind": "move",
+      "from": "view.behavior.eventSourced",
+      "to": "realtime",
+      "codemod": true,
+      "manual": null,
+      "why": "It is a property of the data (Mercure), not of a view.",
+      "before": "view: { behavior: { eventSourced: true } }",
+      "after": "realtime: true",
+      "note": null,
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "eventSourced"
+        }
+      ],
+      "hint": "live updates are `realtime: true` at the root of the resource."
+    },
+    {
+      "id": "RV1-BEHAV-006",
+      "area": "behavior",
+      "title": "`openRecordIn`, `selectable`, `bulkActions` become options of `layout.board()`",
+      "kind": "move",
+      "from": [
+        "behavior.openRecordIn",
+        "behavior.selectable",
+        "behavior.bulkActions"
+      ],
+      "to": "layout.board({ openRecord, selectable, bulkActions })",
+      "codemod": true,
+      "manual": null,
+      "why": "They only ever applied to the Kanban board.",
+      "before": "columnViewOptionFactory({\n  behavior: { openRecordIn: \"drawer\", bulkActions: [markUrgent] },\n})",
+      "after": "layout.board({ openRecord: \"drawer\", bulkActions: [markUrgent] })",
+      "note": "Declared on `view`, they used to reach the board through the merge; the codemod moves them into the board's options when the board is in the same declaration.",
+      "detect": [
+        {
+          "in": "behavior",
+          "key": "openRecordIn"
+        },
+        {
+          "in": "behavior",
+          "key": "selectable"
+        },
+        {
+          "in": "behavior",
+          "key": "bulkActions"
+        }
+      ],
+      "hint": "`openRecordIn` does not exist here: did you mean `layout.board({ openRecord })`? `selectable` and `bulkActions` are board options too.",
+      "map": {
+        "openRecordIn": "openRecord"
+      },
+      "values": {
+        "window": "page",
+        "popup": "dialog",
+        "drawer": "drawer"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-001",
+      "area": "layouts",
+      "title": "`viewVariants` becomes `views.list.layouts`",
+      "kind": "move",
+      "from": "view.viewVariants",
+      "to": "views.list.layouts",
+      "codemod": true,
+      "manual": null,
+      "why": "The list is the only action with layouts.",
+      "before": "view: { viewVariants: [tableViewOptionFactory()] }",
+      "after": "views: { list: { layouts: [layout.table()] } }",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "viewVariants"
+        }
+      ],
+      "hint": "a list's layouts are `views.list.layouts: [layout.table(), layout.board({ … })]`."
+    },
+    {
+      "id": "RV1-LAYOUT-002",
+      "area": "layouts",
+      "title": "`tableViewOptionFactory` becomes `layout.table`",
+      "kind": "rename",
+      "from": "tableViewOptionFactory",
+      "to": "layout.table",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "tableViewOptionFactory({ name: \"Table\" })",
+      "after": "layout.table()",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "factory": {
+        "from": "tableViewOptionFactory",
+        "to": "table"
+      },
+      "map": {}
+    },
+    {
+      "id": "RV1-LAYOUT-003",
+      "area": "layouts",
+      "title": "`cardViewOptionFactory` becomes `layout.cards` (`grid` → `columns`)",
+      "kind": "rename",
+      "from": "cardViewOptionFactory",
+      "to": "layout.cards",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "cardViewOptionFactory({ name: \"Cards\", grid: 3 })",
+      "after": "layout.cards({ columns: 3 })",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "detect": [
+        {
+          "in": "layout:cards",
+          "key": "grid"
+        }
+      ],
+      "hint": "this option of `layout.cards` was renamed: `grid` → `columns`.",
+      "factory": {
+        "from": "cardViewOptionFactory",
+        "to": "cards"
+      },
+      "map": {
+        "grid": "columns"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-004",
+      "area": "layouts",
+      "title": "`columnViewOptionFactory` becomes `layout.board` (`identifierKey` → `groupBy`, `identifierKeyList` → `columns`)",
+      "kind": "rename",
+      "from": "columnViewOptionFactory",
+      "to": "layout.board",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item. `identifierKey` meant \"group by\".",
+      "before": "columnViewOptionFactory({\n  name: \"Board\",\n  identifierKey: \"status\",\n  identifierKeyList: TASK_STATUSES,\n})",
+      "after": "layout.board({ groupBy: \"status\", columns: TASK_STATUSES })",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "detect": [
+        {
+          "in": "layout:board",
+          "key": "identifierKey"
+        },
+        {
+          "in": "layout:board",
+          "key": "identifierKeyList"
+        }
+      ],
+      "hint": "this option of `layout.board` was renamed: `identifierKey` → `groupBy`, `identifierKeyList` → `columns`.",
+      "factory": {
+        "from": "columnViewOptionFactory",
+        "to": "board"
+      },
+      "map": {
+        "identifierKey": "groupBy",
+        "identifierKeyList": "columns"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-005",
+      "area": "layouts",
+      "title": "`calendarViewOptionFactory` becomes `layout.calendar` (`dateKey` → `dateField`, `endDateKey` → `endDateField`, `titleKey` → `titleField`, `colorKey` → `colorField`)",
+      "kind": "rename",
+      "from": "calendarViewOptionFactory",
+      "to": "layout.calendar",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "calendarViewOptionFactory({ dateKey: \"dueDate\", titleKey: \"title\", colorKey: \"assignee\" })",
+      "after": "layout.calendar({ dateField: \"dueDate\", titleField: \"title\", colorField: \"assignee\" })",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "detect": [
+        {
+          "in": "layout:calendar",
+          "key": "dateKey"
+        },
+        {
+          "in": "layout:calendar",
+          "key": "endDateKey"
+        },
+        {
+          "in": "layout:calendar",
+          "key": "titleKey"
+        },
+        {
+          "in": "layout:calendar",
+          "key": "colorKey"
+        }
+      ],
+      "hint": "this option of `layout.calendar` was renamed: `dateKey` → `dateField`, `endDateKey` → `endDateField`, `titleKey` → `titleField`, `colorKey` → `colorField`.",
+      "factory": {
+        "from": "calendarViewOptionFactory",
+        "to": "calendar"
+      },
+      "map": {
+        "dateKey": "dateField",
+        "endDateKey": "endDateField",
+        "titleKey": "titleField",
+        "colorKey": "colorField"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-006",
+      "area": "layouts",
+      "title": "`timelineViewOptionFactory` becomes `layout.timeline` (`startDateKey` → `startField`, `endDateKey` → `endField`, `titleKey` → `titleField`, `groupKey` → `groupBy`, `statusKey` → `statusField`)",
+      "kind": "rename",
+      "from": "timelineViewOptionFactory",
+      "to": "layout.timeline",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "timelineViewOptionFactory({\n  startDateKey: \"startDate\",\n  endDateKey: \"dueDate\",\n  groupKey: \"assignee\",\n  statusKey: \"status\",\n})",
+      "after": "layout.timeline({\n  startField: \"startDate\",\n  endField: \"dueDate\",\n  groupBy: \"assignee\",\n  statusField: \"status\",\n})",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "detect": [
+        {
+          "in": "layout:timeline",
+          "key": "startDateKey"
+        },
+        {
+          "in": "layout:timeline",
+          "key": "endDateKey"
+        },
+        {
+          "in": "layout:timeline",
+          "key": "titleKey"
+        },
+        {
+          "in": "layout:timeline",
+          "key": "groupKey"
+        },
+        {
+          "in": "layout:timeline",
+          "key": "statusKey"
+        }
+      ],
+      "hint": "this option of `layout.timeline` was renamed: `startDateKey` → `startField`, `endDateKey` → `endField`, `titleKey` → `titleField`, `groupKey` → `groupBy`, `statusKey` → `statusField`.",
+      "factory": {
+        "from": "timelineViewOptionFactory",
+        "to": "timeline"
+      },
+      "map": {
+        "startDateKey": "startField",
+        "endDateKey": "endField",
+        "titleKey": "titleField",
+        "groupKey": "groupBy",
+        "statusKey": "statusField"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-007",
+      "area": "layouts",
+      "title": "`splitViewFactory` becomes `layout.split` (`emptySelected` → `emptyState`, `redirectReadToList` → `readInList`, `resourceAction` → `action`)",
+      "kind": "rename",
+      "from": "splitViewFactory",
+      "to": "layout.split",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "splitViewFactory({ emptySelected: Pick, redirectReadToList: true })",
+      "after": "layout.split({ emptyState: Pick, readInList: true })",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "detect": [
+        {
+          "in": "layout:split",
+          "key": "emptySelected"
+        },
+        {
+          "in": "layout:split",
+          "key": "redirectReadToList"
+        },
+        {
+          "in": "layout:split",
+          "key": "resourceAction"
+        }
+      ],
+      "hint": "this option of `layout.split` was renamed: `emptySelected` → `emptyState`, `redirectReadToList` → `readInList`, `resourceAction` → `action`.",
+      "factory": {
+        "from": "splitViewFactory",
+        "to": "split"
+      },
+      "map": {
+        "emptySelected": "emptyState",
+        "redirectReadToList": "readInList",
+        "resourceAction": "action"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-008",
+      "area": "layouts",
+      "title": "`itemViewOptionFactory` becomes `layout.items`",
+      "kind": "rename",
+      "from": "itemViewOptionFactory",
+      "to": "layout.items",
+      "codemod": true,
+      "manual": null,
+      "why": "Seven long imports with inconsistent names (`splitViewFactory` came from `split/columnViewOptionFactory.ts`) for one notion; one `layout` namespace lists them all, each with options named after what they do and typed against the item.",
+      "before": "itemViewOptionFactory({ name: \"List\" })",
+      "after": "layout.items({ label: \"List\" })",
+      "note": "`import { layout } from \"react-resource-view\"`.",
+      "factory": {
+        "from": "itemViewOptionFactory",
+        "to": "items"
+      },
+      "map": {}
+    },
+    {
+      "id": "RV1-LAYOUT-009",
+      "area": "layouts",
+      "title": "A layout's `name` becomes `label`; its URL id is its type",
+      "kind": "semantic",
+      "from": "layout name (and id = slug of the name)",
+      "to": "label (and id = type, or `id`)",
+      "codemod": true,
+      "manual": "A layout whose old URL id (`?variant=…`, the slug of its name) differs from its type now answers to its type: `itemViewOptionFactory({ name: \"List\" })` was `?variant=list`, `layout.items()` is `?variant=items`. A link with the old id falls back on the first layout. Add `id: \"list\"` to keep it.",
+      "why": "The id was derived from the name: renaming \"Board\" to \"Kanban\" changed the URL and broke the links already shared.",
+      "before": "columnViewOptionFactory({ name: \"Kanban\" }) // ?variant=kanban",
+      "after": "layout.board({ label: \"Kanban\" }) // ?variant=board",
+      "note": "The codemod drops a label that only repeats the type (\"Table\" on a table).",
+      "detect": [
+        {
+          "in": "layout",
+          "key": "name"
+        }
+      ],
+      "hint": "a layout's text is `label`; its URL id is its type (`board`), or `id` to change it.",
+      "map": {
+        "name": "label"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-010",
+      "area": "layouts",
+      "title": "`listComponent`, `rowComponent`, `itemComponent` of a layout become `components.list|row|item`",
+      "kind": "move",
+      "from": [
+        "listComponent",
+        "rowComponent",
+        "itemComponent"
+      ],
+      "to": "components.list|row|item",
+      "codemod": true,
+      "manual": null,
+      "why": "One way to inject a component, everywhere: the `components` object.",
+      "before": "cardViewOptionFactory({ rowComponent: ProductRow })",
+      "after": "layout.cards({ components: { row: ProductRow } })",
+      "note": null,
+      "detect": [
+        {
+          "in": "layout",
+          "key": "rowComponent"
+        },
+        {
+          "in": "layout",
+          "key": "listComponent"
+        },
+        {
+          "in": "layout",
+          "key": "itemComponent"
+        }
+      ],
+      "hint": "a layout's components are `components: { list, row, item }`.",
+      "map": {
+        "listComponent": "list",
+        "rowComponent": "row",
+        "itemComponent": "item"
+      }
+    },
+    {
+      "id": "RV1-LAYOUT-011",
+      "area": "layouts",
+      "title": "A layout's `form` is merged over the resource's; `fields` picks the columns",
+      "kind": "semantic",
+      "from": "layout form replaces the view's",
+      "to": "layout form merged by key; `fields` selects and orders",
+      "codemod": true,
+      "manual": "When a layout's `form.inputs` is not an object literal the codemod cannot list its keys: replace it with `fields: [\"title\", \"status\", …]`.",
+      "why": "Deep merge everywhere, and a column selection reads better as a list of fields than as a second form.",
+      "before": "tableViewOptionFactory({\n  form: { inputs: { title: FIELDS.title, status: FIELDS.status } },\n})",
+      "after": "layout.table({ fields: [\"title\", \"status\"] })",
+      "note": "The codemod writes `fields` from the keys of the layout's inputs, and keeps the inputs only when they say more than a reference to the same field."
+    },
+    {
+      "id": "RV1-LAYOUT-012",
+      "area": "layouts",
+      "title": "Custom layouts: `createView` becomes `layout.custom`, options are read with `useLayout()`",
+      "kind": "semantic",
+      "from": "createView({ name, listComponent, rowComponent, itemComponent, ...options })",
+      "to": "layout.custom({ type, components: { list, row, item }, options })",
+      "codemod": true,
+      "manual": "The codemod rewrites a `createView({ … })` call written out in place. A factory of one's own that spreads its arguments into `createView` is left to the hand: rewrite it with `layout.custom`, and read its options in the components with `useLayout().options` instead of `useCurrentViewResourceContext().view`. `npx react-resource-view create-view-variant` writes the new shape.",
+      "why": "The built-in layouts and yours share one shape; a layout's options are no longer mixed into the view.",
+      "before": "export default function heatmapViewFactory(args) {\n  return createView({ name: \"Heatmap\", listComponent: HeatmapList, ...args })\n}",
+      "after": "export function heatmapLayout(options = {}) {\n  return layout.custom({ type: \"heatmap\", components: { list: HeatmapList }, ...options })\n}",
+      "note": null
+    },
+    {
+      "id": "RV1-COMP-001",
+      "area": "components",
+      "title": "`viewComponent`, `listComponent`, `rowComponent`, `itemComponent` become `components.view|list|row|item`",
+      "kind": "move",
+      "from": [
+        "viewComponent",
+        "listComponent",
+        "rowComponent",
+        "itemComponent"
+      ],
+      "to": "components.view|list|row|item",
+      "codemod": true,
+      "manual": null,
+      "why": "Two injection mechanisms — flat `xxxComponent` keys and a `components` object — for one notion.",
+      "before": "views: { [ActionList.update]: { viewComponent: PostBuilder } }",
+      "after": "views: { update: { components: { view: PostBuilder } } }",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "viewComponent"
+        },
+        {
+          "in": "view",
+          "key": "listComponent"
+        },
+        {
+          "in": "view",
+          "key": "rowComponent"
+        },
+        {
+          "in": "view",
+          "key": "itemComponent"
+        }
+      ],
+      "hint": "components are injected through `components: { view, list, row, item, … }` (at the root, per action or per layout).",
+      "map": {
+        "viewComponent": "view",
+        "listComponent": "list",
+        "rowComponent": "row",
+        "itemComponent": "item"
+      }
+    },
+    {
+      "id": "RV1-COMP-002",
+      "area": "components",
+      "title": "`decoratorComponent` of a resource becomes `components.wrapper`",
+      "kind": "move",
+      "from": "decoratorComponent",
+      "to": "components.wrapper",
+      "codemod": true,
+      "manual": null,
+      "why": "Same reason: the `components` object is the one way in.",
+      "before": "decoratorComponent: Frame",
+      "after": "components: { wrapper: Frame }",
+      "note": "The `decoratorComponent` of a scope and of `ResourceViewProvider`'s configuration are unchanged.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "decoratorComponent"
+        }
+      ],
+      "hint": "the wrapper of a resource's views is `components: { wrapper }`."
+    },
+    {
+      "id": "RV1-COMP-003",
+      "area": "components",
+      "title": "`components.noResult` becomes `components.empty`",
+      "kind": "rename",
+      "from": "components.noResult",
+      "to": "components.empty",
+      "codemod": true,
+      "manual": null,
+      "why": "Clearer name.",
+      "before": "components: { noResult: NothingYet }",
+      "after": "components: { empty: NothingYet }",
+      "note": null,
+      "detect": [
+        {
+          "in": "components",
+          "key": "noResult"
+        }
+      ],
+      "hint": "what an empty list draws is `components.empty`.",
+      "map": {
+        "noResult": "empty"
+      }
+    },
+    {
+      "id": "RV1-TABS-001",
+      "area": "tabs",
+      "title": "`subViewResource` becomes `tabs`: `list` → `items`, `viewComponent` → `aside`",
+      "kind": "rename",
+      "from": "subViewResource",
+      "to": "views.read|update.tabs",
+      "codemod": true,
+      "manual": "A `subViewResource` declared on the 0.x `view` reached every action: the codemod puts its tabs on `views.read` and `views.update` — remove the one that had no use.",
+      "why": "A technical name for what the reader sees as tabs, and `list` designated tabs.",
+      "before": "subViewResource: { viewComponent: Summary, list: [ … ] }",
+      "after": "tabs: { aside: Summary, items: [ … ] }",
+      "note": null,
+      "detect": [
+        {
+          "in": "view",
+          "key": "subViewResource"
+        }
+      ],
+      "hint": "a record's sub-views are `tabs: { orientation, aside, items: [{ resource, filter }] }` on `views.read` or `views.update`.",
+      "map": {
+        "list": "items",
+        "viewComponent": "aside"
+      }
+    },
+    {
+      "id": "RV1-TABS-002",
+      "area": "tabs",
+      "title": "A tab's `slug` → `id`, `name` → `label`, `viewComponent` → `component`, `resourceId` → `resource`, `resourceAction` → `action`",
+      "kind": "rename",
+      "from": [
+        "slug",
+        "name",
+        "viewComponent",
+        "resourceId",
+        "resourceAction"
+      ],
+      "to": [
+        "id",
+        "label",
+        "component",
+        "resource",
+        "action"
+      ],
+      "codemod": true,
+      "manual": null,
+      "why": "The words of the rest of the declaration; `resource` takes the resource or its identifier.",
+      "before": "{ slug: \"team\", name: \"Team\", resourceId: USERS_ID, resourceAction: ActionList.list }",
+      "after": "{ id: \"team\", label: \"Team\", resource: USERS_ID }",
+      "note": "`resourceAction: ActionList.list` is the default and is dropped.",
+      "detect": [
+        {
+          "in": "tab",
+          "key": "slug"
+        },
+        {
+          "in": "tab",
+          "key": "name"
+        },
+        {
+          "in": "tab",
+          "key": "viewComponent"
+        },
+        {
+          "in": "tab",
+          "key": "resourceId"
+        },
+        {
+          "in": "tab",
+          "key": "resourceAction"
+        }
+      ],
+      "hint": "a tab is `{ id, label, icon, description, resource, action, filter, defaultData, component }`.",
+      "map": {
+        "slug": "id",
+        "name": "label",
+        "viewComponent": "component",
+        "resourceId": "resource",
+        "resourceAction": "action"
+      }
+    },
+    {
+      "id": "RV1-TABS-003",
+      "area": "tabs",
+      "title": "`onInitViewResource` becomes `filter` and `defaultData` functions of `{ item, parent }`",
+      "kind": "semantic",
+      "from": "onInitViewResource(view, parent) => ({ ...view, filter, defaultData })",
+      "to": "filter: ({ item }) => …, defaultData: ({ item }) => …",
+      "codemod": true,
+      "manual": "The codemod rewrites the usual shape — a function ending in `return { ...view, filter: …, defaultData: … }` — and leaves a `TODO(RV1-TABS-003)` on anything else.",
+      "why": "To filter a tab on its parent one had to rebuild and return the whole view context.",
+      "before": "onInitViewResource: (view, parent) => {\n  const author = (parent?.data as User | undefined)?.name\n  return { ...view, filter: { author }, defaultData: { author } }\n},",
+      "after": "filter: ({ item }) => ({ author: (item as User | undefined)?.name }),\ndefaultData: ({ item }) => ({ author: (item as User | undefined)?.name }),",
+      "note": "`item` is typed after the resource the tabs are declared on: `({ item }) => ({ author: item.name })` is enough once the cast is no longer needed.",
+      "detect": [
+        {
+          "in": "tab",
+          "key": "onInitViewResource"
+        }
+      ],
+      "hint": "a tab is narrowed to the record with `filter: ({ item }) => ({ … })`, and `defaultData: ({ item }) => ({ … })` presets what is created from it."
+    },
+    {
+      "id": "RV1-DATA-001",
+      "area": "data",
+      "title": "Without `path`, `storage: \"local\"` must be declared",
+      "kind": "semantic",
+      "from": "no path → localStorage, silently",
+      "to": "storage: \"local\"",
+      "codemod": true,
+      "manual": null,
+      "why": "Forgetting `path` switched to `localStorage` without a word: one believed to talk to the API while the data stayed in the browser.",
+      "before": "createViewResource(\"drafts\", { name: \"Drafts\" })",
+      "after": "createViewResource(\"drafts\", { name: \"Drafts\", storage: \"local\" })",
+      "note": "The codemod adds `storage: \"local\"` to a declaration with no `path`, unless it replaces all five repository methods or draws a screen of its own (`components.view`). Without `path`, `storage` or a complete `repository`, development throws an error naming the resource."
+    },
+    {
+      "id": "RV1-DATA-002",
+      "area": "data",
+      "title": "`preGetCollection`, `preGetItem`, `preCreate`, `preUpdate` become `hooks.beforeList|beforeRead|beforeCreate|beforeUpdate`",
+      "kind": "move",
+      "from": [
+        "preGetCollection",
+        "preGetItem",
+        "preCreate",
+        "preUpdate"
+      ],
+      "to": [
+        "hooks.beforeList",
+        "hooks.beforeRead",
+        "hooks.beforeCreate",
+        "hooks.beforeUpdate"
+      ],
+      "codemod": true,
+      "manual": null,
+      "why": "Only \"before\" hooks existed, flat among the options; `preCreate` and `preUpdate` lost the view context on the way to the repository (bug fixed).",
+      "before": "preCreate: (data) => ({ ...data, owner: currentUser() }),",
+      "after": "hooks: {\n  beforeCreate: (data) => ({ ...data, owner: currentUser() }),\n},",
+      "note": "Hooks may now be asynchronous, and always receive `{ viewResourceContext }`. New: `beforeDelete`, `afterSave`, `afterDelete`.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "preGetCollection"
+        },
+        {
+          "in": "resource",
+          "key": "preGetItem"
+        },
+        {
+          "in": "resource",
+          "key": "preCreate"
+        },
+        {
+          "in": "resource",
+          "key": "preUpdate"
+        }
+      ],
+      "hint": "code around the data goes in `hooks: { beforeList, beforeRead, beforeCreate, beforeUpdate, beforeDelete, afterSave, afterDelete }`.",
+      "map": {
+        "preGetCollection": "beforeList",
+        "preGetItem": "beforeRead",
+        "preCreate": "beforeCreate",
+        "preUpdate": "beforeUpdate"
+      }
+    },
+    {
+      "id": "RV1-DATA-003",
+      "area": "data",
+      "title": "Repository methods move to `repository`",
+      "kind": "move",
+      "from": [
+        "getCollection",
+        "getItem",
+        "createItem",
+        "updateItem",
+        "removeItem"
+      ],
+      "to": "repository.*",
+      "codemod": true,
+      "manual": null,
+      "why": "The repository methods were offered by the autocompletion of the declaration, mixed with its options.",
+      "before": "getItem: async ({ id }) => ({ data: await fetchBook(id) }),",
+      "after": "repository: {\n  getItem: async ({ id }) => ({ data: await fetchBook(id) }),\n},",
+      "note": "The built resource still exposes `resource.getItem(…)` and the others, decorated with the hooks.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "getCollection"
+        },
+        {
+          "in": "resource",
+          "key": "getItem"
+        },
+        {
+          "in": "resource",
+          "key": "createItem"
+        },
+        {
+          "in": "resource",
+          "key": "updateItem"
+        },
+        {
+          "in": "resource",
+          "key": "removeItem"
+        }
+      ],
+      "hint": "a hand-written data access goes in `repository: { getCollection, getItem, createItem, updateItem, removeItem }`."
+    },
+    {
+      "id": "RV1-DATA-004",
+      "area": "data",
+      "title": "`limit` becomes `quota` (`getLimit` → `get`)",
+      "kind": "rename",
+      "from": "limit",
+      "to": "quota",
+      "codemod": true,
+      "manual": "A `fallback` component receives `{ quota }` instead of `{ limit }`; the runtime context parameter `limit` is `quota`; `useLimit` is `useQuota`.",
+      "why": "`limit` read like pagination; it is the number of records that may be created.",
+      "before": "limit: { getLimit: (ctx) => ({ current: count(ctx), max: 3 }), fallback: Upgrade },",
+      "after": "quota: { get: (ctx) => ({ current: count(ctx), max: 3 }), fallback: Upgrade },",
+      "note": null,
+      "detect": [
+        {
+          "in": "resource",
+          "key": "limit"
+        }
+      ],
+      "hint": "the creation quota is `quota: { get: (context) => ({ current, max }), fallback }`.",
+      "map": {
+        "getLimit": "get"
+      },
+      "identifiers": {
+        "useLimit": "useQuota",
+        "LimitInterface": "Quota",
+        "LimitStateInterface": "QuotaState",
+        "LimitFallbackPropsInterface": "QuotaFallbackProps"
+      }
+    },
+    {
+      "id": "RV1-DATA-005",
+      "area": "data",
+      "title": "`resourceBuild`, `onChange` and `@type` are no longer declared",
+      "kind": "remove",
+      "from": [
+        "resourceBuild",
+        "onChange",
+        "@type"
+      ],
+      "codemod": true,
+      "manual": null,
+      "why": "What the library builds was offered in the autocompletion of what one writes.",
+      "before": "{ resourceBuild: false, … }",
+      "after": "{ … }",
+      "note": "`resource.onChange` still exists on the built resource.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "resourceBuild"
+        },
+        {
+          "in": "resource",
+          "key": "onChange"
+        },
+        {
+          "in": "resource",
+          "key": "@type"
+        }
+      ],
+      "hint": "this key is built by `createViewResource` and cannot be declared."
+    },
+    {
+      "id": "RV1-SCOPE-001",
+      "area": "scope",
+      "title": "A resource no longer declares its `scope`: the scope lists it in `resources`",
+      "kind": "move",
+      "from": "resource.scope",
+      "to": "scope.resources",
+      "codemod": true,
+      "manual": "Make sure every resource the codemod reports is listed in the `resources` of its scope (`npx react-resource-view migrate` prints them). A resource listed nowhere links within the current scope.",
+      "why": "The scope was declared three times: `resource.scope`, `scope.resources` (which nothing read) and `createItemMenuWithResource({ scope })`.",
+      "before": "createViewResource(\"tasks\", { scope: \"admin\", … })\n// adminScope.tsx\nresources: [tasksResource]",
+      "after": "createViewResource(\"tasks\", { … })\n// adminScope.tsx\nresources: [tasksResource]",
+      "note": "The scope stamps its resources when it loads; `resource.scope` is still readable on the built resource.",
+      "detect": [
+        {
+          "in": "resource",
+          "key": "scope"
+        }
+      ],
+      "hint": "a resource does not name its scope: list it in the `resources` of the scope instead."
+    },
+    {
+      "id": "RV1-SCOPE-002",
+      "area": "scope",
+      "title": "A scope's `menu` takes resources directly, or `\"auto\"`",
+      "kind": "semantic",
+      "from": "menu: [createItemMenuWithResource({ resource })]",
+      "to": "menu: [resource] | \"auto\"",
+      "codemod": true,
+      "manual": null,
+      "why": "`createItemMenuWithResource` ran when the scope module was read, before any scope was known: without `resource.scope`, its links would point at the wrong area.",
+      "before": "menu: [createItemMenuWithResource({ resource: usersResource })]",
+      "after": "menu: [usersResource] // or menu: \"auto\"",
+      "note": "The codemod rewrites the calls found in a `menu` (or a group's `items`). `createItemMenuWithResource` is still exported, for menus built outside a scope — pass it the `scope` then."
+    },
+    {
+      "id": "RV1-SCOPE-003",
+      "area": "scope",
+      "title": "`setResourceConfig({ defaultResource })` becomes `configureResourceView({ defaults })`",
+      "kind": "rename",
+      "from": "setResourceConfig({ defaultResource })",
+      "to": "configureResourceView({ defaults })",
+      "codemod": true,
+      "manual": "`getResourceConfig` is gone; read the defaults with `getResourceViewDefaults()`.",
+      "why": "The merge was shallow — passing a `defaultResource` erased the default components (the table…) — and `defaultResource.views` was read for `openIn` only, the rest silently ignored. `defaults` has the shape of a declaration and is merged deeply into every resource.",
+      "before": "setResourceConfig({ defaultResource: { views: { [ActionList.update]: { behavior: { openIn: \"popup\" } } } } })",
+      "after": "configureResourceView({ defaults: { views: { update: { open: \"dialog\" } } } })",
+      "note": null,
+      "identifiers": {
+        "setResourceConfig": "configureResourceView"
+      }
+    },
+    {
+      "id": "RV1-TYPE-001",
+      "area": "types",
+      "title": "What one writes is `ResourceDefinition`, what the library builds is `ViewResource`",
+      "kind": "rename",
+      "from": [
+        "ResourceOptionInterface",
+        "ViewResourceInterface"
+      ],
+      "to": [
+        "ResourceDefinition",
+        "ViewResource"
+      ],
+      "codemod": true,
+      "manual": "Code reading a built resource's old keys (`resource.canUpdate`, `resource.view`) must read `resource.permissions` and `resource.views`.",
+      "why": "`ResourceOptionInterface = Partial<ViewResourceInterface>` offered `resourceBuild`, `onChange`, `@type` and the repository methods in the autocompletion. The new public types drop the `Interface` suffix.",
+      "before": "import type { ViewResourceInterface } from \"react-resource-view\"",
+      "after": "import type { ViewResource } from \"react-resource-view\"",
+      "note": null,
+      "identifiers": {
+        "ResourceOptionInterface": "ResourceDefinition",
+        "ViewResourceInterface": "ViewResource",
+        "PermissionType": "Permission",
+        "SubViewResourceInterface": "TabDefinition",
+        "CardViewOptionInterface": "CardsLayoutOptions",
+        "CalendarViewOptionInterface": "CalendarLayoutOptions",
+        "TimelineViewOptionInterface": "TimelineLayoutOptions",
+        "SplitViewOptionInterface": "SplitLayoutOptions",
+        "CalendarViewMode": "CalendarMode"
+      }
+    },
+    {
+      "id": "RV1-TYPE-002",
+      "area": "types",
+      "title": "`ViewInterface`, `ViewListInterface`, `ViewUpdateInterface` are replaced",
+      "kind": "semantic",
+      "from": [
+        "ViewInterface",
+        "ViewListInterface",
+        "ViewUpdateInterface",
+        "FormFilterInterface"
+      ],
+      "to": [
+        "ListViewDefinition",
+        "ReadViewDefinition",
+        "CreateViewDefinition",
+        "UpdateViewDefinition",
+        "DeleteViewDefinition",
+        "ResolvedView"
+      ],
+      "codemod": false,
+      "manual": "A declaration fragment is typed with the definition of its action (`UpdateViewDefinition<Task>`); a component reading the context's view gets a `ResolvedView`.",
+      "why": "One type per action, so each only offers what has an effect there.",
+      "before": "const UPDATE: ViewUpdateInterface<Task> = { … }",
+      "after": "const UPDATE: UpdateViewDefinition<Task> = { … }",
+      "note": null
+    },
+    {
+      "id": "RV1-TYPE-003",
+      "area": "types",
+      "title": "The context's `view` is the resolved view",
+      "kind": "semantic",
+      "from": "useCurrentViewResourceContext().view (0.x keys)",
+      "to": "ResolvedView + useLayout()",
+      "codemod": false,
+      "manual": "Custom components reading the context's view: `view.name` → `view.title`, `view.rowComponent` → `view.components.row`, `view.viewVariants` → `view.layouts`, a layout's options (`view.identifierKey`, `view.grid`…) → `useLayout().options`, `view.behavior.openIn` → `view.open`.",
+      "why": "The context exposes what the declaration means, with the same words.",
+      "before": "const view = useCurrentViewResourceContext().view\nview.name; view.grid",
+      "after": "const { view } = useCurrentViewResourceContext()\nview.title; useLayout().options.columns",
+      "note": null
+    }
+  ]
+}

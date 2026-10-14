@@ -10,7 +10,7 @@ import "./styles.css"
 /**
  * The documentation site, built with the library it documents.
  *
- * Every page is a resource with a `viewComponent`, the sidebar is built from
+ * Every page is a resource with a `components.view`, the sidebar is built from
  * those same resources, and moving between pages goes through the library's own
  * routing — so reading the docs exercises the thing being described.
  */

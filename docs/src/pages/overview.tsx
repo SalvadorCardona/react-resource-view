@@ -5,16 +5,14 @@ import { CodeBlock, PageHeader, Section } from "../DocLayout"
 /**
  * The landing page.
  *
- * Like every page here it is a resource with a `viewComponent`, which is the
+ * Like every page here it is a resource with a `components.view`, which is the
  * same mechanism an application uses to render a custom screen inside the views.
  */
 const overviewResource = createViewResource("overview", {
   name: "Overview",
-  scope: "docs",
   icon: BookOpen,
-  view: {
-    name: "Overview",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="react-resource-view"
@@ -29,7 +27,8 @@ const overviewResource = createViewResource("overview", {
           <p>
             That is enough for a filterable list, a detail view, create and edit
             forms bound to the API, and a delete confirmation — each reachable
-            by its own URL.
+            by its own URL, each offered unless <code>permissions</code> says
+            otherwise.
           </p>
         </Section>
 
@@ -39,7 +38,7 @@ const overviewResource = createViewResource("overview", {
         >
           <p>
             There is no separate documentation framework here. Each page calls{" "}
-            <code>createViewResource</code> with a <code>viewComponent</code>,
+            <code>createViewResource</code> with a <code>components.view</code>,
             the scope lists them in its menu, and the routing you can read about
             on the next page decides what the URL looks like.
           </p>
@@ -59,27 +58,28 @@ const overviewResource = createViewResource("overview", {
   },
 })
 
-const example = `import { createViewResource, tableViewOptionFactory } from "react-resource-view"
+const example = `import { createViewResource, layout } from "react-resource-view"
 
-const articles = createViewResource("articles", {
-  path: "/api/articles",
+const articles = createViewResource<Article>("articles", {
   name: "Articles",
-  view: {
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        body: { label: "Body" },
-      },
+  path: "/api/articles",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      body: { label: "Body" },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
-    viewVariants: [tableViewOptionFactory({ columns: ["title", "published"] })],
+  },
+  views: {
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [layout.table({ fields: ["title", "published"] })],
+    },
   },
 })`
 
 const selfDoc = `const overviewResource = createViewResource("overview", {
   name: "Overview",
-  scope: "docs",
-  view: { viewComponent: () => <OverviewPage /> },
+  components: { view: () => <OverviewPage /> },
 })`
 
 const install = `pnpm add react-resource-view react-data-form react-mini-i18n resource-registry`

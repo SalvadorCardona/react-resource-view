@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { ValueOptionInterface } from "react-data-form"
 import { Trans } from "react-mini-i18n"
-import { RowInterface } from "@/ViewInterface"
+import { RowInterface } from "@/ViewResource"
 import { cn } from "@/ui/cn"
 import { BoardCard } from "@/views/list/component/columns/BoardCard"
 import { useBoard, useBoardContext } from "@/views/list/component/columns/useBoard"

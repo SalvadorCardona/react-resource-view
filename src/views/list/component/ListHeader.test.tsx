@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
-import { createView, createViewResource } from "@/index"
+import { createViewResource, layout } from "@/index"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
-import { ListComponentPropsInterface } from "@/ViewInterface"
+import { ListComponentPropsInterface } from "@/ViewResource"
 import { ActionList } from "react-data-form"
 
 /**
@@ -39,45 +39,51 @@ function ArticleIcon({ className }: { className?: string }) {
 
 const headedResource = createViewResource<Article>("header_articles", {
   name: "Articles",
-  scope: "header",
   icon: ArticleIcon,
-  canCreate: true,
-  getCollection: async () => ({ data: collection("header_articles") }),
-  view: {
-    name: "Articles",
-    description: "Your resource collection",
-    viewVariants: [
-      createView({ name: "Alpha", listComponent: ArticleList }),
-      createView({ name: "Beta", listComponent: ArticleList }),
-    ],
+  storage: "local",
+  repository: {
+    getCollection: async () => ({ data: collection("header_articles") }),
+  },
+  description: "Your resource collection",
+  views: {
+    list: {
+      layouts: [
+        layout.custom({ type: "alpha", components: { list: ArticleList } }),
+        layout.custom({ type: "beta", components: { list: ArticleList } }),
+      ],
+    },
   },
 })
 
 /** A list held inside another one: the tab above it already names it. */
 const nestedResource = createViewResource<Article>("header_comments", {
   name: "Comments",
-  scope: "header",
-  getCollection: async () => ({ data: collection("header_comments") }),
-  view: { name: "Comments", listComponent: ArticleList },
+  storage: "local",
+  repository: {
+    getCollection: async () => ({ data: collection("header_comments") }),
+  },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+  },
 })
 
 const hostResource = createViewResource<Article>("header_posts", {
   name: "Posts",
-  scope: "header",
-  getCollection: async () => ({ data: collection("header_posts") }),
-  view: {
-    name: "Posts",
-    listComponent: ArticleList,
-    subViewResource: {
-      list: [{ resourceId: "header_comments", resourceAction: ActionList.list }],
+  storage: "local",
+  repository: { getCollection: async () => ({ data: collection("header_posts") }) },
+  views: {
+    list: { layouts: [layout.table({ components: { list: ArticleList } })] },
+    read: {
+      components: { view: () => <h2>Posts</h2> },
+      tabs: { items: [{ resource: "header_comments" }] },
     },
   },
 })
 
-function renderList(resourceId: string) {
+function renderList(resourceId: string, resourceAction = ActionList.list) {
   return render(
     <ResourceViewProvider
-      viewResourceContextParams={{ scope: "header", resourceId }}
+      viewResourceContextParams={{ scope: "header", resourceId, resourceAction }}
       configuration={{
         resources: [headedResource, nestedResource, hostResource],
         defaultScope: "header",
@@ -126,11 +132,12 @@ describe("the header of a list", () => {
   // A sub-view tab writes the name of the resource it opens; the list inside
   // it would otherwise write it a second time, right underneath.
   it("leaves a nested list unnamed, since what contains it names it", async () => {
-    renderList("header_posts")
+    renderList("header_posts", ActionList.read)
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Posts" })).toBeInTheDocument()
     })
+    await screen.findByTestId("rows")
     expect(screen.queryByRole("heading", { name: "Comments" })).toBeNull()
   })
 })

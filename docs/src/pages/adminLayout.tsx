@@ -21,11 +21,9 @@ const blocks: [string, string][] = [
 
 const adminLayoutResource = createViewResource("admin-layout", {
   name: "Admin layout",
-  scope: "docs",
   icon: LayoutPanelLeft,
-  view: {
-    name: "Admin layout",
-    viewComponent: () => (
+  components: {
+    view: () => (
       <>
         <PageHeader
           title="Admin layout"
@@ -155,10 +153,9 @@ const adminLayoutResource = createViewResource("admin-layout", {
 const usage = `const adminScope: ScopeInterface = {
   name: "admin",
   decoratorComponent: AdminLayout,
-  menu: [
-    createItemMenuWithResource({ resource: articlesResource }),
-    createItemMenuWithResource({ resource: usersResource }),
-  ],
+  resources: [articlesResource, usersResource],
+  // One entry per resource — or a list mixing resources, links and groups.
+  menu: "auto",
   defaultViewResourceContextParams: { resourceId: articlesResource["@id"] },
 }`
 
@@ -184,9 +181,9 @@ const sidebarFooter = `decoratorComponent: createAdminLayout({
 }),`
 
 const headerOverrides = `views: {
-  [ActionList.update]: {
+  update: {
     // The field that names an account, instead of \`name\`.
-    titleKey: "email",
+    titleField: "email",
     components: {
       // Either of them, or both — the rest of the header stays.
       title: () => <h2>…</h2>,
@@ -195,19 +192,20 @@ const headerOverrides = `views: {
   },
 }`
 
-const fullWidth = `createViewResource("tasks", {
-  view: {
-    // Every action of the resource, across the whole page…
-    fullWidth: true,
-    viewVariants: [
-      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
-      // …or a single layout of the list, with fullWidth on the variant.
-      tableViewOptionFactory({ name: "Table" }),
-    ],
-  },
+const fullWidth = `createViewResource<Task>("tasks", {
+  path: "/api/tasks",
+  // Every action of the resource, across the whole page…
+  fullWidth: true,
   views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES }),
+        // …or a single layout of the list, with fullWidth on the layout.
+        layout.table({ fullWidth: false }),
+      ],
+    },
     // The forms keep the column.
-    [ActionList.update]: { fullWidth: false },
+    update: { fullWidth: false },
   },
 })`
 

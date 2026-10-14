@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { createViewResource } from "@/utils/createViewResource"
 import ResourceViewProvider from "@/provider/ResourceViewProvider"
-import columnViewOptionFactory from "@/views/list/component/columns/columnViewOptionFactory"
-import { RowComponentPropsInterface } from "@/ViewInterface"
+import { RowComponentPropsInterface } from "@/ViewResource"
+import { layout } from "@/layout/layout"
 
 /**
  * A card holding one long unbreakable word — a path, a URL, an identifier —
@@ -21,19 +21,20 @@ function TaskRow({ row }: RowComponentPropsInterface) {
 
 const tasks = createViewResource("width_board_tasks", {
   name: "Tasks",
-  scope: "width_board",
-  view: {
-    name: "Tasks",
-    viewVariants: [
-      columnViewOptionFactory({
-        rowComponent: TaskRow,
-        identifierKey: "status",
-        identifierKeyList: [
-          { value: "todo", label: "To do" },
-          { value: "done", label: "Done" },
-        ],
-      }),
-    ],
+  storage: "local",
+  views: {
+    list: {
+      layouts: [
+        layout.board({
+          groupBy: "status",
+          columns: [
+            { value: "todo", label: "To do" },
+            { value: "done", label: "Done" },
+          ],
+          components: { row: TaskRow },
+        }),
+      ],
+    },
   },
 })
 

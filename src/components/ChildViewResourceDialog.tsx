@@ -14,7 +14,9 @@ import { buttonVariants } from "@/ui/button"
 import { Link, useNavigate } from "@/ports"
 import { generateLink } from "@/routes/routes"
 import { findResource } from "@/utils/findResource"
-import { permissionResource } from "@/utils/permissionResource"
+import { usePermission } from "@/utils/permissionResource"
+import { useLayout } from "@/layout/useLayout"
+import type { BoardLayoutOptions } from "@/layout/layout"
 import { ActionList } from "react-data-form"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
@@ -37,9 +39,9 @@ export interface ChildViewResourceDialogProps {
  * .../{resourceId}/{action}/{id}/{childResourceId}/{childAction}/{childId}
  * Closing the dialog returns to the parent view's URL.
  *
- * It is a centred dialog, or a panel sliding in from the right when the parent
- * view opens its records in a drawer (`behavior.openRecordIn`) or the child
- * view is itself declared as one (`behavior.openIn`).
+ * It is a centred dialog, or a panel sliding in from the right when the board
+ * underneath opens its records in a drawer (`layout.board({ openRecord })`) or
+ * the child view is itself declared as one (`open: "drawer"`).
  */
 export function ChildViewResourceDialog({
   childViewResource,
@@ -49,6 +51,10 @@ export function ChildViewResourceDialog({
   const isWideScreen = useMediaQuery("(min-width: 768px)")
 
   const childResource = findResource(childViewResource)
+  const { openRecord } = useLayout<BoardLayoutOptions>().options
+  // Asked without the record, which loads inside the dialog: the update view
+  // checks it again, record in hand, before drawing its form.
+  const canUpdate = usePermission(ActionList.update, undefined, childResource)
 
   // Whatever is saved in the child — the record edited in the drawer — is
   // what the view underneath shows, and it would otherwise stay stale.
@@ -85,11 +91,9 @@ export function ChildViewResourceDialog({
   }
 
   const childAction = childViewResource.resourceAction ?? ActionList.read
-  const childView = childResource.views?.[childAction] ?? childResource.view
+  const childView = childResource.views?.[childAction as ActionList]
 
-  const inDrawer =
-    parentResource.view?.behavior?.openRecordIn === "drawer" ||
-    childView?.behavior?.openIn === "drawer"
+  const inDrawer = openRecord === "drawer" || childView?.open === "drawer"
 
   // The filter and the layout of the view underneath travel with every link
   // built from here: closing the dialog must not land on another list.
@@ -108,7 +112,7 @@ export function ChildViewResourceDialog({
   const editLink =
     childAction === ActionList.read &&
     childViewResource.id &&
-    permissionResource(childResource, ActionList.update)
+    canUpdate
       ? generateLink({
           ...parentParams,
           childViewResource: {
@@ -128,7 +132,7 @@ export function ChildViewResourceDialog({
     }
   }
 
-  const title = <Trans>{childView?.name ?? childAction}</Trans>
+  const title = <Trans>{childView?.title ?? childAction}</Trans>
 
   const editButton = editLink && (
     <Link
