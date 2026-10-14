@@ -9,6 +9,7 @@ import { ViewResourceContextParams } from "../ViewResourceContext"
 import { PageLoader } from "@/ui/Loader"
 import { ResourceViewConfigurationContext } from "@/provider/ResourceViewConfigurationContext"
 import { adoptResources } from "@/scope/resolveScope"
+import { NavigationIndicator } from "@/navigation/NavigationIndicator"
 
 export interface CurrentResourceFactoryComponentPropsInterface {
   viewResourceContextParams?: ViewResourceContextParams
@@ -77,20 +78,22 @@ function ResourceViewProviderInner({
 
   return (
     <ResourceViewConfigurationContext value={{ configuration }}>
-      {hasResource ? (
-        <ViewResourceContextProvider
-          key={
-            (viewResourceContextParams.resourceId ?? "") +
-            (viewResourceContextParams.id ?? "") +
-            viewResourceContextParams.resourceAction +
-            JSON.stringify(viewResourceContextParams.defaultData ?? "")
-          }
-          decoratorComponent={decorator}
-          {...viewResourceContextParams}
-        />
-      ) : (
-        children
-      )}
+      <NavigationIndicator loader={configuration?.navigationLoader}>
+        {hasResource ? (
+          <ViewResourceContextProvider
+            key={
+              (viewResourceContextParams.resourceId ?? "") +
+              (viewResourceContextParams.id ?? "") +
+              viewResourceContextParams.resourceAction +
+              JSON.stringify(viewResourceContextParams.defaultData ?? "")
+            }
+            decoratorComponent={decorator}
+            {...viewResourceContextParams}
+          />
+        ) : (
+          children
+        )}
+      </NavigationIndicator>
       <Toaster />
     </ResourceViewConfigurationContext>
   )

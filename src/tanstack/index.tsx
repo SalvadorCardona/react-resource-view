@@ -3,6 +3,7 @@ import {
   Navigate as TanstackNavigate,
   useLocation as useTanstackLocation,
   useNavigate as useTanstackNavigate,
+  useRouterState,
 } from "@tanstack/react-router"
 import type { NavigationPortInterface } from "@/ports"
 
@@ -47,4 +48,8 @@ export const tanstackAdapter: NavigationPortInterface = {
   Navigate: ({ to, replace }) => (
     <TanstackNavigate to={to as never} replace={replace} />
   ),
+
+  // Pending while the router loads the next route's code and loaders.
+  useIsNavigating: () =>
+    useRouterState({ select: (state) => state.status === "pending" }),
 }

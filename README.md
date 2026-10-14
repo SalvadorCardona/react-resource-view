@@ -454,7 +454,8 @@ the shadcn theme variables. Tailwind must scan the compiled files:
 ## Connecting a router
 
 The views navigate and build links, but the package knows no router. It asks
-for four primitives, and ships an adapter for
+for four primitives — a fifth, optional, [says when it is
+loading](#between-two-views) — and ships an adapter for
 [TanStack Router](https://tanstack.com/router):
 
 ```ts
@@ -483,6 +484,39 @@ API. Enough for a test or a story, not for production.
 Importing `react-resource-view/tanstack` is what pulls TanStack Router in — the
 core never references it, so an application on another router installs nothing
 extra.
+
+### Between two views
+
+Moving to another view takes the time the next one needs to load — its code,
+its permissions, its data. Meanwhile a thin bar runs along the top of the
+screen, in the theme's `--primary`, and the new view fades in, sliding up a few
+pixels, once it is there. Nothing to install: React and inline styles.
+
+- The bar waits 150 ms before showing, so an instant navigation flashes nothing,
+  then stays 300 ms at least. It runs quickly, then slower and slower, and fills
+  up only when the new view has its data.
+- Under `prefers-reduced-motion: reduce`, the view fades without moving.
+- The loading view is marked `aria-busy`, the bar has `role="progressbar"`;
+  neither takes the focus.
+
+A navigation counts from a click on a link of the library, or a call to its
+`navigate`, until the new view has loaded. A router that knows more says so
+through the optional `useIsNavigating` of the navigation port — the TanStack
+adapter reads `useRouterState(s => s.status === "pending")`.
+
+```tsx
+<ResourceViewProvider
+  configuration={{
+    // a node, a component receiving { isNavigating }, or false for nothing
+    navigationLoader: ({ isNavigating }) => <PageLoader isLoading={isNavigating} />,
+    viewTransition: false, // true by default
+  }}
+/>
+```
+
+`useIsNavigating()` gives the raw signal, `useDelayedVisibility()` the delay
+and minimum duration, and `NavigationProgressBar` the default bar, for an
+indicator drawn elsewhere.
 
 ## The rest of the configuration
 

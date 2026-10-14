@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { ActionList } from "react-data-form"
 import { configurePorts, parseLink, ResourceViewProvider } from "react-resource-view"
 import { DocLayout } from "./DocLayout"
@@ -43,6 +43,19 @@ describe("the documentation site", () => {
     renderAt("/?view=docs/routing/read")
     expect(
       await screen.findByRole("heading", { name: "Routing" }, WAIT)
+    ).toBeInTheDocument()
+  })
+
+  it("renders the navigation page and its slow navigation", async () => {
+    renderAt("/?view=docs/navigation/read")
+    expect(
+      await screen.findByRole("heading", { name: "Navigation" }, WAIT)
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /^Slow/ }))
+    expect(await screen.findByRole("progressbar", {}, WAIT)).toBeInTheDocument()
+    expect(
+      await screen.findByRole("heading", { name: "Projects" }, WAIT)
     ).toBeInTheDocument()
   })
 
