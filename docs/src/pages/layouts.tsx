@@ -51,11 +51,24 @@ const layoutsResource = createViewResource("layouts", {
           intro="It derives its columns from the form's inputs."
         >
           <p>
-            A resource declaring no <code>form</code> renders a notice instead
-            of rows. The form is what tells the table which fields exist, what
-            to label them, and how to edit a cell in place; <code>fields</code>{" "}
-            picks the columns of one layout without writing a second form.
+            A resource declaring no <code>form</code> renders a notice instead of
+            rows. The form is what tells the table which fields exist, what to label
+            them, and how to edit a cell in place; <code>fields</code> picks the
+            columns of one layout without writing a second form.
           </p>
+        </Section>
+
+        <Section
+          title="A wide table"
+          intro="The row actions stay pinned to the right edge, whatever the table's width."
+        >
+          <p>
+            The actions column and its header are sticky, opaque and shadowed while
+            columns scroll beneath them; a fade on the edges tells that columns are
+            hidden. <code>stickyActions: false</code> turns it off,
+            <code>stickyFirstColumn: true</code> pins the first column too.
+          </p>
+          <CodeBlock>{wideTable}</CodeBlock>
         </Section>
 
         <Section
@@ -64,10 +77,10 @@ const layoutsResource = createViewResource("layouts", {
         >
           <CodeBlock>{filters}</CodeBlock>
           <p>
-            The distinction matters. A <code>defaultValue</code> on a filter
-            input would not do the same job: the first request goes out before
-            the form exists, so the list would show something other than what
-            the filters display.
+            The distinction matters. A <code>defaultValue</code> on a filter input
+            would not do the same job: the first request goes out before the form
+            exists, so the list would show something other than what the filters
+            display.
           </p>
         </Section>
       </>
@@ -83,6 +96,15 @@ views: {
       layout.table({ fields: ["title", "author", "published"] }),
       layout.cards({ columns: 3 }),
     ],
+  },
+}`
+
+const wideTable = `views: {
+  list: {
+    layouts: [
+      layout.table({ stickyFirstColumn: true }), // stickyActions: true by default
+    ],
+    rowActions: ["read", "update", "delete"],
   },
 }`
 

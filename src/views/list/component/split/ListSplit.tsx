@@ -44,9 +44,7 @@ export default function ListSplit({ rows = [] }: ListComponentPropsInterface) {
       return
     }
 
-    void Promise.resolve(navigate({ to: getLink(newId) })).then(() =>
-      setId(newId)
-    )
+    void Promise.resolve(navigate({ to: getLink(newId) })).then(() => setId(newId))
   }
 
   const handleBack = () => {

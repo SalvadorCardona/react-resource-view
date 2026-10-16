@@ -15,10 +15,7 @@ import { Button } from "@/ui/button"
 import { cn } from "@/ui/cn"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
 import { Trans } from "react-mini-i18n"
-import {
-  ListComponentPropsInterface,
-  RowInterface,
-} from "@/ViewResource"
+import { ListComponentPropsInterface, RowInterface } from "@/ViewResource"
 import type { TimelineGroupInterface, TimelineLayoutOptions } from "@/layout/layout"
 import { useLayout } from "@/layout/useLayout"
 import { EventPreview } from "@/views/list/component/preview/EventPreview"
@@ -130,8 +127,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
         const groupResolver =
           resolveGroupForRow ??
           (groupBy
-            ? (item: Record<string, any>) =>
-                defaultResolveGroupForRow(item, groupBy)
+            ? (item: Record<string, any>) => defaultResolveGroupForRow(item, groupBy)
             : undefined)
         const group = groupResolver?.(data)
         return { row, data, start, end, group }
@@ -284,7 +280,9 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
         <div className="min-w-max">
           <div className="flex sticky top-0 z-20 bg-card border-b">
             <div className="w-40 md:w-52 flex-shrink-0 px-3 py-2 font-medium text-sm border-r bg-muted/50 sticky left-0 z-30">
-              <Trans>{options.groupsLabel ?? (groupBy ? "Groups" : "Bookings")}</Trans>
+              <Trans>
+                {options.groupsLabel ?? (groupBy ? "Groups" : "Bookings")}
+              </Trans>
             </div>
             <div className="flex flex-1">
               {days.map((day, idx) => (
@@ -365,9 +363,7 @@ export default function ListTimeline({ rows = [] }: ListComponentPropsInterface)
           </Trans>
         </span>
         <span>
-          <Trans params={{ count: String(groups.length) }}>
-            {"{{count}} rows"}
-          </Trans>
+          <Trans params={{ count: String(groups.length) }}>{"{{count}} rows"}</Trans>
         </span>
       </div>
     </div>
