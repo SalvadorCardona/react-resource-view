@@ -7,11 +7,11 @@ import {
 } from "@/demo/playground/adminData"
 
 /**
- * The second shape a sub-view takes: a tab of one's own, with no resource
+ * The second shape a tab takes: a component of one's own, with no resource
  * behind it — the posts and the CVs beside it are collections, this one is a
  * component.
  *
- * A sub-view is rendered inside the record's own view, so
+ * A tab is rendered inside the record's own view, so
  * `useCurrentViewResourceContext` hands back the account on screen.
  */
 export function UserActivity() {

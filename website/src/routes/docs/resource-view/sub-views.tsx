@@ -22,53 +22,48 @@ export const Route = createFileRoute("/docs/resource-view/sub-views")({
 })
 
 const SUB = `views: {
-  [ActionList.read]: {
-    subViewResource: {
-      list: [
+  read: {
+    tabs: {
+      items: [
         {
           // A nested resource, filtered by the record on screen.
           resource: articles,
-          resourceAction: ActionList.list,
-          name: "Articles",
+          label: "Articles",
           icon: FileText,
-          onInitViewResource: (view, parent) => ({
-            ...view,
-            filter: { author: parent?.data?.["@id"] },
-          }),
+          filter: ({ item }) => ({ author: item["@id"] }),
         },
         {
           // Or a tab of your own, with no resource behind it.
-          slug: "activity",
-          name: "Activity",
+          id: "activity",
+          label: "Activity",
           icon: Activity,
-          viewComponent: AuthorActivity,
+          component: AuthorActivity,
         },
       ],
     },
   },
 }`
 
-const DEFAULT_DATA = `onInitViewResource: (view, parent) => ({
-  ...view,
+const DEFAULT_DATA = `{
+  resource: articles,
   // Filters the list…
-  filter: { author: parent?.data?.["@id"] },
+  filter: ({ item }) => ({ author: item["@id"] }),
   // …and pre-fills the create form opened from inside it.
-  defaultData: { author: parent?.data?.["@id"] },
-})`
+  defaultData: ({ item }) => ({ author: item["@id"] }),
+}`
 
 const DIALOG = `import { ChildViewResourceDialog } from "react-resource-view"
 
 // A second context, rendered over the first — creating a category without
 // leaving the article being written.
 <ChildViewResourceDialog
-  resource={categories}
-  resourceAction={ActionList.create}
+  childViewResource={{ resource: categories, resourceAction: ActionList.create }}
 />`
 
-const ORIENTATION = `subViewResource: {
+const ORIENTATION = `tabs: {
   // "horizontal" by default: a bar above the sub-view.
   orientation: "vertical",
-  list: [...],
+  items: [...],
 }`
 
 const NESTED_URL = `/admin/authors/read/7/articles
@@ -110,7 +105,7 @@ function SubViews() {
     <DocArticle
       toc={[
         { id: "why", title: "The shape of the problem" },
-        { id: "declaring", title: "Declaring sub-views" },
+        { id: "declaring", title: "Declaring tabs" },
         { id: "navigation", title: "Where the tabs are drawn" },
         { id: "context", title: "Deriving from the parent" },
         { id: "url", title: "Nesting in the URL" },
@@ -134,11 +129,11 @@ function SubViews() {
 
       <LiveExample />
 
-      <H2 id="declaring">Declaring sub-views</H2>
+      <H2 id="declaring">Declaring tabs</H2>
 
       <P>
-        <C>subViewResource.list</C> is the tabs of a detail page. An entry takes one
-        of two shapes — a nested <Term id="resource">resource</Term>, or a component
+        <C>tabs.items</C> is the tabs of a detail page — on <C>views.read</C>, or on{" "}
+        <C>views.update</C> under the edit form. An entry takes one of two shapes — a nested <Term id="resource">resource</Term>, or a component
         of your own.
       </P>
 
@@ -147,17 +142,19 @@ function SubViews() {
       <PropsTable
         rows={[
           {
-            name: "resource / resourceId",
-            type: "ViewResourceInterface | string",
-            description: "The nested resource. Omit for a free-form tab.",
+            name: "resource",
+            type: "ViewResource | string",
+            description:
+              "The nested resource, or its identifier. Omit for a free-form tab.",
           },
           {
-            name: "resourceAction",
-            type: "ActionList",
+            name: "action",
+            type: "Action",
+            default: '"list"',
             description: "Which of its views the tab renders.",
           },
           {
-            name: "slug",
+            name: "id",
             type: "string",
             description: (
               <>
@@ -167,7 +164,7 @@ function SubViews() {
             ),
           },
           {
-            name: "name",
+            name: "label",
             type: "string",
             description: "The tab label. Defaults to the resource's name.",
           },
@@ -177,24 +174,29 @@ function SubViews() {
             description: "The tab icon. Defaults to the resource's.",
           },
           {
-            name: "viewComponent",
+            name: "component",
             type: "FC",
             description:
-              "Custom rendering, taking precedence over the resource's own — the free-form tab.",
-          },
-          {
-            name: "onInitViewResource",
-            type: "(view, parent) => view",
-            description:
-              "Where the nested context is derived from the surrounding one.",
+              "Custom rendering, in place of a resource — the free-form tab.",
           },
           {
             name: "filter",
-            type: "FilterInterface",
-            description: "A static filter, when nothing has to be derived.",
+            type: "FilterInterface | (({ item, parent }) => FilterInterface)",
+            description:
+              "Narrows the tab to the record on screen — static, or derived from it.",
+          },
+          {
+            name: "defaultData",
+            type: "object | (({ item, parent }) => object)",
+            description: "What a record created from the tab starts with.",
           },
         ]}
       />
+
+      <P>
+        Beside <C>items</C>, <C>tabs.aside</C> takes a component drawn beside the
+        tabs on a desktop and above them on a phone — a summary of the record, say.
+      </P>
 
       <P>
         <C>MultiViewTab</C> renders the tab bar. It is exported, so a detail page
@@ -231,8 +233,9 @@ function SubViews() {
       <H2 id="context">Deriving from the parent</H2>
 
       <P>
-        <C>onInitViewResource</C> receives the context being built and the
-        surrounding one, and returns the context to use. It runs once, when the
+        <C>filter</C> and <C>defaultData</C> may be functions of{" "}
+        <C>{"{ item, parent }"}</C> — the record on screen and its view context —
+        typed after the resource the tabs are declared on. They run when the
         sub-view mounts.
       </P>
 
@@ -292,14 +295,12 @@ function SubViews() {
         field behind the dialog to reload its options.
       </P>
 
-      <Callout kind="note" title="behavior.openIn">
+      <Callout kind="note" title="views.<action>.open">
         <P>
           A view can also ask to open over the page rather than in place — with{" "}
-          <C>behavior: {'{ openIn: "popup" }'}</C> for a dialog, or{" "}
-          <C>{'{ openIn: "drawer" }'}</C> for a panel sliding in from the right,
-          from the bottom on a phone — together with <C>closeAfterUpdate</C> and{" "}
-          <C>refreshDataAfterUpdate</C>, which decide what happens once the write
-          lands.
+          <C>{'open: "dialog"'}</C> for a dialog, or <C>{'open: "drawer"'}</C> for a
+          panel sliding in from the right, from the bottom on a phone — together
+          with <C>afterSave</C>, which decides what happens once the write lands.
         </P>
       </Callout>
     </DocArticle>

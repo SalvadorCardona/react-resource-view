@@ -50,12 +50,10 @@ const RESOURCE = `import { createViewResource } from "react-resource-view"
 export const articles = createViewResource("articles", {
   name: "Articles",
   path: "/api/articles",
-  view: {
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-      },
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
     },
   },
 })`
@@ -72,26 +70,30 @@ export function ArticlesPage() {
   )
 }`
 
-const FILTER = `view: {
-  form: { … },
-  formFilter: {
-    inputs: {
-      title: { label: "Search a title" },
-      status: {
-        label: "Status",
-        controller: SelectInputController,
-        valueOptions: STATUSES,
+const FILTER = `form: { … },
+views: {
+  list: {
+    filters: {
+      inputs: {
+        title: { label: "Search a title" },
+        status: {
+          label: "Status",
+          controller: SelectInputController,
+          valueOptions: STATUSES,
+        },
       },
     },
   },
 }`
 
-const LAYOUT = `import { cardViewOptionFactory, tableViewOptionFactory } from "react-resource-view"
+const LAYOUT = `import { layout } from "react-resource-view"
 
-view: {
-  form: { … },
-  formFilter: { … },
-  viewVariants: [tableViewOptionFactory(), cardViewOptionFactory({ grid: 3 })],
+form: { … },
+views: {
+  list: {
+    filters: { … },
+    layouts: [layout.table(), layout.cards({ columns: 3 })],
+  },
 }`
 
 function Quickstart() {
@@ -164,7 +166,7 @@ function Quickstart() {
 
       <P>
         <A href="/docs/resource-view/resources">Declaring a resource</A> covers the
-        repository behind it and every key of <C>view</C>.
+        repository behind it and every key of the declaration.
       </P>
 
       <H2 id="list">3. The list, from your API</H2>
@@ -175,8 +177,9 @@ function Quickstart() {
 
       <P>
         <strong>You should see</strong> a table with one row per record the API
-        returns, a pager, a button to create one, and on each row the detail, edit
-        and delete actions — the five screens come from the one declaration:
+        returns, a pager, a button to create one, and on each row the edit and
+        delete actions — every action is offered unless <C>permissions</C> restricts
+        it, and the five screens come from the one declaration:
       </P>
 
       <Demo label="The list — rows read from the API" wide>
@@ -186,7 +189,8 @@ function Quickstart() {
       <H2 id="filter">4. Add a filter</H2>
 
       <P>
-        The filter bar is an ordinary form description, in <C>formFilter</C>. Its
+        The filter bar is an ordinary form description, in{" "}
+        <C>views.list.filters</C>. Its
         values go out with the request and into the URL.
       </P>
 
@@ -218,14 +222,14 @@ function Quickstart() {
       </P>
 
       <Demo label="Same resource, same filter — as cards" wide>
-        <ResourceDemo resource={articlesResource} variant="card" />
+        <ResourceDemo resource={articlesResource} variant="cards" />
       </Demo>
 
       <H2 id="next">Where to go next</H2>
 
       <P>
         <A href="/docs/resource-view/layouts">Choosing a layout</A> has the five
-        others (split, columns, calendar, timeline…);{" "}
+        others (split, board, calendar, timeline…);{" "}
         <A href="/docs/resource-view/routing">Routing</A> puts the views on real
         URLs; <A href="/docs/resource-view/openapi-types">Types from OpenAPI</A>{" "}
         types the resources from your API's schema.

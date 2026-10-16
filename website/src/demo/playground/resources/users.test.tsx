@@ -54,7 +54,7 @@ describe("usersResource", () => {
     const router = renderPlayground("admin/admin_users/list")
 
     const row = (await screen.findByText("Ada Lovelace")).closest("tr")!
-    await user.click(within(row).getByRole("button", { name: "Open" }))
+    await user.click(within(row).getByRole("link", { name: "Open" }))
 
     expect(router.state.location.search).toMatchObject({
       view: "admin/admin_users/read/1",
@@ -72,7 +72,7 @@ describe("usersResource", () => {
     await screen.findByText("Ada Lovelace")
     await user.click(screen.getByRole("tab", { name: "Cards" }))
     const card = (await screen.findByText("Ada Lovelace")).closest(".rounded-2xl")!
-    await user.click(within(card as HTMLElement).getByRole("button", { name: "Open" }))
+    await user.click(within(card as HTMLElement).getByRole("link", { name: "Open" }))
 
     expect(router.state.location.search).toMatchObject({
       view: "admin/admin_users/read/1",
@@ -85,7 +85,7 @@ describe("usersResource", () => {
     renderPlayground("admin/admin_users/list")
 
     const row = (await screen.findByText("Ada Lovelace")).closest("tr")!
-    await user.click(within(row).getByRole("button", { name: "Edit" }))
+    await user.click(within(row).getByRole("link", { name: "Edit" }))
 
     expect(await screen.findByText("Edit a user")).toBeVisible()
   })

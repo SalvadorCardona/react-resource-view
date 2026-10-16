@@ -11,63 +11,59 @@ import { articlesResource } from "@/demo/resources"
 export const Route = createFileRoute("/docs/resource-view/split")({
   head: () => ({
     meta: [
-      { title: "Split and columns — react-resource-view" },
+      { title: "Split and board — react-resource-view" },
       {
         name: "description",
         content:
-          "Master-detail in one screen, and a board grouped by a key. Two layouts that change how a collection is worked with, not just how it looks.",
+          "Master-detail in one screen, and a board grouped by a field. Two layouts that change how a collection is worked with, not just how it looks.",
       },
     ],
   }),
   component: SplitAndColumns,
 })
 
-const SPLIT = `import { splitViewFactory } from "react-resource-view"
-import { ActionList } from "react-data-form"
+const SPLIT = `import { layout } from "react-resource-view"
 
-viewVariants: [
-  splitViewFactory({
-    // What the right-hand pane shows. \`update\` makes it an editor.
-    resourceAction: ActionList.read,
+layouts: [
+  layout.split({
+    // What the right-hand pane shows. The default, \`update\`, makes it an editor.
+    action: "read",
     // Shown before anything is selected.
-    emptySelected: () => <p>Pick an article on the left.</p>,
-    // \`read/{id}\` redirects to \`list/{id}\`, so incoming links land here.
-    redirectReadToList: true,
+    emptyState: () => <p>Pick an article on the left.</p>,
+    // \`read/{id}\` lands on \`list/{id}\`, so incoming links land here.
+    readInList: true,
   }),
 ]`
 
-const OPENING = `columnViewOptionFactory({
-  identifierKey: "status",
-  identifierKeyList: STATUSES,
-  behavior: {
-    // "drawer" | "popup" | "window". Unset, a card opens nothing.
-    openRecordIn: "drawer",
+const OPENING = `views: {
+  // "page" | "dialog" | "drawer". Unset, a card opens the record's page.
+  read: { open: "drawer" },
+  list: {
+    layouts: [layout.board({ groupBy: "status", columns: STATUSES })],
   },
-})`
+}`
 
-const BULK = `columnViewOptionFactory({
-  identifierKey: "status",
-  identifierKeyList: STATUSES,
-  behavior: {
-    // On by default; false takes the checkboxes and the bar away.
+const BULK = `views: {
+  list: {
+    // On by default on a board; false takes the checkboxes and the bar away.
     selectable: true,
     // Beside "Move to…", in the bar the selection brings up.
     bulkActions: [
       {
         label: "Mark as urgent",
         icon: Flame,
-        onAction: (tasks) =>
+        onAction: (tasks, mutation) =>
           Promise.all(
-            tasks.map((task) =>
-              tasksResource.updateItem({ id: task.id, priority: "urgent" })
-            )
+            tasks.map((task) => mutation.update({ ...task, priority: "urgent" }))
           ),
       },
+      "delete",
     ],
+    layouts: [layout.board({ groupBy: "status", columns: STATUSES })],
   },
-})`
+}`
 
-const COLUMNS = `import { columnViewOptionFactory } from "react-resource-view"
+const COLUMNS = `import { layout } from "react-resource-view"
 
 const STATUSES = [
   { label: "Draft", value: "draft" },
@@ -75,12 +71,12 @@ const STATUSES = [
   { label: "Published", value: "published" },
 ]
 
-viewVariants: [
-  columnViewOptionFactory({
+layouts: [
+  layout.board({
     // Which field decides the column…
-    identifierKey: "status",
+    groupBy: "status",
     // …and which columns exist, in which order.
-    identifierKeyList: STATUSES,
+    columns: STATUSES,
   }),
 ]`
 
@@ -90,7 +86,7 @@ function SplitAndColumns() {
       toc={[
         { id: "split", title: "Split" },
         { id: "redirect", title: "Incoming links" },
-        { id: "columns", title: "Columns" },
+        { id: "columns", title: "Board" },
         { id: "dragging", title: "Moving a card" },
         { id: "opening", title: "Opening a card" },
         { id: "selecting", title: "Moving several cards" },
@@ -115,27 +111,28 @@ function SplitAndColumns() {
       <PropsTable
         rows={[
           {
-            name: "resourceAction",
-            type: "ActionList",
-            default: "read",
+            name: "action",
+            type: '"read" | "update"',
+            default: '"update"',
             description: (
               <>
-                What the right pane renders. <C>update</C> turns it into an editor,
-                which is what makes a split feel like a mail client.
+                What the right pane renders. <C>update</C> makes it an editor, which
+                is what makes a split feel like a mail client; <C>read</C> keeps it
+                read-only.
               </>
             ),
           },
           {
-            name: "emptySelected",
+            name: "emptyState",
             type: "FC",
             description: "Rendered before anything is selected.",
           },
           {
-            name: "redirectReadToList",
+            name: "readInList",
             type: "boolean",
             description: (
               <>
-                Makes <C>read/{"{id}"}</C> redirect to <C>list/{"{id}"}</C>.
+                Makes <C>read/{"{id}"}</C> land on <C>list/{"{id}"}</C>.
               </>
             ),
           },
@@ -150,7 +147,7 @@ function SplitAndColumns() {
         would land nowhere.
       </P>
 
-      <Callout kind="tip" title="That is what redirectReadToList is for">
+      <Callout kind="tip" title="That is what readInList is for">
         <P>
           It turns <C>read/42</C> into <C>list/42</C>, so an existing link opens the
           split with that item selected. Set it whenever the split is the only detail
@@ -158,7 +155,7 @@ function SplitAndColumns() {
         </P>
       </Callout>
 
-      <H2 id="columns">Columns</H2>
+      <H2 id="columns">Board</H2>
 
       <P>
         A board: one column per value of a chosen field. It needs two things — which
@@ -168,21 +165,21 @@ function SplitAndColumns() {
       <CodeBlock>{COLUMNS}</CodeBlock>
 
       <Demo label="Grouped by status" wide>
-        <ResourceDemo resource={articlesResource} variant="column" />
+        <ResourceDemo resource={articlesResource} variant="board" />
       </Demo>
 
-      <Callout kind="warning" title="Both keys are required">
+      <Callout kind="warning" title="Both options are required">
         <P>
-          Without <C>identifierKey</C> the <Term id="view-variant">layout</Term>{" "}
-          renders “Not Identifiant Found”, and without <C>identifierKeyList</C>, “no
-          identifierKeyList”. The list is explicit on purpose: an empty column has to
-          exist to be dropped into, and deriving the columns from the data would make
-          it vanish.
+          <C>layout.board()</C> without <C>groupBy</C> or <C>columns</C> is a
+          TypeScript error, and <C>groupBy</C> must name a field of the item. The{" "}
+          <Term id="view-variant">layout</Term> takes its columns as a list on
+          purpose: an empty column has to exist to be dropped into, and deriving the
+          columns from the data would make it vanish.
         </P>
       </Callout>
 
       <P>
-        <C>identifierKeyList</C> takes the same option shape as a select field, so
+        <C>columns</C> takes the same option shape as a select field, so
         the field's own <C>valueOptions</C> can be reused directly — one list, both
         places.
       </P>
@@ -191,17 +188,18 @@ function SplitAndColumns() {
 
       <P>
         Dragging a card into another column writes the new value of{" "}
-        <C>identifierKey</C> through the <Term id="repository">repository</Term> and
-        refetches. There is no drag handler to write: moving a card <em>is</em>{" "}
+        <C>groupBy</C> through the <Term id="repository">repository</Term>, drawn in
+        its new column before the API answers. There is no drag handler to write: moving a card <em>is</em>{" "}
         editing that field.
       </P>
 
       <H2 id="opening">Opening a card</H2>
 
       <P>
-        <C>behavior.openRecordIn</C> makes the whole card clickable — with a pointer
-        cursor, a hover state and a focus ring — and says what a click opens: the
-        record's <C>read</C> view, with a way to edit it.
+        The whole card is clickable — with a pointer cursor, a hover state and a
+        focus ring — and a click opens the record&apos;s <C>read</C> view, with a way
+        to edit it. Where it opens is not the board&apos;s to say: it is{" "}
+        <C>views.read.open</C>, the same decision a row&apos;s read button follows.
       </P>
 
       <CodeBlock>{OPENING}</CodeBlock>
@@ -211,16 +209,16 @@ function SplitAndColumns() {
           <C>drawer</C> slides it in from the right — up from the bottom on a phone.
         </Li>
         <Li>
-          <C>popup</C> centres it in a dialog.
+          <C>dialog</C> centres it in a dialog.
         </Li>
         <Li>
-          <C>window</C> goes to the record's own page, through <C>generateLink</C>{" "}
-          and the configured router.
+          <C>page</C>, the default, goes to the record's own page, through{" "}
+          <C>generateLink</C> and the configured router.
         </Li>
       </Ul>
 
       <P>
-        A drawer or a popup is written into the URL as a child view of the list —{" "}
+        A drawer or a dialog is written into the URL as a child view of the list —{" "}
         <C>…/tasks/list/tasks/read/12</C> — so it can be shared, a reload reopens it,
         and the browser's Back button closes it. The host reads it back with{" "}
         <A href="/docs/resource-view/routing">
@@ -249,8 +247,10 @@ function SplitAndColumns() {
         add or remove one, Shift+click for a range within a column, Space on a
         focused card — and a long press on a phone, after which a tap adds or
         removes. As soon as one card is selected, a bar comes up with the count,
-        “Move to…”, the view's own <C>bulkActions</C> and “Deselect all”; Escape
-        empties the selection too.
+        “Move to…”, the list&apos;s own <C>bulkActions</C> and “Deselect all”; Escape
+        empties the selection too. The selection is declared on{" "}
+        <C>views.list</C>, not on the board, so a table, cards or a plain list of
+        the same resource select the same way.
       </P>
 
       <P>
@@ -265,27 +265,30 @@ function SplitAndColumns() {
       <PropsTable
         rows={[
           {
-            name: "behavior.openRecordIn",
-            type: '"drawer" | "popup" | "window"',
+            name: "views.read.open",
+            type: '"page" | "dialog" | "drawer" | OpenFrame',
+            default: '"page"',
             description: (
               <>
-                What a click on a card opens. Needs <C>canRead</C>.
+                Where a click on a card opens the record. Needs the <C>read</C>{" "}
+                permission.
               </>
             ),
           },
           {
-            name: "behavior.selectable",
+            name: "views.list.selectable",
             type: "boolean",
-            default: "true",
-            description: "Whether cards can be selected and moved together.",
+            default: "true on a board",
+            description: "Whether records can be selected and moved together.",
           },
           {
-            name: "behavior.bulkActions",
-            type: "BulkActionInterface[]",
+            name: "views.list.bulkActions",
+            type: '(BulkActionInterface | "delete")[]',
             description: (
               <>
-                <C>{"{ label, icon?, onAction(records) }"}</C>, run on the selected
-                records; the board refreshes once it settles.
+                <C>{"{ label, icon?, onAction(records, mutation) }"}</C>, run on the
+                selected records; the list refreshes once it settles.{" "}
+                <C>"delete"</C> is the built-in deletion of the selection.
               </>
             ),
           },
@@ -300,7 +303,7 @@ function SplitAndColumns() {
           is a navigation aid — an inbox, a queue, a log.
         </Li>
         <Li>
-          <strong>Columns</strong> when the interesting operation is moving a record
+          <strong>Board</strong> when the interesting operation is moving a record
           between states — a pipeline, a kanban, an editorial workflow.
         </Li>
         <Li>

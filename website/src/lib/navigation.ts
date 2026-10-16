@@ -286,7 +286,7 @@ export const VIEW_SECTION: DocSection = {
         {
           href: "/docs/resource-view/layouts/",
           title: "Choosing a layout",
-          summary: "Seven variants over one resource, and how the reader switches.",
+          summary: "Seven layouts over one resource, and how the reader switches.",
           icon: LayoutGrid,
         },
         {
@@ -297,8 +297,8 @@ export const VIEW_SECTION: DocSection = {
         },
         {
           href: "/docs/resource-view/split/",
-          title: "Split & columns",
-          summary: "Master-detail, and a board grouped by a key.",
+          title: "Split & board",
+          summary: "Master-detail, and a board grouped by a field.",
           icon: Columns3,
         },
         {
@@ -309,7 +309,7 @@ export const VIEW_SECTION: DocSection = {
         },
         {
           href: "/docs/resource-view/custom-variant/",
-          title: "Create your own variant",
+          title: "Create your own layout",
           summary:
             "One command writes the eighth layout: a single file, yours to draw.",
           icon: Terminal,
@@ -350,7 +350,8 @@ export const VIEW_SECTION: DocSection = {
         {
           href: "/docs/resource-view/permissions/",
           title: "Permissions & quotas",
-          summary: "canCreate, canDelete, and a creation limit with a fallback.",
+          summary:
+            "One permissions object, rules per record, and a creation quota with a fallback.",
           icon: KeyRound,
         },
         {

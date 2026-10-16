@@ -22,38 +22,38 @@ export const Route = createFileRoute("/docs/resource-view/calendar")({
   component: CalendarAndTimeline,
 })
 
-const CALENDAR = `import { calendarViewOptionFactory } from "react-resource-view"
+const CALENDAR = `import { layout } from "react-resource-view"
 
-viewVariants: [
-  calendarViewOptionFactory({
-    dateKey: "startAt",     // when it starts
-    endDateKey: "endAt",    // when it ends — omit for point-in-time events
-    titleKey: "title",      // what is written on the event
-    colorKey: "track",      // one colour per distinct value
-    mode: "week",           // "day" | "week" | "month"
+layouts: [
+  layout.calendar({
+    dateField: "startAt",     // when it starts
+    endDateField: "endAt",    // when it ends — omit for point-in-time events
+    titleField: "title",      // what is written on the event
+    colorField: "track",      // one colour per distinct value
+    mode: "week",             // "day" | "week" | "month"
     hourStart: 8,
     hourEnd: 18,
   }),
 ]`
 
-const TIMELINE = `import { timelineViewOptionFactory } from "react-resource-view"
+const TIMELINE = `import { layout } from "react-resource-view"
 
-viewVariants: [
-  timelineViewOptionFactory<Session>({
-    startDateKey: "startAt",
-    endDateKey: "endAt",
-    titleKey: "title",
-    groupKey: "room",          // one band per room
+layouts: [
+  layout.timeline<Session>({
+    startField: "startAt",
+    endField: "endAt",
+    titleField: "title",
+    groupBy: "room",           // one band per room
     groupsLabel: "Rooms",      // header of the left-hand column
-    statusKey: "status",
+    statusField: "status",
     colorByStatus: { confirmed: "#3b82f6", hold: "#f59e0b" },
     daysToShow: 5,
     showUnassigned: false,
   }),
 ]`
 
-const RESOLVE = `timelineViewOptionFactory<Booking>({
-  // The bands, when they are not simply the distinct values of a key —
+const RESOLVE = `layout.timeline<Booking>({
+  // The bands, when they are not simply the distinct values of a field —
   // every room, including those with nothing booked in them.
   resolveGroups: () => rooms.map((room) => ({
     id: room["@id"],
@@ -67,12 +67,12 @@ const RESOLVE = `timelineViewOptionFactory<Booking>({
   }),
 })`
 
-const PREVIEW = `calendarViewOptionFactory({
-  dateKey: "startAt",
-  titleKey: "title",
+const PREVIEW = `layout.calendar({
+  dateField: "startAt",
+  titleField: "title",
   // What the window opening on an event holds. Omit it for the summary
   // the calendar and the timeline draw by themselves.
-  rowComponent: SessionPreview,
+  components: { row: SessionPreview },
 })`
 
 const LOCALE = `import { fr } from "date-fns/locale"
@@ -87,7 +87,7 @@ function CalendarAndTimeline() {
       toc={[
         { id: "calendar", title: "Calendar" },
         { id: "timeline", title: "Timeline" },
-        { id: "groups", title: "Bands that are not just a key" },
+        { id: "groups", title: "Bands that are not just a field" },
         { id: "preview", title: "Clicking an event" },
         { id: "locale", title: "Locale" },
         { id: "choosing", title: "Which one, when" },
@@ -114,24 +114,24 @@ function CalendarAndTimeline() {
       <PropsTable
         rows={[
           {
-            name: "dateKey",
+            name: "dateField",
             type: "string",
             default: `"dueDate"`,
             description:
               "The field the event is placed by. Almost always worth setting.",
           },
           {
-            name: "endDateKey",
+            name: "endDateField",
             type: "string",
             description: "Makes the event a block rather than a point.",
           },
           {
-            name: "titleKey",
+            name: "titleField",
             type: "string",
             description: "What is written on the event.",
           },
           {
-            name: "colorKey",
+            name: "colorField",
             type: "string",
             description: "One colour per distinct value of this field.",
           },
@@ -174,13 +174,13 @@ function CalendarAndTimeline() {
       <PropsTable
         rows={[
           {
-            name: "startDateKey / endDateKey",
+            name: "startField / endField",
             type: "string",
             default: `"startDate" / "endDate"`,
             description: "The span each band segment covers.",
           },
           {
-            name: "groupKey",
+            name: "groupBy",
             type: "string",
             description: "The field whose distinct values become the bands.",
           },
@@ -190,8 +190,9 @@ function CalendarAndTimeline() {
             description: "Header of the left-hand column — “Rooms”, “Staff”.",
           },
           {
-            name: "statusKey / colorByStatus",
+            name: "statusField / colorByStatus",
             type: "string / Record<string, string>",
+            default: `"state"`,
             description: "Colours a segment by a status field.",
           },
           {
@@ -219,10 +220,10 @@ function CalendarAndTimeline() {
         ]}
       />
 
-      <H2 id="groups">Bands that are not just a key</H2>
+      <H2 id="groups">Bands that are not just a field</H2>
 
       <P>
-        <C>groupKey</C> derives the bands from the records, which means an empty room
+        <C>groupBy</C> derives the bands from the records, which means an empty room
         does not exist. When the bands are a known set — every room, every engineer,
         whether or not anything is booked — resolve them instead.
       </P>
@@ -248,8 +249,8 @@ function CalendarAndTimeline() {
       </P>
 
       <P>
-        What fills it is the <Term id="view-variant">variant</Term>'s{" "}
-        <C>rowComponent</C>, which both layouts default to the summary described
+        What fills it is the <Term id="view-variant">layout</Term>'s{" "}
+        <C>components.row</C>, which both layouts default to the summary described
         above. A <Term id="resource">resource</Term> with something better to show
         declares its own, exactly as the card and list layouts do.
       </P>
@@ -278,7 +279,8 @@ function CalendarAndTimeline() {
           room free, is that person double-booked.
         </Li>
         <Li>
-          Declare both. They are two entries in <C>viewVariants</C> and the reader
+          Declare both. They are two entries in <C>views.list.layouts</C> and the
+          reader
           switches between them —{" "}
           <A href="/docs/resource-view/layouts">as with any other layout</A>.
         </Li>

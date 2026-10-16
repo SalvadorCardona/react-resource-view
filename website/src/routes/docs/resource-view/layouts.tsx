@@ -23,112 +23,118 @@ export const Route = createFileRoute("/docs/resource-view/layouts")({
       {
         name: "description",
         content:
-          "Seven layout factories over one collection. Declare several, and the reader picks — the choice travels in the URL.",
+          "Seven layouts over one collection, from one `layout` namespace. Declare several, and the reader picks — the choice travels in the URL.",
       },
     ],
   }),
   component: Layouts,
 })
 
-const VARIANTS = `import {
-  cardViewOptionFactory,
-  splitViewFactory,
-  tableViewOptionFactory,
-} from "react-resource-view"
+const VARIANTS = `import { layout } from "react-resource-view"
 
-view: {
-  form: articleForm,
-  viewVariants: [
-    tableViewOptionFactory(),        // the default: the first one listed
-    cardViewOptionFactory({ grid: 3 }),
-    splitViewFactory({ redirectReadToList: true }),
-  ],
+form: articleForm,
+views: {
+  list: {
+    layouts: [
+      layout.table(), // the default: the first one listed
+      layout.cards({ columns: 3 }),
+      layout.split({ readInList: true }),
+    ],
+  },
 }`
 
-const IDENTITY = `// A variant is identified by the slug of its name.
-tableViewOptionFactory()                    // id: "table"
-cardViewOptionFactory()                     // id: "card"
-tableViewOptionFactory({ name: "Compact" }) // id: "compact"`
+const IDENTITY = `// A layout is identified by its type — in the URL, ?variant=table.
+layout.table() // id: "table"
+layout.cards() // id: "cards"
 
-const CUSTOM = `import { createView } from "react-resource-view"
+// The label changes what the switcher shows, not the id: still "board".
+layout.board({ label: "Kanban", groupBy: "status", columns: STATUSES })
 
-// A factory is just a preset. Nothing stops you writing your own layout.
-const heatmapView = createView({
-  name: "Heatmap",
-  icon: Flame,
-  listComponent: MyHeatmap,   // receives { rows }
-  rowComponent: MyHeatCell,   // receives { row }
-  itemComponent: MyHeatValue, // receives { formInput }
-})`
+// The same type twice needs an id of its own.
+layout.table({ id: "compact", label: "Compact", fields: ["title"] })`
+
+const CUSTOM = `import { layout } from "react-resource-view"
+
+// A built-in layout is a preset. Nothing stops you writing your own.
+export const heatmapLayout = (options = {}) =>
+  layout.custom({
+    type: "heatmap",
+    icon: Flame,
+    components: {
+      list: MyHeatmap, // receives { rows }
+      row: MyHeatCell, // receives { row }
+      item: MyHeatValue, // receives { formInput }
+    },
+    ...options,
+  })`
 
 const SCAFFOLD = `npx react-resource-view create-view-variant Heatmap --dir src/views`
 
 const HEADER = `createViewResource("articles", {
-  name: "Articles",
+  name: "Articles",         // the heading: "Articles"
   icon: Newspaper,          // the badge, and the same mark the menu uses
-  view: {
-    name: "Articles",       // the heading
-    description: "Everything published, and everything on its way there.",
-    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory()],
+  description: "Everything published, and everything on its way there.",
+  views: {
+    list: { layouts: [layout.table(), layout.cards()] },
   },
 })`
 
 const LAYOUTS = [
   {
     icon: Table,
-    factory: "tableViewOptionFactory",
+    factory: "layout.table()",
     title: "Table",
-    body: "One column per field of the view's form, editable in place. The default for anything with more than three fields worth comparing.",
+    body: "One column per field of the resource's form, editable in place. The default for anything with more than three fields worth comparing.",
   },
   {
     icon: Rows2,
-    factory: "cardViewOptionFactory",
+    factory: "layout.cards()",
     title: "Cards",
     body: (
       <>
-        A grid of cards, <C>grid</C> per row. Right when a record has a title and a
-        couple of attributes.
+        A grid of cards, <C>columns</C> per row. Right when a record has a title and
+        a couple of attributes.
       </>
     ),
   },
   {
     icon: List,
-    factory: "itemViewOptionFactory",
+    factory: "layout.items()",
     title: "Item list",
     body: "A plain vertical list. The lightest of the seven, and the one that survives a narrow column.",
   },
   {
     icon: Columns3,
-    factory: "columnViewOptionFactory",
-    title: "Columns",
+    factory: "layout.board()",
+    title: "Board",
     body: (
       <>
-        A board grouped by a key — a kanban. Needs <C>identifierKey</C> and{" "}
-        <C>identifierKeyList</C>.
+        A board grouped by a field — a kanban. Needs <C>groupBy</C> and{" "}
+        <C>columns</C>.
       </>
     ),
   },
   {
     icon: Columns2,
-    factory: "splitViewFactory",
+    factory: "layout.split()",
     title: "Split",
     body: "The list on the left, the selected item on the right. Replaces the separate detail page.",
   },
   {
     icon: CalendarDays,
-    factory: "calendarViewOptionFactory",
+    factory: "layout.calendar()",
     title: "Calendar",
     body: (
       <>
-        By day, week or month, from a date field. <C>dateKey</C> says which.
+        By day, week or month, from a date field. <C>dateField</C> says which.
       </>
     ),
   },
   {
     icon: CalendarRange,
-    factory: "timelineViewOptionFactory",
+    factory: "layout.timeline()",
     title: "Timeline",
-    body: "A Gantt-like band per row, grouped by a key — rooms, staff, vehicles.",
+    body: "A Gantt-like band per row, grouped by a field — rooms, staff, vehicles.",
   },
 ]
 
@@ -136,11 +142,11 @@ function Layouts() {
   return (
     <DocArticle
       toc={[
-        { id: "seven", title: "The seven factories" },
+        { id: "seven", title: "The seven layouts" },
         { id: "declaring", title: "Declaring several" },
         { id: "header", title: "The header of a list" },
-        { id: "identity", title: "How a variant is identified" },
-        { id: "shared", title: "What every variant shares" },
+        { id: "identity", title: "How a layout is identified" },
+        { id: "shared", title: "What every layout shares" },
         { id: "custom", title: "Writing your own" },
       ]}
     >
@@ -148,10 +154,10 @@ function Layouts() {
         A collection is not one screen. The same articles are a table when you are
         comparing them, a board when you are moving them along, and a calendar when
         you are scheduling them. All three are the same{" "}
-        <Term id="resource">resource</Term> with a different <C>listComponent</C>.
+        <Term id="resource">resource</Term> with a different <C>components.list</C>.
       </P>
 
-      <H2 id="seven">The seven factories</H2>
+      <H2 id="seven">The seven layouts</H2>
 
       <div className="not-prose my-6 grid gap-3 sm:grid-cols-2">
         {LAYOUTS.map(({ icon: Icon, factory, title, body }) => (
@@ -178,7 +184,7 @@ function Layouts() {
       <H2 id="declaring">Declaring several</H2>
 
       <P>
-        <C>viewVariants</C> is a list. Declare more than one and the{" "}
+        <C>views.list.layouts</C> is a list. Declare more than one and the{" "}
         <Term id="view">view</Term> renders a switcher; the reader's choice is
         written into the URL, so it survives a reload and travels in a shared link.
       </P>
@@ -191,8 +197,8 @@ function Layouts() {
 
       <Callout kind="note" title="The first one wins">
         <P>
-          With no <Term id="view-variant">variant</Term> in the URL, the first of the
-          list is used. Ordering them is how you choose the default, and a variant id
+          With no <Term id="view-variant">layout</Term> in the URL, the first of the
+          list is used. Ordering them is how you choose the default, and a layout id
           that no longer exists falls back to it rather than rendering nothing.
         </P>
       </Callout>
@@ -202,8 +208,8 @@ function Layouts() {
       <P>
         The switcher is not a loose control floating above the rows: every list draws
         one header line, and the switcher sits in it. From left to right — the
-        resource's <C>icon</C> in a badge, the view's <C>name</C> and{" "}
-        <C>description</C>, the layout switcher, then the export and create buttons,
+        resource's <C>icon</C> in a badge, the view's title — derived from the
+        resource&apos;s <C>name</C> — and <C>description</C>, the layout switcher, then the export and create buttons,
         with a rule under the lot.
       </P>
 
@@ -213,13 +219,13 @@ function Layouts() {
         Nothing is declared to turn it on. It is assembled from what the resource
         already says, and each piece disappears when there is nothing to draw: no{" "}
         <C>icon</C>, no badge; no <C>description</C>, one line instead of two; one
-        variant, no switcher; <C>canCreate</C> denied, no button.
+        layout, no switcher; <C>permissions.create</C> refused, no button.
       </P>
 
       <Callout kind="note" title="A nested list keeps quiet">
         <P>
           A list rendered inside another view — a{" "}
-          <A href="/docs/resource-view/sub-views">sub-view tab</A>, a resource
+          <A href="/docs/resource-view/sub-views">tab</A>, a resource
           embedded in a page of your own — leaves the naming out: whatever contains it
           has already written its title, and saying it twice is only saying it twice.
           Its switcher and its buttons stay.
@@ -227,7 +233,7 @@ function Layouts() {
       </Callout>
 
       <P>
-        The icon shown is the resource's, not the variant's. A variant carries an icon
+        The icon shown is the resource's, not the layout's. A layout carries an icon
         of its own — it is what the switcher draws — and a header taking that one
         would change the heading of the collection every time the reader changed the
         layout.
@@ -238,54 +244,60 @@ function Layouts() {
         it has <A href="/docs/resource-view/filters">its own page</A>.
       </P>
 
-      <H2 id="identity">How a variant is identified</H2>
+      <H2 id="identity">How a layout is identified</H2>
 
       <P>
-        Each factory names its variant, and the id is the slug of that name. Pass a{" "}
-        <C>name</C> to change both — which you have to do when the same factory
-        appears twice.
+        A layout&apos;s id is its type, so renaming its <C>label</C> breaks no
+        shared link. Pass an <C>id</C> only when the same layout appears twice.
       </P>
 
       <CodeBlock>{IDENTITY}</CodeBlock>
 
-      <H2 id="shared">What every variant shares</H2>
+      <H2 id="shared">What every layout shares</H2>
 
       <P>
-        A variant is a <C>ViewInterface</C>, so anything a view accepts, a variant
-        accepts — and only for that layout:
+        Besides its own options — <C>columns</C>, <C>groupBy</C>,{" "}
+        <C>dateField</C>… — every layout accepts the same few, and only for that
+        layout:
       </P>
 
       <Ul>
         <Li>
-          <C>form</C> — different columns per layout, if the table needs more than
-          the cards.
+          <C>fields</C> — the columns of the table, the lines of a card, in order:{" "}
+          <C>fields: ["title", "status"]</C>. Checked against the item type.
         </Li>
         <Li>
-          <C>itemsPerPage</C> — a grid of cards holds fewer than a table.
+          <C>form</C> — adjusts the resource&apos;s form for this layout only, merged
+          over it.
         </Li>
         <Li>
-          <C>components.top</C>, <C>components.bottom</C>, <C>components.noResult</C>
-          , <C>components.pagination</C>.
+          <C>fullWidth</C> — this layout takes the page&apos;s whole width.
         </Li>
         <Li>
-          <C>behavior.canExport</C> — a CSV export honouring the current filters.
+          <C>label</C>, <C>icon</C> — what the switcher shows; <C>id</C> — what the
+          URL says.
         </Li>
         <Li>
-          <C>className</C>, <C>icon</C>, <C>label</C>.
+          <C>components.list</C>, <C>components.row</C>, <C>components.item</C>.
         </Li>
       </Ul>
 
       <P>
-        The three rendering slots are what a factory actually sets:{" "}
-        <C>listComponent</C> draws the collection, <C>rowComponent</C> one record,
-        and <C>itemComponent</C> one field of a record.
+        Those three rendering slots are what a layout actually sets:{" "}
+        <C>components.list</C> draws the collection, <C>components.row</C> one
+        record, and <C>components.item</C> one field of a record. What belongs to
+        the list rather than to one layout — <C>pageSize</C>, <C>filters</C>,{" "}
+        <C>sort</C>, <C>bulkActions</C>, <C>components.top</C>,{" "}
+        <C>components.empty</C> — is declared on <C>views.list</C>, and holds
+        whichever layout the reader picks.
       </P>
 
       <H2 id="custom">Writing your own</H2>
 
       <P>
-        A factory is a preset over <C>createView</C>, nothing more. A layout of your
-        own is three components and one call:
+        A built-in layout is a preset over the same shape as{" "}
+        <C>layout.custom()</C>, nothing more. A layout of your own is three
+        components and one call:
       </P>
 
       <CodeBlock>{CUSTOM}</CodeBlock>
@@ -293,19 +305,20 @@ function Layouts() {
       <P>
         Inside those components, <C>useList</C> gives the rows and the mutations, and{" "}
         <C>useCurrentViewResourceContext</C> gives the whole context — loading state,
-        filters, selection.
+        filters, selection — and <C>useLayout().options</C> the layout&apos;s own
+        options.
       </P>
 
       <P>
         You need not type any of it: the package ships a command that writes that
-        file where you want it, components and factory included.
+        file where you want it, components and <C>layout.custom()</C> call included.
       </P>
 
       <CodeBlock lang="bash">{SCAFFOLD}</CodeBlock>
 
       <P>
         <A href="/docs/resource-view/custom-variant">
-          Create your own view variant
+          Create your own layout
         </A>{" "}
         takes the generated file apart, line by line.
       </P>
@@ -313,7 +326,7 @@ function Layouts() {
       <P>
         The next three pages take the built-in layouts one family at a time:{" "}
         <A href="/docs/resource-view/table">table and cards</A>,{" "}
-        <A href="/docs/resource-view/split">split and columns</A>, and{" "}
+        <A href="/docs/resource-view/split">split and board</A>, and{" "}
         <A href="/docs/resource-view/calendar">calendar and timeline</A> — then{" "}
         <A href="/docs/resource-view/custom-variant">one you write yourself</A>.
       </P>

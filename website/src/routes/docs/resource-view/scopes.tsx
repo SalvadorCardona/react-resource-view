@@ -26,11 +26,13 @@ import { authClient } from "../auth-client"
 export const adminScope: ScopeInterface = {
   name: "admin",
   label: "Administration",
+  // The one place a resource's scope is written: their links lead here.
   resources: [articles, authors, categories],
   home: "/admin/articles/list",
+  // Resources as they are, or links of your own — "auto" lists \`resources\`.
   menu: [
-    createItemMenuWithResource({ resource: articles }),
-    createItemMenuWithResource({ resource: authors }),
+    articles,
+    authors,
     { name: "Reports", href: "/admin/reports", icon: BarChart },
   ],
   // Synchronous or async — the scope renders once it has answered.
@@ -64,7 +66,7 @@ const FLAT = `// A small application needs no scopes at all.
   configuration={{ resources: [articles, authors] }}
 />`
 
-const MENU = `import { createItemMenuWithResource, useIsActiveItemMenu } from "react-resource-view"
+const MENU = `import { useIsActiveItemMenu } from "react-resource-view"
 
 function Sidebar({ menu }: { menu: MenuItemInterface[] }) {
   const isActive = useIsActiveItemMenu()
@@ -77,9 +79,19 @@ function Sidebar({ menu }: { menu: MenuItemInterface[] }) {
   ))
 }`
 
-const SAME_PATH = `// Two resources over one endpoint, one per scope.
-createViewResource("articles", { scope: "admin",  path: "/api/articles", canDelete: true,  … })
-createViewResource("articles", { scope: "portal", path: "/api/articles", canDelete: false, … })`
+const SAME_PATH = `// Two resources over one endpoint, one per scope, both answering to "articles".
+export const adminArticles = createViewResource("admin_articles", {
+  alias: "articles",
+  path: "/api/articles",
+})
+export const portalArticles = createViewResource("portal_articles", {
+  alias: "articles",
+  path: "/api/articles",
+  permissions: "readonly",
+})
+
+// scopes/admin.ts → resources: [adminArticles]
+// scopes/portal.ts → resources: [portalArticles]`
 
 function Scopes() {
   return (
@@ -104,8 +116,8 @@ function Scopes() {
 
       <Ul>
         <Li>
-          <strong>A namespace.</strong> Two resources may share an id if they live in
-          different scopes.
+          <strong>A namespace.</strong> Two resources may answer to the same name in
+          the URL if they live in different scopes.
         </Li>
         <Li>
           <strong>An authorisation boundary.</strong> One function, synchronous or
@@ -143,7 +155,7 @@ function Scopes() {
             name: "name",
             type: "string",
             required: true,
-            description: "The first URL segment, and the value resources refer to.",
+            description: "The first URL segment of every view of the scope.",
           },
           {
             name: "label",
@@ -152,13 +164,24 @@ function Scopes() {
           },
           {
             name: "resources",
-            type: "ViewResourceInterface[]",
-            description: "Everything the scope can render.",
+            type: "ViewResource[]",
+            description: (
+              <>
+                Everything the scope can render — the one place a resource&apos;s
+                scope is declared: each resource listed here links within it.
+              </>
+            ),
           },
           {
             name: "menu",
-            type: "MenuItemInterface[]",
-            description: "The navigation, yours to render.",
+            type: '"auto" | (ViewResource | MenuItemInterface)[]',
+            description: (
+              <>
+                The navigation, yours to render. <C>&quot;auto&quot;</C> lists{" "}
+                <C>resources</C> in order; a list mixes resources with links and
+                groups of your own.
+              </>
+            ),
           },
           {
             name: "home",
@@ -226,19 +249,13 @@ function Scopes() {
           },
           {
             name: "resources",
-            type: "ViewResourceInterface[]",
+            type: "ViewResource[]",
             description: "The flat alternative, when there are no scopes.",
           },
           {
             name: "defaultScope",
             type: "string",
             description: "Used when the URL names none.",
-          },
-          {
-            name: "defaultResource",
-            type: "Partial<ViewResourceInterface>",
-            description:
-              "Defaults every resource starts from — a shared row component, a shared empty state.",
           },
           {
             name: "decoratorComponent",
@@ -271,6 +288,13 @@ function Scopes() {
         ]}
       />
 
+      <P>
+        What every resource starts from — a shared empty state, edit forms in a
+        drawer — is not part of this configuration but of{" "}
+        <C>configureResourceView({"{"} defaults {"}"})</C>, called once at startup
+        with the shape of a declaration and merged beneath every resource.
+      </P>
+
       <Callout kind="warning" title="Lazy scopes suspend">
         <P>
           A lazily loaded scope suspends on first paint. That is the right trade-off
@@ -286,9 +310,10 @@ function Scopes() {
       <P>
         The menu is data — rendering it is yours, or{" "}
         <A href="/docs/resource-view/admin-layout">AdminLayout</A>&apos;s, if a
-        collapsible sidebar built from it is enough.{" "}
-        <C>createItemMenuWithResource</C> builds an entry pointing at a resource's
-        list, in the configured routing mode.
+        collapsible sidebar built from it is enough. A resource in a scope&apos;s{" "}
+        <C>menu</C> becomes an entry pointing at its list, in the configured routing
+        mode; outside a scope, <C>createItemMenuWithResource({"{"} resource, scope{" "}
+        {"}"})</C> builds the same entry.
       </P>
 
       <CodeBlock>{MENU}</CodeBlock>
@@ -355,7 +380,8 @@ function Scopes() {
 
       <P>
         The same API collection often needs two different treatments. Declare it
-        twice, once per scope, with different permissions, filters and{" "}
+        twice, under two ids sharing one <C>alias</C>, and list each in its scope,
+        with different permissions, filters and{" "}
         <Term id="view-variant">layouts</Term>:
       </P>
 

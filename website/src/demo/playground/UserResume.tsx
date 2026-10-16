@@ -18,7 +18,7 @@ import type { User } from "@/demo/playground/adminData"
  * record somebody goes looking for, it is what an account amounts to on paper,
  * so `blocks` is a field of the user and this tab is where it is built.
  *
- * The tab is a `viewComponent`, which is rendered inside the record's own
+ * The tab is a `component`, which is rendered inside the record's own
  * view — `useCurrentViewResourceContext` therefore hands back the account on
  * screen, and `useFormByResource` writes through the users repository. The form
  * below holds that one field, so what is submitted is `{ id, blocks }`: the

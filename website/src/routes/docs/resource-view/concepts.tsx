@@ -11,7 +11,7 @@ export const Route = createFileRoute("/docs/resource-view/concepts")({
       {
         name: "description",
         content:
-          "The vocabulary of react-resource-view in one page — resource, view, view variant, form, controller, repository, dialect, port, scope, registry, sub-view — and how the pieces fit together.",
+          "The vocabulary of react-resource-view in one page — resource, view, layout, form, controller, repository, dialect, port, scope, registry, sub-view — and how the pieces fit together.",
       },
     ],
   }),
@@ -35,7 +35,7 @@ function Concepts() {
       <H2 id="picture">The whole picture</H2>
 
       <P>
-        Everything starts from one declaration. Its form and its view variants are
+        Everything starts from one declaration. Its form and its layouts are
         what the screens are drawn from; its repository is where the data comes from,
         and the dialect is how that data is asked of your API. The application stays
         in charge of what the library cannot know — which router, which API, which

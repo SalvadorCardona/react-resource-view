@@ -232,10 +232,12 @@ import { createViewResource } from "react-resource-view"
 
 export const articles = createViewResource("articles", {
   path: "/api/articles",
-  canRead: true,
-  canCreate: () => hasRole("ROLE_EDITOR") || hasRole("ROLE_ADMIN"),
-  canUpdate: () => hasRole("ROLE_EDITOR") || hasRole("ROLE_ADMIN"),
-  canDelete: () => hasRole("ROLE_ADMIN"),
+  // Everything is allowed by default: only the restrictions are written.
+  permissions: {
+    create: () => hasRole("ROLE_EDITOR") || hasRole("ROLE_ADMIN"),
+    update: () => hasRole("ROLE_EDITOR") || hasRole("ROLE_ADMIN"),
+    delete: () => hasRole("ROLE_ADMIN"),
+  },
 })`
 
 const MENU = `import { hasRole } from "react-jwt-session"
@@ -253,9 +255,10 @@ export const adminScope: ScopeInterface = {
   authorization: createScopeAuthorization({ roles: ["ROLE_ADMIN", "ROLE_EDITOR"] }),
 
   menu: [
-    createItemMenuWithResource({ resource: articles }),
+    articles,
     {
-      ...createItemMenuWithResource({ resource: users }),
+      // An entry of its own, to add a getter: it names the scope its link leads to.
+      ...createItemMenuWithResource({ resource: users, scope: "admin" }),
       // \`hidden\` is read each time the menu renders: a getter follows the session.
       get hidden() {
         return !hasRole("ROLE_ADMIN")
@@ -294,7 +297,7 @@ function AuthenticationJwt() {
         { id: "alive", title: "Keeping the session alive" },
         { id: "scope", title: "Protecting a scope" },
         { id: "redirect", title: "Redirecting to sign in" },
-        { id: "roles", title: "Roles, flags and menu" },
+        { id: "roles", title: "Roles, permissions and menu" },
         { id: "sign-out", title: "Signing out" },
         { id: "server", title: "The API decides" },
       ]}
@@ -553,7 +556,7 @@ function AuthenticationJwt() {
         on the login form.
       </P>
 
-      <Callout kind="note" title="Needs react-resource-view 0.12">
+      <Callout kind="note" title="An optional peer dependency">
         <P>
           The sub-path imports <C>UnauthorizedError</C> and <C>ForbiddenError</C>{" "}
           from react-resource-view, an optional peer dependency of react-jwt-session:
@@ -609,15 +612,15 @@ function AuthenticationJwt() {
 
       <CodeBlock filename="routes/login.tsx">{LOGIN}</CodeBlock>
 
-      <H2 id="roles">Roles, flags and menu</H2>
+      <H2 id="roles">Roles, permissions and menu</H2>
 
       <P>
         The scope decides who gets in; the{" "}
-        <A href="/docs/resource-view/permissions">permission flags</A> decide what
-        each reader is offered inside. They are evaluated on render, so they cannot
-        wait for a request. They do not need to: <C>hasRole(role)</C> reads the roles
-        of the stored JWT synchronously, and returns <C>false</C> once it has
-        expired.
+        <A href="/docs/resource-view/permissions">permissions</A> decide what
+        each reader is offered inside. They are asked per action and per row, so
+        they should not wait for a request — and they do not need to:{" "}
+        <C>hasRole(role)</C> reads the roles of the stored JWT synchronously, and
+        returns <C>false</C> once it has expired.
       </P>
 
       <P>
@@ -647,8 +650,8 @@ function AuthenticationJwt() {
         <P>
           A component of yours — a top bar, an avatar — can read{" "}
           <C>useUserContext()</C> for the <C>user</C> and its <C>hasRole</C>. The
-          plain <C>hasRole</C> exists for the places that are not components: flags
-          and menu entries, declared once, outside any render.
+          plain <C>hasRole</C> exists for the places that are not components:
+          permissions and menu entries, declared once, outside any render.
         </P>
       </Callout>
 

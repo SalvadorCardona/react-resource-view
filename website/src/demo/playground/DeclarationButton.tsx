@@ -20,10 +20,10 @@ export function DeclarationButton() {
 
   if (!declaration) return null
 
-  const variant = context.resource.view?.viewVariants?.find(
-    (candidate) => candidate.id === context.viewVariant
-  )
-  const layout = findLayoutLines(declaration.source, variant?.name)
+  const active =
+    context.layout ??
+    context.view?.layouts.find((candidate) => candidate.id === context.viewVariant)
+  const layout = findLayoutLines(declaration.source, active)
 
   return (
     <>
@@ -42,7 +42,7 @@ export function DeclarationButton() {
           <DeclarationPanel
             declaration={declaration}
             layout={layout}
-            layoutName={variant?.name}
+            layoutName={active?.label}
             onClose={() => setOpen(false)}
           />
         </Suspense>

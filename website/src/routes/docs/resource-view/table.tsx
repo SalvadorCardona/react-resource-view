@@ -22,51 +22,50 @@ export const Route = createFileRoute("/docs/resource-view/table")({
   component: TableAndCards,
 })
 
-const COLUMNS = `view: {
-  form: {
-    inputs: {
-      title:       { label: "Title" },      // column 1
-      author:      { label: "Author" },     // column 2
-      status:      { label: "Status" },     // column 3
-      workspace:   { generatedValue: true },// not a column
-    },
+const COLUMNS = `form: {
+  inputs: {
+    title:       { label: "Title" },      // column 1
+    author:      { label: "Author" },     // column 2
+    status:      { label: "Status" },     // column 3
+    workspace:   { generatedValue: true },// not a column
   },
-  viewVariants: [tableViewOptionFactory()],
+},
+views: {
+  list: { layouts: [layout.table()] },
 }`
 
-const PER_VARIANT = `viewVariants: [
+const PER_VARIANT = `layouts: [
   // The table shows everything…
-  tableViewOptionFactory({ form: fullForm }),
+  layout.table(),
   // …the cards, only what fits.
-  cardViewOptionFactory({ grid: 3, form: compactForm }),
+  layout.cards({ columns: 3, fields: ["title", "status"] }),
 ]`
 
-const CELL = `import { itemViewOptionFactory } from "react-resource-view"
+const CELL = `import { ItemTable, layout } from "react-resource-view"
 
-tableViewOptionFactory({
-  // One cell. \`formInput\` carries the field *and* its value for this row.
-  itemComponent: ({ formInput }) => {
-    if (formInput?.name !== "status") return <ItemTable formInput={formInput} />
-    return <StatusBadge value={formInput.value} />
+layout.table({
+  components: {
+    // One cell. \`formInput\` carries the field *and* its value for this row.
+    item: ({ formInput }) => {
+      if (formInput?.name !== "status") return <ItemTable formInput={formInput} />
+      return <StatusBadge value={formInput.value} />
+    },
   },
 })`
 
-const ROW_ACTIONS = `import { ActionList } from "react-data-form"
-
-tableViewOptionFactory({
-  behavior: {
-    // Read is not in the default — [update, delete] is. Put it back where
+const ROW_ACTIONS = `views: {
+  list: {
+    // Read is not in the default — ["update", "delete"] is. Put it back where
     // the detail view carries more than the row does.
-    rowActions: [ActionList.read, ActionList.update, ActionList.delete],
-  },
-})`
-
-const EXPORT = `views: {
-  [ActionList.list]: {
-    // A CSV export, produced by the API, honouring the current filters.
-    behavior: { canExport: true },
+    rowActions: ["read", "update", "delete"],
   },
 }`
+
+const EXPORT = `views: {
+  list: { pageSize: 50 },
+},
+// The CSV export is offered by default; restrict it like any other action.
+permissions: { export: () => isManager() },`
 
 function TableAndCards() {
   return (
@@ -90,8 +89,8 @@ function TableAndCards() {
 
       <P>
         There is no <C>columns</C> array. The table renders one column per field of
-        the <Term id="view">view</Term>'s <Term id="form">form</Term>, in declaration
-        order, skipping fields marked <C>generatedValue</C>. The header is the
+        the resource&apos;s <Term id="form">form</Term> — the root <C>form</C>, shared
+        by every <Term id="view">view</Term> — in declaration order, skipping fields marked <C>generatedValue</C>. The header is the
         field's <C>label</C>, passed through the translation dictionary.
       </P>
 
@@ -107,7 +106,9 @@ function TableAndCards() {
 
       <P>
         When the table wants more than the cards, give each{" "}
-        <Term id="view-variant">variant</Term> its own <C>form</C>:
+        <Term id="view-variant">layout</Term> its own <C>fields</C> — the columns,
+        or the lines of a card, in order. A layout&apos;s <C>form</C> adjusts the
+        fields themselves, merged over the resource&apos;s:
       </P>
 
       <CodeBlock>{PER_VARIANT}</CodeBlock>
@@ -117,8 +118,8 @@ function TableAndCards() {
       <P>
         A table cell is rendered by the same <Term id="controller">controller</Term>{" "}
         the form would use, so a row is editable where it stands — no modal, no
-        separate edit mode. A change writes through the{" "}
-        <Term id="repository">repository</Term> and the list refetches.
+        separate edit mode. A change is drawn at once and written through the{" "}
+        <Term id="repository">repository</Term>; a refusal puts the cell back.
       </P>
 
       <Demo label="Change a status in the table" wide>
@@ -134,7 +135,7 @@ function TableAndCards() {
 
       <P>
         At the end of every row sits a group of buttons. Which ones is a decision the
-        view takes, because it depends on what the row already does — a table editing
+        list takes, because it depends on what the row already does — a table editing
         its cells in place has little use for a button whose only job is to show the
         same fields again, and three buttons are three buttons' worth of width taken
         from the columns.
@@ -145,14 +146,14 @@ function TableAndCards() {
       <PropsTable
         rows={[
           {
-            name: "behavior.rowActions",
-            type: "ActionList[]",
-            default: "[update, delete]",
+            name: "views.list.rowActions",
+            type: '("read" | "update" | "delete")[]',
+            default: '["update", "delete"]',
             description: (
               <>
-                Declared on the list view, on a variant, or once for the application
-                through <C>defaultResource.views.list</C>. Order is the order the
-                buttons are drawn in.
+                Declared on the list view, or once for the application through{" "}
+                <C>configureResourceView({"{"} defaults {"}"})</C>. Order is the
+                order the buttons are drawn in.
               </>
             ),
           },
@@ -165,14 +166,14 @@ function TableAndCards() {
           the list does, which is exactly the case{" "}
           <A href="/docs/resource-view/forms">a read form of its own</A> describes.
           Permissions apply on top either way: an action listed here without the
-          matching <C>can*</C> renders nothing.
+          action refused by <C>permissions</C> renders nothing.
         </P>
       </Callout>
 
       <H2 id="cells">Rendering a cell yourself</H2>
 
       <P>
-        <C>itemComponent</C> renders one field of one row. It receives the{" "}
+        <C>components.item</C> renders one field of one row. It receives the{" "}
         <C>formInput</C> — the field description carrying this row's value — so it
         can decide by field name and fall back to the default for the rest.
       </P>
@@ -182,33 +183,33 @@ function TableAndCards() {
       <PropsTable
         rows={[
           {
-            name: "listComponent",
+            name: "components.list",
             type: "FC<{ rows, children }>",
             description: "Draws the whole collection. The table or the grid itself.",
           },
           {
-            name: "rowComponent",
+            name: "components.row",
             type: "FC<{ row, children }>",
             description: "Draws one record — a table row, a card.",
           },
           {
-            name: "itemComponent",
+            name: "components.item",
             type: "FC<{ formInput, children }>",
             description: "Draws one field of one record — a cell.",
           },
           {
-            name: "components.top / bottom",
+            name: "views.list.components.top / bottom",
             type: "FC",
             description:
               "Rendered above and below the list — a summary bar, a legend.",
           },
           {
-            name: "components.noResult",
+            name: "views.list.components.empty",
             type: "FC",
             description: "Replaces the empty state.",
           },
           {
-            name: "components.pagination",
+            name: "views.list.components.pagination",
             type: "FC",
             description: "Replaces the pager.",
           },
@@ -224,12 +225,12 @@ function TableAndCards() {
       <H2 id="cards">Cards</H2>
 
       <P>
-        <C>cardViewOptionFactory</C> takes one extra option, <C>grid</C>, the number
-        of cards per row. Four by default.
+        <C>layout.cards()</C> takes one extra option, <C>columns</C>, the number of
+        cards per row, from one to six. Four by default.
       </P>
 
       <Demo label="The same articles as cards" wide>
-        <ResourceDemo resource={articlesResource} variant="card" />
+        <ResourceDemo resource={articlesResource} variant="cards" />
       </Demo>
 
       <P>Cards read better than a table when:</P>
@@ -246,7 +247,8 @@ function TableAndCards() {
       <H2 id="pagination">Pagination and export</H2>
 
       <P>
-        <C>itemsPerPage</C> sets the page size — thirty by default — and the current
+        <C>views.list.pageSize</C> sets the page size — thirty by default — and the
+        current
         page travels in the URL alongside the filters, so a link to page four is a
         link to page four.
       </P>
@@ -254,8 +256,9 @@ function TableAndCards() {
       <CodeBlock>{EXPORT}</CodeBlock>
 
       <P>
-        <C>behavior.canExport</C> adds an export button. The export is produced by
-        the API in CSV and carries the filters currently applied, so what is
+        The export button is there unless <C>permissions.export</C> refuses it — on
+        a resource with a <C>path</C>, whose dialect knows how to ask for one. The
+        export is produced by the API in CSV and carries the filters currently applied, so what is
         downloaded is what is on screen.
       </P>
 

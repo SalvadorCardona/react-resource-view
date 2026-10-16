@@ -11,11 +11,11 @@ import { spotlightResource } from "@/demo/resources"
 export const Route = createFileRoute("/docs/resource-view/custom-variant")({
   head: () => ({
     meta: [
-      { title: "Create your own view variant — react-resource-view" },
+      { title: "Create your own layout — react-resource-view" },
       {
         name: "description",
         content:
-          "One command scaffolds a layout of your own: a single file, three components and a factory, ready to sit beside the built-in variants.",
+          "One command scaffolds a layout of your own: a single file, three components and a layout.custom() call, ready to sit beside the built-in layouts.",
       },
     ],
   }),
@@ -26,21 +26,21 @@ const COMMAND = `npx react-resource-view create-view-variant Heatmap --dir src/v
 
 const BARE = `npx react-resource-view create-view-variant`
 
-const SCAFFOLD = `// src/views/heatmapViewFactory.tsx — comments trimmed
+const SCAFFOLD = `// src/views/heatmapLayout.tsx — comments trimmed
 import { Flame } from "lucide-react"
 import {
-  createView,
   ItemRender,
+  layout,
   ListPagination,
   ListResourceViewButton,
-  useCurrentViewResourceContext,
+  useLayout,
   type ItemComponentPropsInterface,
+  type LayoutOptions,
   type ListComponentPropsInterface,
   type RowComponentPropsInterface,
-  type ViewInterface,
 } from "react-resource-view"
 
-export interface HeatmapViewInterface extends ViewInterface {
+export interface HeatmapOptions {
   dense?: boolean
 }
 
@@ -74,8 +74,7 @@ export function HeatmapRow({ row }: RowComponentPropsInterface) {
 
 /** The whole collection. */
 export function HeatmapList({ rows = [] }: ListComponentPropsInterface) {
-  const view = useCurrentViewResourceContext().view as HeatmapViewInterface
-  const dense = view?.dense ?? false
+  const { dense = false } = useLayout<HeatmapOptions>().options
 
   return (
     <div className="w-full">
@@ -94,41 +93,46 @@ export function HeatmapList({ rows = [] }: ListComponentPropsInterface) {
   )
 }
 
-export default function heatmapViewFactory(
-  args?: Partial<HeatmapViewInterface>
-): HeatmapViewInterface {
-  const defaultArgs: Partial<HeatmapViewInterface> = { dense: false, ...args }
-
-  return createView({
-    name: "Heatmap",
+export default function heatmapLayout(
+  { dense = false, components, ...options }: LayoutOptions & HeatmapOptions = {}
+) {
+  return layout.custom({
+    type: "heatmap",
+    label: "Heatmap",
     icon: Flame,
-    listComponent: HeatmapList,
-    rowComponent: HeatmapRow,
-    itemComponent: HeatmapItem,
-    ...defaultArgs,
+    ...options,
+    components: {
+      list: HeatmapList,
+      row: HeatmapRow,
+      item: HeatmapItem,
+      ...components,
+    },
+    options: { dense },
   })
 }`
 
-const DECLARING = `import { tableViewOptionFactory } from "react-resource-view"
-import heatmapViewFactory from "./views/heatmapViewFactory"
+const DECLARING = `import { layout } from "react-resource-view"
+import heatmapLayout from "./views/heatmapLayout"
 
-view: {
-  form: articleForm,
-  viewVariants: [
-    heatmapViewFactory(),      // the default: the first one listed
-    tableViewOptionFactory(),
-  ],
+form: articleForm,
+views: {
+  list: {
+    layouts: [
+      heatmapLayout(), // the default: the first one listed
+      layout.table(),
+    ],
+  },
 }`
 
-const OPTIONS = `// Anything the interface declares travels to the components…
-viewVariants: [heatmapViewFactory({ dense: true, itemsPerPage: 50 })]
+const OPTIONS = `// Its own options travel to the components…
+layouts: [heatmapLayout({ dense: true, fields: ["title", "status"] })]
 
-// …and is read back from the view, inside any of the three.
-const view = useCurrentViewResourceContext().view as HeatmapViewInterface
-const dense = view?.dense ?? false`
+// …and are read back with useLayout(), inside any of the three.
+const { dense = false } = useLayout<HeatmapOptions>().options`
 
-const RENAMING = `heatmapViewFactory()                     // id: "heatmap"
-heatmapViewFactory({ name: "Compact" })  // id: "compact"`
+const RENAMING = `heatmapLayout()                                    // id: "heatmap"
+heatmapLayout({ label: "Compact" })                // id: "heatmap" still
+heatmapLayout({ id: "compact", label: "Compact" }) // id: "compact"`
 
 function CustomVariant() {
   return (
@@ -146,8 +150,8 @@ function CustomVariant() {
         The <A href="/docs/resource-view/layouts">seven layouts</A> that ship with
         the package answer the usual questions about a collection. The eighth is
         yours — a heatmap, a map, a gallery, whatever your records actually look
-        like — and it is one file: three components and a factory over{" "}
-        <C>createView</C>.
+        like — and it is one file: three components and a{" "}
+        <C>layout.custom()</C> call.
       </P>
 
       <P>Rather than copy that file from this page, have the command write it.</P>
@@ -175,7 +179,7 @@ function CustomVariant() {
             description: (
               <>
                 What the layout switcher shows — <C>Heatmap</C>,{" "}
-                <C>"Kanban board"</C>. The file, the components and the id are all
+                <C>"Kanban board"</C>. The file, the components and the type are all
                 derived from it.
               </>
             ),
@@ -231,49 +235,50 @@ function CustomVariant() {
         lands — the point is that you then delete what it drew and draw your own:
       </P>
 
-      <CodeBlock filename="src/views/heatmapViewFactory.tsx">{SCAFFOLD}</CodeBlock>
+      <CodeBlock filename="src/views/heatmapLayout.tsx">{SCAFFOLD}</CodeBlock>
 
       <H2 id="slots">The three slots</H2>
 
       <P>
-        A <Term id="view-variant">variant</Term> is a <Term id="view">view</Term>,
-        and a view renders through three components:
+        A <Term id="view-variant">layout</Term> draws a list through three
+        components, given in <C>components</C>:
       </P>
 
       <Ul>
         <Li>
-          <C>listComponent</C> draws the collection. It receives <C>rows</C> — the
+          <C>list</C> draws the collection. It receives <C>rows</C> — the
           current page, filtered and paginated.
         </Li>
         <Li>
-          <C>rowComponent</C> draws one record. It receives <C>row</C>, whose{" "}
+          <C>row</C> draws one record. It receives <C>row</C>, whose{" "}
           <C>data</C> is the record as the API answered it.
         </Li>
         <Li>
-          <C>itemComponent</C> draws one field. It receives <C>formInput</C>, and{" "}
+          <C>item</C> draws one field. It receives <C>formInput</C>, and{" "}
           <C>ItemRender</C> is the package's own renderer for a value — booleans,
           relations, arrays and objects included.
         </Li>
       </Ul>
 
       <P>
-        Everything else is one hook away: <C>useCurrentViewResourceContext</C> gives
-        the <Term id="resource">resource</Term>, the loading state, the filters, the
-        selection and the view itself, and <C>useList</C> gives the rows with the
-        mutations that go with them.
+        Everything else is one hook away: <C>useLayout</C> gives the layout and its
+        own options, <C>useCurrentViewResourceContext</C> the{" "}
+        <Term id="resource">resource</Term>, the loading state, the filters, the
+        selection and the <Term id="view">view</Term> itself, and <C>useList</C> the
+        rows with the mutations that go with them.
       </P>
 
       <H2 id="declaring">Declaring it</H2>
 
       <P>
-        A scaffolded variant is declared exactly like a built-in one — it is the
-        same kind of object:
+        A scaffolded layout is declared exactly like a built-in one — it is the same
+        kind of object:
       </P>
 
       <CodeBlock>{DECLARING}</CodeBlock>
 
       <P>
-        The list below runs a variant this command wrote. The file was not touched
+        The list below runs a layout this command wrote. The file was not touched
         afterwards, which is why it draws every field it finds: switch to the table
         to see the same records through a layout that ships with the package.
       </P>
@@ -285,19 +290,20 @@ function CustomVariant() {
       <H2 id="options">Options of your own</H2>
 
       <P>
-        The generated interface extends <C>ViewInterface</C>, so a variant of yours
-        takes both what a view accepts — <C>form</C>, <C>itemsPerPage</C>,{" "}
-        <C>behavior</C>, <C>components</C> — and whatever you add to it. The{" "}
-        <C>dense</C> option in the scaffold is there to be replaced:
+        The generated function takes <C>LayoutOptions</C> — what every layout
+        accepts: <C>id</C>, <C>label</C>, <C>icon</C>, <C>fields</C>,{" "}
+        <C>form</C>, <C>fullWidth</C>, <C>components</C> — and whatever you add to
+        its options interface. The <C>dense</C> option in the scaffold is there to
+        be replaced:
       </P>
 
       <CodeBlock>{OPTIONS}</CodeBlock>
 
-      <Callout kind="note" title="The name is the id">
+      <Callout kind="note" title="The type is the id">
         <P>
-          A variant is identified by the slug of its name, and that id is what
-          travels in the URL. Pass a <C>name</C> to change it — which you have to do
-          when the same factory appears twice in one <C>viewVariants</C>.
+          A layout is identified by its <C>type</C>, and that id is what travels in
+          the URL — a new <C>label</C> breaks no shared link. Pass an <C>id</C> when
+          the same layout appears twice in one <C>layouts</C>.
         </P>
         <CodeBlock>{RENAMING}</CodeBlock>
       </Callout>
@@ -306,10 +312,11 @@ function CustomVariant() {
 
       <P>
         There is no registration step and no plugin: the command saves you the
-        typing, nothing more. A variant written by hand is a <C>createView</C> call
-        with the components you already have, and the{" "}
+        typing, nothing more. A layout written by hand is a{" "}
+        <C>layout.custom({"{"} type, components {"}"})</C> call with the components
+        you already have, and the{" "}
         <A href="/docs/resource-view/layouts">layouts page</A> covers what every
-        variant shares with the seven built-in ones.
+        layout shares with the seven built-in ones.
       </P>
     </DocArticle>
   )

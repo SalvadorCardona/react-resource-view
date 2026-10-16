@@ -15,42 +15,50 @@ export const Route = createFileRoute("/docs/resource-view/filters")({
       {
         name: "description",
         content:
-          "The filter bar is a form with saveOnChange. Why defaultFilter exists and defaultValue would not do, and how filters travel in the URL.",
+          "The filter bar is a form with saveOnChange. Why filters.initial exists and defaultValue would not do, and how filters travel in the URL.",
       },
     ],
   }),
   component: Filters,
 })
 
-const FORM_FILTER = `view: {
-  formFilter: {
-    inputs: {
-      title:  { label: "Search a title" },
-      status: {
-        label: "Status",
-        controller: SelectInputController,
-        valueOptions: STATUSES,
+const FORM_FILTER = `views: {
+  list: {
+    filters: {
+      inputs: {
+        title:  { label: "Search a title" },
+        status: {
+          label: "Status",
+          controller: SelectInputController,
+          valueOptions: STATUSES,
+        },
       },
+      // Applied as long as the URL carries no filter of its own.
+      initial: { status: "published" },
     },
   },
-  // Applied as long as the URL carries no filter of its own.
-  defaultFilter: { status: "published" },
 }`
 
 const WRONG = `// ❌ Does not do what it looks like.
-formFilter: {
+filters: {
   inputs: { status: { label: "Status", defaultValue: "published" } },
 }`
 
 const RIGHT = `// ✅ Goes out with the first request *and* pre-fills the form.
-formFilter: { inputs: { status: { label: "Status" } } },
-defaultFilter: { status: "published" },`
+filters: {
+  inputs: { status: { label: "Status" } },
+  initial: { status: "published" },
+}`
 
-const INJECTED = `// A sub-view filtering on its parent, invisibly and permanently.
-onInitViewResource: (view, parent) => ({
-  ...view,
-  filter: { author: parent?.data?.["@id"] },
-})`
+const INJECTED = `// A tab filtering on its parent, invisibly and permanently.
+tabs: {
+  items: [
+    {
+      resource: articles,
+      filter: ({ item }) => ({ author: item["@id"] }),
+    },
+  ],
+}`
 
 const USE_FILTER = `import { useListViewContext } from "react-resource-view"
 
@@ -70,7 +78,7 @@ function Filters() {
     <DocArticle
       toc={[
         { id: "form-filter", title: "The filter bar is a form" },
-        { id: "default-filter", title: "defaultFilter, and why not defaultValue" },
+        { id: "default-filter", title: "filters.initial, and why not defaultValue" },
         { id: "url", title: "Filters in the URL" },
         { id: "injected", title: "Filters the reader cannot clear" },
         { id: "driving", title: "Driving the filter yourself" },
@@ -79,7 +87,7 @@ function Filters() {
       <H2 id="form-filter">The filter bar is a form</H2>
 
       <P>
-        There is no filter DSL. <C>formFilter</C> is an ordinary{" "}
+        There is no filter DSL. <C>views.list.filters</C> is an ordinary{" "}
         <A href="/docs/form/fields">form description</A>, built with{" "}
         <C>saveOnChange</C> so that editing it fires a request rather than waiting
         for a submit. Every <Term id="controller">controller</Term> in the catalogue
@@ -94,16 +102,16 @@ function Filters() {
 
       <P>
         The values are cleaned of empties and merged into the collection request
-        after <C>preGetCollection</C> has run, so a hook cannot overwrite what the
+        after <C>hooks.beforeList</C> has run, so a hook cannot overwrite what the
         reader typed.
       </P>
 
-      <H2 id="default-filter">defaultFilter, and why not defaultValue</H2>
+      <H2 id="default-filter">filters.initial, and why not defaultValue</H2>
 
       <P>
         A list that should open showing only published articles needs the filter to
         be in the <em>first</em> request. That is the whole reason{" "}
-        <C>defaultFilter</C> exists as a separate key.
+        <C>initial</C> exists as a separate key.
       </P>
 
       <CodeBlock>{WRONG}</CodeBlock>
@@ -119,7 +127,7 @@ function Filters() {
 
       <Callout kind="tip" title="It also defines the resting state">
         <P>
-          “Clear search” resets to <C>defaultFilter</C>, not to nothing. And a field
+          “Clear search” resets to <C>filters.initial</C>, not to nothing. And a field
           whose value equals its default is not counted as a search, so the clear
           button is not offered permanently.
         </P>
@@ -148,7 +156,7 @@ function Filters() {
       <H2 id="injected">Filters the reader cannot clear</H2>
 
       <P>
-        A <Term id="sub-view">sub-view</Term> showing “this author's articles” is
+        A <Term id="sub-view">tab</Term> showing “this author's articles” is
         filtered by the parent, and that filter is not the reader's to remove —
         clearing it would show every author's articles inside a page about one of
         them.
@@ -189,7 +197,7 @@ function Filters() {
             type: "(filter?) => void",
             description: (
               <>
-                Back to <C>defaultFilter</C>, keeping injected filters.
+                Back to <C>filters.initial</C>, keeping injected filters.
               </>
             ),
           },

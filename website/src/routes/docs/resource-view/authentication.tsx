@@ -119,7 +119,7 @@ export function forgetSession() {
 }
 
 /**
- * Synchronous, for the flags evaluated on render. The scope's authorization
+ * Synchronous, for the permissions asked on every render. The scope's authorization
  * has awaited loadSession() before any view of the scope renders, so the
  * session is already there when this is read.
  */
@@ -145,16 +145,19 @@ const FLAGS = `import { hasRole } from "../session"
 
 export const articles = createViewResource("articles", {
   path: "/api/articles",
-  canRead: true,
-  canCreate: () => hasRole("editor") || hasRole("admin"),
-  canUpdate: () => hasRole("editor") || hasRole("admin"),
-  canDelete: () => hasRole("admin"),
+  // Everything is allowed by default: only the restrictions are written.
+  permissions: {
+    create: () => hasRole("editor") || hasRole("admin"),
+    update: () => hasRole("editor") || hasRole("admin"),
+    delete: () => hasRole("admin"),
+  },
 })`
 
 const MENU = `menu: [
-  createItemMenuWithResource({ resource: articles }),
+  articles,
   {
-    ...createItemMenuWithResource({ resource: users }),
+    // An entry of its own, to add a getter: it names the scope its link leads to.
+    ...createItemMenuWithResource({ resource: users, scope: "admin" }),
     // \`hidden\` is read each time the menu renders: a getter follows the session.
     get hidden() {
       return !hasRole("admin")
@@ -212,7 +215,7 @@ function Authentication() {
         { id: "client", title: "Better Auth: the client" },
         { id: "scope", title: "Protecting a scope" },
         { id: "redirect", title: "Redirecting to sign in" },
-        { id: "roles", title: "Roles, flags and menu" },
+        { id: "roles", title: "Roles, permissions and menu" },
         { id: "sign-out", title: "Signing out" },
         { id: "server", title: "The API decides" },
         { id: "other", title: "Other providers" },
@@ -383,14 +386,14 @@ function Authentication() {
         ]}
       />
 
-      <H2 id="roles">Roles, flags and menu</H2>
+      <H2 id="roles">Roles, permissions and menu</H2>
 
       <P>
         The scope decides who gets in; the{" "}
-        <A href="/docs/resource-view/permissions">permission flags</A> decide what
-        each reader is offered inside. They are evaluated on render, so they cannot
-        wait for a request — and they should not each ask for the session again.
-        Load it once, keep it, and read it synchronously:
+        <A href="/docs/resource-view/permissions">permissions</A> decide what
+        each reader is offered inside. They may answer asynchronously, but they are
+        asked per action and per row, so they should not each ask for the session
+        again. Load it once, keep it, and read it synchronously:
       </P>
 
       <CodeBlock filename="session.ts" lang="ts">
@@ -421,7 +424,7 @@ function Authentication() {
         <P>
           A component of yours — a top bar, an avatar — can call{" "}
           <C>authClient.useSession()</C>. The module above exists for the places
-          that are not components: flags and menu entries, declared once, outside
+          that are not components: permissions and menu entries, declared once, outside
           any render.
         </P>
       </Callout>
@@ -442,7 +445,7 @@ function Authentication() {
           <C>authClient.signOut()</C> ends the session on the server.
         </Li>
         <Li>
-          <C>forgetSession()</C> drops the copy the flags read.
+          <C>forgetSession()</C> drops the copy the permissions read.
         </Li>
         <Li>
           <C>recheckAuthorization()</C> hides the scope behind its fallback and

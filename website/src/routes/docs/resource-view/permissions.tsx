@@ -12,7 +12,7 @@ export const Route = createFileRoute("/docs/resource-view/permissions")({
       {
         name: "description",
         content:
-          "Five permission flags, evaluated on render, and a creation limit that can render a fallback instead of the button.",
+          "One permissions object — everything allowed by default, rules per record, asynchronous answers — and a creation quota that can render a fallback instead of the button.",
       },
     ],
   }),
@@ -20,41 +20,50 @@ export const Route = createFileRoute("/docs/resource-view/permissions")({
 })
 
 const FLAGS = `// hasRole() reads a session loaded once — see Authentication.
-createViewResource("articles", {
+createViewResource<Article>("articles", {
   path: "/api/articles",
 
-  // A boolean, or a function evaluated on every render.
-  canRead: true,
-  canCreate: () => hasRole("editor"),
-  canUpdate: () => hasRole("editor"),
-  canDelete: () => hasRole("admin"),
+  // Everything is allowed by default: only the restrictions are written.
+  // A boolean, or a function of the record — which may answer with a promise.
+  permissions: {
+    create: () => hasRole("editor"),
+    update: ({ item }) => hasRole("editor") && item?.status !== "archived",
+    delete: () => hasRole("admin"),
+  },
 })`
 
-const DENIED = `// ⚠️ No permission declared at all → nothing is offered.
-createViewResource("articles", { path: "/api/articles" })
-// The list renders, but there is no create button, no edit and no delete.`
+const SHORTHANDS = `permissions: "readonly"                  // list, read and export
+permissions: ["list", "read", "update"]  // those, and nothing else
+permissions: { export: false }           // everything but the CSV export`
 
-const LIMIT = `import type { LimitInterface } from "react-resource-view"
+const IN_COMPONENT = `import { usePermission } from "react-resource-view"
+
+function ArchiveButton({ article }: { article: Article }) {
+  // false while an asynchronous permission is still answering.
+  const canUpdate = usePermission("update", article)
+  return canUpdate ? <button onClick={() => archive(article)}>Archive</button> : null
+}`
+
+const LIMIT = `import { createViewResource, getCollectionTotal } from "react-resource-view"
 
 createViewResource("projects", {
   path: "/api/projects",
-  canCreate: true,
-  limit: {
-    // Synchronous: count what the context already holds.
-    getLimit: (context) => ({
-      current: context.data?.totalItems ?? 0,
+  quota: {
+    // Synchronous: count what the context already holds, whatever the dialect.
+    get: (context) => ({
+      current: getCollectionTotal(context.data, context.resource) ?? 0,
       max: subscription.plan === "free" ? 3 : Infinity,
     }),
     // Rendered in place of the create button once current >= max.
-    fallback: ({ limit }) => (
-      <UpgradePrompt used={limit.current} allowed={limit.max} />
+    fallback: ({ quota }) => (
+      <UpgradePrompt used={quota.current} allowed={quota.max} />
     ),
   },
 })`
 
-const ASYNC_LIMIT = `limit: {
+const ASYNC_LIMIT = `quota: {
   // Or asynchronous: a quota only the API knows.
-  getLimit: async () => {
+  get: async () => {
     const { data } = await api.get("/quota/projects")
     return { current: data.used, max: data.allowed }
   },
@@ -76,19 +85,21 @@ function Permissions() {
   return (
     <DocArticle
       toc={[
-        { id: "flags", title: "Five flags" },
-        { id: "default-deny", title: "Undeclared means denied" },
+        { id: "flags", title: "One permissions object" },
+        { id: "default-allow", title: "Allowed by default" },
         { id: "limit", title: "Creation quotas" },
         { id: "scope", title: "Authorising a whole scope" },
         { id: "server", title: "This is not security" },
       ]}
     >
-      <H2 id="flags">Five flags</H2>
+      <H2 id="flags">One permissions object</H2>
 
       <P>
-        Each maps to an action, and each is either a boolean or a function evaluated
-        on render — so a permission can follow a session that changes without
-        anything being re-declared.
+        Each key maps to an action — <C>list</C>, <C>read</C>, <C>create</C>,{" "}
+        <C>update</C>, <C>delete</C>, and the CSV <C>export</C> — and each is either a
+        boolean or a function. A function is told the record the action would apply
+        to, so a rule can be about one record; it may answer with a promise, and it
+        is asked again as the session changes, without anything being re-declared.
       </P>
 
       <CodeBlock>{FLAGS}</CodeBlock>
@@ -102,73 +113,87 @@ function Permissions() {
       <PropsTable
         rows={[
           {
-            name: "canRead",
-            type: "boolean | (() => boolean)",
+            name: "list",
+            type: "Permission",
             description: (
               <>
-                Covers both <C>read</C> and <C>list</C> — seeing a record and seeing
-                the collection are the same right.
+                The list and the way back to it. Refused, the list page draws the
+                forbidden fallback.
               </>
             ),
           },
           {
-            name: "canCreate",
-            type: "boolean | (() => boolean)",
+            name: "read",
+            type: "Permission",
+            description: "The read button, the read view, and a board's cards opening.",
+          },
+          {
+            name: "create",
+            type: "Permission",
             description: "The create button and the create view.",
           },
           {
-            name: "canUpdate",
-            type: "boolean | (() => boolean)",
+            name: "update",
+            type: "Permission",
             description: "The edit button, and editing in place in a table.",
           },
           {
-            name: "canDelete",
-            type: "boolean | (() => boolean)",
-            description: "The delete button and its confirmation.",
+            name: "delete",
+            type: "Permission",
+            description: "The delete button, its confirmation, and the bulk deletion.",
           },
           {
-            name: "canList",
-            type: "boolean | (() => boolean)",
-            description: (
-              <>
-                Carried on the <Term id="resource">resource</Term> for your own use —
-                the action check itself reads <C>canRead</C>.
-              </>
-            ),
+            name: "export",
+            type: "Permission",
+            description: "The CSV export button of the list.",
           },
         ]}
       />
 
       <P>
-        A denied action removes its button entirely rather than disabling it:{" "}
-        <C>ResourceViewButton</C> returns nothing. <C>permissionResource</C> is
-        exported, so a menu or a dashboard can ask the same question and stay
-        consistent.
+        <C>Permission</C> is <C>boolean</C> or{" "}
+        <C>({"{"} action, item, context {"}"}) =&gt; boolean | Promise&lt;boolean&gt;</C>
+        . The asynchronous answers are kept per action and record while a list is on
+        screen, so a list of fifty rows asks once per row. Three shorthands cover the
+        common cases:
       </P>
 
-      <H2 id="default-deny">Undeclared means denied</H2>
+      <CodeBlock>{SHORTHANDS}</CodeBlock>
 
-      <Callout kind="danger" title="This is the one that surprises people">
+      <P>
+        A refused action removes its button entirely rather than disabling it, and
+        protects its route: <C>/articles/update/42</C> typed by hand draws the
+        scope&apos;s <C>forbiddenFallback</C> instead of the form. A component of
+        yours asks the same question with <C>usePermission</C> — and{" "}
+        <C>permissionResource(resource, action, {"{"} item {"}"})</C> outside React —
+        so a menu or a dashboard stays consistent.
+      </P>
+
+      <CodeBlock>{IN_COMPONENT}</CodeBlock>
+
+      <H2 id="default-allow">Allowed by default</H2>
+
+      <Callout kind="note" title="Nothing declared, everything offered">
         <P>
-          An undeclared permission evaluates to <strong>false</strong>. A resource
-          with no flags renders its list and offers nothing else — no create, no
-          edit, no delete — and nothing errors to tell you why.
+          A resource that declares no <C>permissions</C> offers every action: the
+          list, the read and edit buttons, the create button, the delete
+          confirmation and the export. A resource meant to be read-only says so with{" "}
+          <C>permissions: &quot;readonly&quot;</C>.
         </P>
       </Callout>
 
-      <CodeBlock>{DENIED}</CodeBlock>
-
       <P>
-        Deny-by-default is the right way round for a package that renders write
-        actions, but it does mean the flags are part of a working declaration rather
-        than an optional extra. Every demo on this site sets all four.
+        Allow-by-default is the right way round for presentation: the interface only
+        decides what is offered, and the API is where access is enforced. A
+        declaration says only what it restricts, and a first resource works without
+        a single permission in it.
       </P>
 
       <H2 id="limit">Creation quotas</H2>
 
       <P>
-        A permission answers <em>may they</em>; a limit answers{" "}
-        <em>how many more</em>. <C>getLimit</C> receives the current context, so the
+        A permission answers <em>may they</em>; a quota answers{" "}
+        <em>how many more</em>. <C>quota.get</C> receives the current context, so the
         count can come from data already loaded rather than another request.
       </P>
 
@@ -179,8 +204,8 @@ function Permissions() {
       <PropsTable
         rows={[
           {
-            name: "getLimit",
-            type: "(context) => LimitState | Promise<LimitState>",
+            name: "get",
+            type: "(context) => QuotaState | Promise<QuotaState>",
             required: true,
             description: (
               <>
@@ -191,7 +216,7 @@ function Permissions() {
           },
           {
             name: "fallback",
-            type: "FC<{ limit: LimitState }>",
+            type: "FC<{ quota: QuotaState }>",
             description: (
               <>
                 Rendered instead of the create button once <C>current &gt;= max</C>.
@@ -208,12 +233,12 @@ function Permissions() {
           has no cap”.
         </Li>
         <Li>
-          A limit can also be injected at runtime through the{" "}
+          A quota can also be injected at runtime through the{" "}
           <Term id="view">view</Term> context, which is how a nested view's create
           button is driven by how many rows the parent has selected.
         </Li>
         <Li>
-          <C>useLimit</C> is exported, should a component of yours need to ask the
+          <C>useQuota</C> is exported, should a component of yours need to ask the
           same question.
         </Li>
       </Ul>
@@ -221,9 +246,9 @@ function Permissions() {
       <H2 id="scope">Authorising a whole scope</H2>
 
       <P>
-        Per-resource flags are about buttons. Whether a reader may be in this part of
-        the application at all is a <A href="/docs/resource-view/scopes">scope</A>{" "}
-        question.
+        Per-resource permissions are about actions. Whether a reader may be in this
+        part of the application at all is a{" "}
+        <A href="/docs/resource-view/scopes">scope</A> question.
       </P>
 
       <CodeBlock>{SCOPE_AUTH}</CodeBlock>
@@ -242,9 +267,9 @@ function Permissions() {
 
       <Callout kind="warning" title="Everything here is presentation">
         <P>
-          These flags decide what is <em>offered</em>. They run in the browser, where
-          anyone can change them. The API is what decides what is <em>allowed</em>,
-          and it has to enforce the same rules independently.
+          These permissions decide what is <em>offered</em>. They run in the browser,
+          where anyone can change them. The API is what decides what is{" "}
+          <em>allowed</em>, and it has to enforce the same rules independently.
         </P>
         <P>
           Their real job is to stop the reader being shown an action that will be

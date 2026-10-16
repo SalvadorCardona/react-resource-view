@@ -23,16 +23,11 @@ export const Route = createFileRoute("/docs/resource-view/")({
 })
 
 const DECLARATION = `import {
-  ActionList,
   DatePickerInputController,
   NumberInputController,
   SelectInputController,
 } from "react-data-form"
-import {
-  cardViewOptionFactory,
-  createViewResource,
-  tableViewOptionFactory,
-} from "react-resource-view"
+import { createViewResource, layout } from "react-resource-view"
 
 const CATEGORIES = [
   { label: "Forms", value: "Forms" },
@@ -51,40 +46,39 @@ const STATUSES = [
 export const articles = createViewResource("articles", {
   name: "Articles",
   path: "/api/articles",
-  view: {
-    // The fields are the form *and* the table's columns.
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        category: {
-          label: "Category",
-          controller: SelectInputController,
-          valueOptions: CATEGORIES,
-        },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: STATUSES,
-        },
-        readingTime: { label: "Minutes", controller: NumberInputController },
-        publishedAt: { label: "Published on", controller: DatePickerInputController },
+  // The fields are the form *and* the table's columns.
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      category: {
+        label: "Category",
+        controller: SelectInputController,
+        valueOptions: CATEGORIES,
       },
-    },
-    formFilter: {
-      inputs: {
-        title: { label: "Search a title" },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: STATUSES,
-        },
+      status: {
+        label: "Status",
+        controller: SelectInputController,
+        valueOptions: STATUSES,
       },
+      readingTime: { label: "Minutes", controller: NumberInputController },
+      publishedAt: { label: "Published on", controller: DatePickerInputController },
     },
-    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory({ grid: 3 })],
   },
   views: {
-    [ActionList.list]: { name: "Articles" },
+    list: {
+      filters: {
+        inputs: {
+          title: { label: "Search a title" },
+          status: {
+            label: "Status",
+            controller: SelectInputController,
+            valueOptions: STATUSES,
+          },
+        },
+      },
+      layouts: [layout.table(), layout.cards({ columns: 3 })],
+    },
   },
 })`
 
@@ -141,7 +135,7 @@ function ViewIntroduction() {
         what they ask for need not be the same when creating as when editing, which is{" "}
         <A href="/docs/resource-view/forms">a form per action</A>. A layout the
         package does not ship is one command away —{" "}
-        <A href="/docs/resource-view/custom-variant">create your own view variant</A>
+        <A href="/docs/resource-view/custom-variant">create your own layout</A>
         .
       </P>
 
@@ -232,11 +226,11 @@ function ViewIntroduction() {
           {
             to: "/docs/resource-view/layouts",
             title: "Choosing a layout",
-            body: "Seven variants over one collection, switched by the reader.",
+            body: "Seven layouts over one collection, switched by the reader.",
           },
           {
             to: "/docs/resource-view/custom-variant",
-            title: "Create your own view variant",
+            title: "Create your own layout",
             body: "One command writes the eighth layout: a single file, yours to draw.",
           },
           {

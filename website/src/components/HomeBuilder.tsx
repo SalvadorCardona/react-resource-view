@@ -14,9 +14,8 @@ import {
   type ValueOptionInterface,
 } from "react-data-form"
 import {
-  cardViewOptionFactory,
   createViewResource,
-  tableViewOptionFactory,
+  layout,
   ViewResourceContextProvider,
 } from "react-resource-view"
 import { Check, Code2, Eye, RotateCcw, Table2 } from "lucide-react"
@@ -272,7 +271,9 @@ function buildSnippet(state: BuilderState): string {
   lines.push("")
   lines.push("// …and the columns the list draws. Same object, no second description.")
   lines.push('createViewResource("articles", {')
-  lines.push("  view: { form: articleForm, viewVariants: [tableViewOptionFactory()] },")
+  lines.push('  path: "/api/articles",')
+  lines.push("  form: articleForm,")
+  lines.push("  views: { list: { layouts: [layout.table()] } },")
   lines.push("})")
 
   return lines.join("\n")
@@ -289,28 +290,21 @@ function buildSnippet(state: BuilderState): string {
 function buildResource(form: FormInterface) {
   return createViewResource<Article>(HOME_ARTICLES_ID, {
     name: "Articles",
-    scope: "home",
-    canRead: true,
-    canCreate: true,
-    canUpdate: true,
-    canDelete: true,
-    view: {
-      name: "Articles",
-      form,
-      viewVariants: [
-        tableViewOptionFactory(),
-        cardViewOptionFactory({ grid: 2, rowComponent: ArticleRow }),
-      ],
-    },
+    // The landing page runs on the browser's storage, seeded like the
+    // documentation's demos: there is no server behind it.
+    storage: "local",
+    form,
     views: {
-      [ActionList.list]: { name: "Articles" },
-      // The builder is the page; nothing it opens may leave it.
-      [ActionList.create]: {
-        name: "New article",
-        behavior: { openIn: "popup" },
+      list: {
+        layouts: [
+          layout.table(),
+          layout.cards({ columns: 2, components: { row: ArticleRow } }),
+        ],
       },
-      [ActionList.update]: { behavior: { openIn: "popup" } },
-      [ActionList.read]: { behavior: { openIn: "popup" } },
+      // The builder is the page; nothing it opens may leave it.
+      create: { title: "New article", open: "dialog" },
+      update: { open: "dialog" },
+      read: { open: "dialog" },
     },
   })
 }

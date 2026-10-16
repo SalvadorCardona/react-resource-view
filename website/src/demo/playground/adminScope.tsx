@@ -1,11 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { Blocks, BookOpen, Bug, Github, Newspaper, ShoppingBag } from "lucide-react"
 import { ActionList } from "react-data-form"
-import {
-  createAdminLayout,
-  createItemMenuWithResource,
-  type ScopeInterface,
-} from "react-resource-view"
+import { createAdminLayout, type ScopeInterface } from "react-resource-view"
 import { DeclarationButton } from "@/demo/playground/DeclarationButton"
 import {
   commentsResource,
@@ -41,36 +37,6 @@ function BuilderLink() {
 }
 
 /**
- * A "Need help?" block pinned at the bottom of the sidebar — on a phone, a
- * last entry of the bottom bar opening the same links in a drawer. Absolute
- * URLs, so each one opens in a new tab and the playground stays where it was.
- *
- * Spread rather than written out in `createAdminLayout`: `footerMenu` arrived
- * in react-resource-view 0.12, and a spread keeps this scope compiling against
- * whichever release the site is installed on.
- */
-const HELP_FOOTER = {
-  footerMenuTitle: "Need help?",
-  footerMenu: [
-    {
-      name: "Documentation",
-      icon: BookOpen,
-      href: "https://cardona.digital/react-resource-view/docs/resource-view/admin-layout",
-    },
-    {
-      name: "GitHub",
-      icon: Github,
-      href: "https://github.com/SalvadorCardona/react-resource-view",
-    },
-    {
-      name: "Report an issue",
-      icon: Bug,
-      href: "https://github.com/SalvadorCardona/react-resource-view/issues",
-    },
-  ],
-}
-
-/**
  * The back office of the playground: one area, nine resources, one menu.
  *
  * This is the whole administration. There is no screen written by hand
@@ -78,7 +44,7 @@ const HELP_FOOTER = {
  * delete confirmations all come from the declarations in `resources/`, and
  * everything around them is `AdminLayout` — the package's ready-made admin
  * template, configured in a line and fed by the menu below. The overview is
- * the one exception, and it is a resource too, with a `viewComponent` of its
+ * the one exception, and it is a resource too, with a `components.view` of its
  * own instead of a list.
  *
  * The scope is loaded lazily by the playground, which is the point of a scope
@@ -91,7 +57,7 @@ export const adminScope: ScopeInterface = {
   resources: [
     overviewResource,
     usersResource,
-      companiesResource,
+    companiesResource,
     postsResource,
     commentsResource,
     newslettersResource,
@@ -106,7 +72,28 @@ export const adminScope: ScopeInterface = {
         <BuilderLink />
       </>
     ),
-    ...HELP_FOOTER,
+    // A "Need help?" block pinned at the bottom of the sidebar — on a phone, a
+    // last entry of the bottom bar opening the same links in a drawer.
+    // Absolute URLs, so each one opens in a new tab and the playground stays
+    // where it was.
+    footerMenuTitle: "Need help?",
+    footerMenu: [
+      {
+        name: "Documentation",
+        icon: BookOpen,
+        href: "https://cardona.digital/react-resource-view/docs/resource-view/admin-layout",
+      },
+      {
+        name: "GitHub",
+        icon: Github,
+        href: "https://github.com/SalvadorCardona/react-resource-view",
+      },
+      {
+        name: "Report an issue",
+        icon: Bug,
+        href: "https://github.com/SalvadorCardona/react-resource-view/issues",
+      },
+    ],
   }),
   // Where the scope opens when the URL names it and nothing else.
   defaultViewResourceContextParams: {
@@ -117,27 +104,24 @@ export const adminScope: ScopeInterface = {
   // sidebar on desktop and for its bottom bar on narrow screens. Each entry is
   // built from its resource, so a label, an icon and a link are declared once.
   menu: [
-    createItemMenuWithResource({ resource: overviewResource }),
-    createItemMenuWithResource({ resource: usersResource }),
-    createItemMenuWithResource({ resource: companiesResource }),
-    createItemMenuWithResource({ resource: tasksResource }),
+    overviewResource,
+    usersResource,
+    companiesResource,
+    tasksResource,
     {
       name: "Blog",
       icon: Newspaper,
       items: [
-        createItemMenuWithResource({ resource: postsResource }),
-        createItemMenuWithResource({ resource: commentsResource }),
+        postsResource,
+        commentsResource,
         // The other thing the roastery writes: the email builder's records.
-        createItemMenuWithResource({ resource: newslettersResource }),
+        newslettersResource,
       ],
     },
     {
       name: "Catalogue",
       icon: ShoppingBag,
-      items: [
-        createItemMenuWithResource({ resource: productsResource }),
-        createItemMenuWithResource({ resource: ordersResource }),
-      ],
+      items: [productsResource, ordersResource],
     },
   ],
 }

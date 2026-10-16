@@ -1,19 +1,9 @@
 import {
-  ActionList,
   DatePickerInputController,
   NumberInputController,
   SelectInputController,
 } from "react-data-form"
-import {
-  calendarViewOptionFactory,
-  cardViewOptionFactory,
-  columnViewOptionFactory,
-  createViewResource,
-  itemViewOptionFactory,
-  splitViewFactory,
-  tableViewOptionFactory,
-  timelineViewOptionFactory,
-} from "react-resource-view"
+import { createViewResource, layout } from "react-resource-view"
 import { Newspaper } from "lucide-react"
 import { ArticleRow } from "@/demo/ArticleRow"
 import {
@@ -27,15 +17,20 @@ import {
   type Article,
   type Session,
 } from "@/demo/data"
-import spotlightViewFactory from "@/demo/spotlightViewFactory"
+import spotlightLayout from "@/demo/spotlightLayout"
 
 /**
  * The two resources every view demo on this site is built on.
  *
  * They are declared once, at module scope, because `createViewResource` writes
  * into the shared resource registry: declaring the same IRI twice from two
- * pages would register it twice. Each page then picks a `viewVariant` instead
- * of declaring a resource of its own.
+ * pages would register it twice. Each page then picks a layout instead of
+ * declaring a resource of its own.
+ *
+ * None of them has a `path`: they read and write the browser's storage, which
+ * `seedDemoData` fills, so every demo runs with no server behind it. Nor do
+ * they declare `permissions`: everything is allowed by default, and the demos
+ * want the whole CRUD surface.
  */
 
 /** The form that drives both the create/edit views and the table's columns. */
@@ -59,7 +54,7 @@ const articleForm = {
   },
 }
 
-const articleFilter = {
+const articleFilters = {
   inputs: {
     title: { label: "Search a title" },
     status: {
@@ -71,52 +66,41 @@ const articleFilter = {
 }
 
 /** The five layouts an article reads in without a date to place it on. */
-function articleViewVariants() {
+function articleLayouts() {
   return [
-    tableViewOptionFactory(),
+    layout.table(),
     // The four layouts below draw a whole record rather than a row of cells,
     // so they take a row component instead of falling back to the raw dump.
-    cardViewOptionFactory({ grid: 3, rowComponent: ArticleRow }),
-    itemViewOptionFactory({ rowComponent: ArticleRow }),
-    columnViewOptionFactory({
-      rowComponent: ArticleRow,
-      identifierKey: "status",
-      identifierKeyList: ARTICLE_STATUSES,
+    layout.cards({ columns: 3, components: { row: ArticleRow } }),
+    layout.items({ components: { row: ArticleRow } }),
+    layout.board({
+      groupBy: "status",
+      columns: ARTICLE_STATUSES,
+      components: { row: ArticleRow },
     }),
-    splitViewFactory({ rowComponent: ArticleRow, redirectReadToList: true }),
+    layout.split({ readInList: true, components: { row: ArticleRow } }),
   ]
 }
 
 export const articlesResource = createViewResource<Article>(ARTICLES_ID, {
   name: "Articles",
-  scope: "docs",
-  // Permissions are opt-in: an undeclared one denies, and the button for it is
-  // simply not rendered. The demos want the whole CRUD surface.
-  canRead: true,
-  canCreate: true,
-  canUpdate: true,
-  canDelete: true,
-  view: {
-    name: "Articles",
-    // A list has no separate column description: the table renders one column
-    // per field of this form, which is also the form the create and edit views
-    // use. One description, four screens.
-    form: articleForm,
-    formFilter: articleFilter,
-    viewVariants: articleViewVariants(),
-  },
+  storage: "local",
+  // A list has no separate column description: the table renders one column
+  // per field of this form, which is also the form the create and edit views
+  // use. One description, four screens.
+  form: articleForm,
   views: {
-    [ActionList.list]: { name: "Articles" },
+    list: {
+      filters: articleFilters,
+      layouts: articleLayouts(),
+    },
     // A demo sits inside a page of prose. Sending the reader to the playground
     // to edit a row would take the documentation off the screen, so both forms
     // open over the list instead — which is also the behaviour an application
     // embedding a view in a dashboard wants.
-    [ActionList.create]: {
-      name: "New article",
-      behavior: { openIn: "popup" },
-    },
-    [ActionList.update]: { behavior: { openIn: "popup" } },
-    [ActionList.read]: { behavior: { openIn: "popup" } },
+    create: { title: "New article", open: "dialog" },
+    update: { open: "dialog" },
+    read: { open: "dialog" },
   },
 })
 
@@ -134,49 +118,42 @@ const sessionForm = {
 
 export const sessionsResource = createViewResource<Session>(SESSIONS_ID, {
   name: "Sessions",
-  scope: "docs",
-  canRead: true,
-  canCreate: true,
-  canUpdate: true,
-  canDelete: true,
-  view: {
-    name: "Sessions",
-    form: sessionForm,
-    viewVariants: [
-      calendarViewOptionFactory({
-        name: "calendar",
-        mode: "week",
-        dateKey: "startAt",
-        endDateKey: "endAt",
-        titleKey: "title",
-        colorKey: "track",
-        hourStart: 8,
-        hourEnd: 18,
-      }),
-      timelineViewOptionFactory<Session>({
-        name: "timeline",
-        startDateKey: "startAt",
-        endDateKey: "endAt",
-        titleKey: "title",
-        groupKey: "room",
-        groupsLabel: "Rooms",
-        statusKey: "status",
-        daysToShow: 5,
-        showUnassigned: false,
-        colorByStatus: {
-          confirmed: "var(--color-view)",
-          hold: "var(--color-form)",
-        },
-      }),
-      tableViewOptionFactory(),
-    ],
-  },
-  // Same reasoning as the articles: a schedule embedded in a page of prose
-  // edits itself over the page, not somewhere else.
+  storage: "local",
+  form: sessionForm,
   views: {
-    [ActionList.create]: { behavior: { openIn: "popup" } },
-    [ActionList.update]: { behavior: { openIn: "popup" } },
-    [ActionList.read]: { behavior: { openIn: "popup" } },
+    list: {
+      layouts: [
+        layout.calendar({
+          mode: "week",
+          dateField: "startAt",
+          endDateField: "endAt",
+          titleField: "title",
+          colorField: "track",
+          hourStart: 8,
+          hourEnd: 18,
+        }),
+        layout.timeline<Session>({
+          startField: "startAt",
+          endField: "endAt",
+          titleField: "title",
+          groupBy: "room",
+          groupsLabel: "Rooms",
+          statusField: "status",
+          daysToShow: 5,
+          showUnassigned: false,
+          colorByStatus: {
+            confirmed: "var(--color-view)",
+            hold: "var(--color-form)",
+          },
+        }),
+        layout.table(),
+      ],
+    },
+    // Same reasoning as the articles: a schedule embedded in a page of prose
+    // edits itself over the page, not somewhere else.
+    create: { open: "dialog" },
+    update: { open: "dialog" },
+    read: { open: "dialog" },
   },
 })
 
@@ -192,51 +169,43 @@ export const galleryArticlesResource = createViewResource<Article>(
   GALLERY_ARTICLES_ID,
   {
     name: "Articles",
-    scope: "docs",
-    canRead: true,
-    canCreate: true,
-    canUpdate: true,
-    canDelete: true,
-    view: {
-      name: "Articles",
-      form: articleForm,
-      formFilter: articleFilter,
-      viewVariants: [
-        ...articleViewVariants(),
-        calendarViewOptionFactory({
-          name: "calendar",
-          // A writing window runs over days, which a week's hour grid would
-          // draw as one tall block: a month lays it out on the day it starts.
-          mode: "month",
-          dateKey: "writingStartAt",
-          endDateKey: "writingEndAt",
-          titleKey: "title",
-          colorKey: "categoryColor",
-        }),
-        // Who writes what, when.
-        timelineViewOptionFactory<Article>({
-          name: "timeline",
-          startDateKey: "writingStartAt",
-          endDateKey: "writingEndAt",
-          titleKey: "title",
-          groupKey: "author",
-          groupsLabel: "Authors",
-          statusKey: "status",
-          daysToShow: 14,
-          showUnassigned: false,
-          colorByStatus: {
-            draft: "var(--color-muted-foreground)",
-            review: "var(--color-form)",
-            published: "var(--color-view)",
-          },
-        }),
-      ],
-    },
+    storage: "local",
+    form: articleForm,
     views: {
-      [ActionList.list]: { name: "Articles" },
-      [ActionList.create]: { name: "New article", behavior: { openIn: "popup" } },
-      [ActionList.update]: { behavior: { openIn: "popup" } },
-      [ActionList.read]: { behavior: { openIn: "popup" } },
+      list: {
+        filters: articleFilters,
+        layouts: [
+          ...articleLayouts(),
+          layout.calendar({
+            // A writing window runs over days, which a week's hour grid would
+            // draw as one tall block: a month lays it out on the day it starts.
+            mode: "month",
+            dateField: "writingStartAt",
+            endDateField: "writingEndAt",
+            titleField: "title",
+            colorField: "categoryColor",
+          }),
+          // Who writes what, when.
+          layout.timeline<Article>({
+            startField: "writingStartAt",
+            endField: "writingEndAt",
+            titleField: "title",
+            groupBy: "author",
+            groupsLabel: "Authors",
+            statusField: "status",
+            daysToShow: 14,
+            showUnassigned: false,
+            colorByStatus: {
+              draft: "var(--color-muted-foreground)",
+              review: "var(--color-form)",
+              published: "var(--color-view)",
+            },
+          }),
+        ],
+      },
+      create: { title: "New article", open: "dialog" },
+      update: { open: "dialog" },
+      read: { open: "dialog" },
     },
   }
 )
@@ -244,29 +213,21 @@ export const galleryArticlesResource = createViewResource<Article>(
 /**
  * The same articles, with an eighth layout the package does not ship.
  *
- * `spotlightViewFactory.tsx` next to this file was not written by hand: it is
- * what `npx react-resource-view create-view-variant Spotlight` printed, kept as
- * it came out so the "your own variant" page can run the file it documents.
- * The layout lives on a resource of its own rather than on the shared articles,
- * so the other pages keep the five layouts they describe.
+ * `spotlightLayout.tsx` next to this file was not written by hand: it is what
+ * `npx react-resource-view create-view-variant Spotlight -i Sparkles` printed,
+ * kept as it came out so the "your own layout" page can run the file it
+ * documents. The layout lives on a resource of its own rather than on the
+ * shared articles, so the other pages keep the five layouts they describe.
  */
 export const spotlightResource = createViewResource<Article>(VARIANT_ARTICLES_ID, {
   name: "Articles",
-  scope: "docs",
-  canRead: true,
-  canCreate: true,
-  canUpdate: true,
-  canDelete: true,
-  view: {
-    name: "Articles",
-    form: articleForm,
-    viewVariants: [spotlightViewFactory(), tableViewOptionFactory()],
-  },
+  storage: "local",
+  form: articleForm,
   views: {
-    [ActionList.list]: { name: "Articles" },
-    [ActionList.create]: { name: "New article", behavior: { openIn: "popup" } },
-    [ActionList.update]: { behavior: { openIn: "popup" } },
-    [ActionList.read]: { behavior: { openIn: "popup" } },
+    list: { layouts: [spotlightLayout(), layout.table()] },
+    create: { title: "New article", open: "dialog" },
+    update: { open: "dialog" },
+    read: { open: "dialog" },
   },
 })
 
@@ -283,36 +244,31 @@ export const drawerArticlesResource = createViewResource<Article>(
   DRAWER_ARTICLES_ID,
   {
     name: "Articles",
-    scope: "docs",
     icon: Newspaper,
-    canRead: true,
-    canCreate: true,
-    canUpdate: true,
-    canDelete: true,
-    view: {
-      name: "Articles",
-      description: "Started in two fields, finished in six.",
-      form: articleForm,
-      viewVariants: [tableViewOptionFactory()],
-    },
+    storage: "local",
+    description: "Started in two fields, finished in six.",
+    form: articleForm,
     views: {
-      [ActionList.list]: { name: "Articles" },
+      list: { layouts: [layout.table()] },
       // Creating asks for what a draft cannot exist without; everything else
-      // is filled in later, from the edit form, which is the whole `articleForm`
-      // inherited from `view`.
-      [ActionList.create]: {
-        name: "New article",
-        behavior: { openIn: "drawer" },
+      // is filled in later, from the edit form, which is the whole
+      // `articleForm` declared at the root. The create form is merged over it,
+      // so it only says what it takes away.
+      create: {
+        title: "New article",
+        open: "drawer",
         form: {
           label: { title: "New article" },
           inputs: {
-            title: articleForm.inputs.title,
-            category: articleForm.inputs.category,
+            author: false,
+            status: false,
+            readingTime: false,
+            publishedAt: false,
           },
         },
       },
-      [ActionList.update]: { behavior: { openIn: "drawer" } },
-      [ActionList.read]: { behavior: { openIn: "drawer" } },
+      update: { open: "drawer" },
+      read: { open: "drawer" },
     },
   }
 )

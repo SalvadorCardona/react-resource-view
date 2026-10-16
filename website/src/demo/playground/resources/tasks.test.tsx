@@ -15,8 +15,7 @@ import { configureLibraries, PLAYGROUND_PATH } from "@/demo/setup"
 
 /**
  * The task board as a reader uses it: a card opens in a drawer the URL knows
- * about, and several cards move to another column at once. Needs
- * react-resource-view 0.15, where boards gained both.
+ * about, and several cards move to another column at once.
  */
 
 configureLibraries()
