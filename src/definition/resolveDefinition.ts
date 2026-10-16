@@ -14,6 +14,7 @@ import { mergeDefinition } from "@/definition/mergeDefinition"
 import { toForm } from "@/definition/toForm"
 import { derivedTitle } from "@/definition/validateDefinition"
 import { DefaultViewComponent } from "@/views/list/component/DefaultViewComponent"
+import { resolveOpen, type OpenFrame } from "@/open/open"
 
 export const ACTIONS = ["list", "read", "create", "update", "delete"] as const
 export type ActionName = (typeof ACTIONS)[number]
@@ -59,7 +60,9 @@ function resolveLayout(
   layout: Layout,
   viewForm: FormDefinition | undefined
 ): ResolvedLayout {
-  const form = layout.form ? mergeDefinition<FormDefinition>(viewForm, layout.form) : viewForm
+  const form = layout.form
+    ? mergeDefinition<FormDefinition>(viewForm, layout.form)
+    : viewForm
 
   return {
     ...layout,
@@ -101,12 +104,14 @@ function pickCommon(level: Record<string, any> | undefined): Record<string, any>
 /**
  * The five views of a resource: the library's defaults, then the application's
  * (`configureResourceView`), then the resource's root, then the action's own
- * options — each level merged deeply over the one before.
+ * options — each level merged deeply over the one before. `frames` are the
+ * frames registered by name, which `open: "accordion"` refers to.
  */
 export function resolveViews(
   definition: ResourceDefinition,
   defaults: ResourceDefaults | undefined,
-  name: string
+  name: string,
+  frames?: Record<string, OpenFrame>
 ): Record<ActionName, ResolvedView> {
   return Object.fromEntries(
     ACTIONS.map((action) => {
@@ -141,9 +146,12 @@ export function resolveViews(
         fullWidth: merged.fullWidth ?? false,
         className: merged.className,
         titleField: merged.titleField,
-        open: own.open ?? (action === "delete" ? "dialog" : "page"),
+        // The only place the frame of a view is decided: the button, the
+        // board's card, the route and the form all read this one.
+        open: resolveOpen(own.open, frames, action === "delete" ? "dialog" : "page"),
         expandable: own.expandable ?? (action === "read" || action === "update"),
-        optimistic: own.optimistic ?? definition.optimistic ?? defaults?.optimistic ?? true,
+        optimistic:
+          own.optimistic ?? definition.optimistic ?? defaults?.optimistic ?? true,
         afterSave: own.afterSave,
         form: toForm(form),
         components: {

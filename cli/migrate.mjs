@@ -22,7 +22,8 @@ import { extname, join, relative, resolve } from "node:path"
  */
 function readMigrations() {
   const url = new URL("../migrations/1.0.json", import.meta.url)
-  const path = url.protocol === "file:" ? url : join(process.cwd(), "migrations/1.0.json")
+  const path =
+    url.protocol === "file:" ? url : join(process.cwd(), "migrations/1.0.json")
   return JSON.parse(readFileSync(path, "utf8"))
 }
 
@@ -200,11 +201,15 @@ export function print(value, indent = "") {
       const items = value.items.map((item) => print(item, inner))
       const hasComments = value.items.some((item) => item.comments?.trim())
       const oneLine = `[${items.join(", ")}]`
-      if (!hasComments && !oneLine.includes("\n") && oneLine.length < 60) return oneLine
+      if (!hasComments && !oneLine.includes("\n") && oneLine.length < 60)
+        return oneLine
       return `[\n${items
         .map(
           (item, index) =>
-            printComments(value.items[index].comments ?? "", inner) + inner + item + ","
+            printComments(value.items[index].comments ?? "", inner) +
+            inner +
+            item +
+            ","
         )
         .join("\n")}\n${indent}]`
     }
@@ -227,7 +232,9 @@ export function print(value, indent = "") {
         if (oneLine.length < 70) return oneLine
       }
       return `{\n${printed
-        .map((entry) => printComments(entry.comments, inner) + inner + entry.body + ",")
+        .map(
+          (entry) => printComments(entry.comments, inner) + inner + entry.body + ","
+        )
         .join("\n")}\n${indent}}`
     }
     case "call":
@@ -247,14 +254,25 @@ export function print(value, indent = "") {
  * Rewrites one file. Returns the new text, whether it changed, and what is
  * left to do by hand.
  */
-export function transformSource(source, fileName, ts, { packages = [PACKAGE] } = {}) {
+export function transformSource(
+  source,
+  fileName,
+  ts,
+  { packages = [PACKAGE] } = {}
+) {
   const kind =
     fileName.endsWith(".tsx") || fileName.endsWith(".jsx")
       ? ts.ScriptKind.TSX
       : fileName.endsWith(".js") || fileName.endsWith(".mjs")
         ? ts.ScriptKind.JS
         : ts.ScriptKind.TS
-  const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, kind)
+  const file = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    kind
+  )
 
   const notes = []
   const scopes = []
@@ -283,6 +301,75 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     }
   }
   const fromPackage = (name) => imported.has(name)
+
+  /* ---------------------------------------------- shared board fragments */
+
+  /**
+   * `const BOARD = { behavior: { openRecordIn: "drawer" } }`, spread into a
+   * board of a declaration of this file: where its cards open goes to that
+   * declaration's `views.read.open`. Name of the constant → the value.
+   */
+  const fragmentOpens = new Map()
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue
+    for (const declaration of statement.declarationList.declarations) {
+      let initializer = declaration.initializer
+      if (initializer && ts.isAsExpression(initializer))
+        initializer = initializer.expression
+      if (!ts.isIdentifier(declaration.name) || !initializer) continue
+      if (!ts.isObjectLiteralExpression(initializer)) continue
+      const behavior = initializer.properties.find(
+        (property) =>
+          ts.isPropertyAssignment(property) &&
+          property.name.getText(file) === "behavior" &&
+          ts.isObjectLiteralExpression(property.initializer)
+      )
+      const openRecordIn = behavior?.initializer.properties.find(
+        (property) =>
+          ts.isPropertyAssignment(property) &&
+          property.name.getText(file) === "openRecordIn" &&
+          ts.isStringLiteral(property.initializer)
+      )
+      if (openRecordIn) {
+        const value = openRecordIn.initializer.text
+        fragmentOpens.set(
+          declaration.name.text,
+          JSON.stringify(OPEN_VALUES[value] ?? value)
+        )
+      }
+    }
+  }
+
+  /** The shared board fragments spread somewhere in `node`. */
+  const fragmentsSpreadIn = (node) => {
+    const found = []
+    const visit = (child) => {
+      if (
+        ts.isSpreadAssignment(child) &&
+        ts.isIdentifier(child.expression) &&
+        fragmentOpens.has(child.expression.text)
+      ) {
+        found.push(child.expression.text)
+      }
+      ts.forEachChild(child, visit)
+    }
+    visit(node)
+    return found
+  }
+
+  /** Spread into a declaration of this file, which takes their `openRecordIn`. */
+  const fragmentsInDeclarations = new Set()
+  const findDeclarations = (node) => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "createViewResource"
+    ) {
+      for (const name of fragmentsSpreadIn(node)) fragmentsInDeclarations.add(name)
+    }
+    ts.forEachChild(node, findDeclarations)
+  }
+  findDeclarations(file)
   const isFactory = (name) =>
     Boolean(FACTORIES[imported.get(name) ?? ""]) ||
     (!imported.size && Boolean(FACTORIES[name]))
@@ -320,7 +407,13 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       if (ts.isPropertyAssignment(property)) {
         const key = keyOf(property.name)
         if (key !== undefined) {
-          return { kind: "prop", key, node: property.initializer, comments, property }
+          return {
+            kind: "prop",
+            key,
+            node: property.initializer,
+            comments,
+            property,
+          }
         }
       }
       if (ts.isShorthandPropertyAssignment(property)) {
@@ -394,7 +487,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         .replace(/,([}\])])/g, "$1")
     const original = node.getText(file)
     const todos = (code) => (code.match(/TODO\(RV1-/g) ?? []).length
-    return squash(original) === squash(rewritten) && todos(rewritten) === todos(original)
+    return squash(original) === squash(rewritten) &&
+      todos(rewritten) === todos(original)
       ? original
       : rewritten
   }
@@ -431,6 +525,23 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       }
     }
 
+    // A board of a 1.0 preview built away from its resource: where its cards
+    // open belongs to the resource's `read` view, which is not here.
+    if (ts.isCallExpression(node) && !isInsideDeclaration(node)) {
+      const migrated = migrateBoardOpen(node)
+      if (migrated) {
+        const values = migrated.read.map(
+          (entry) => `${entry.key}: ${entry.value.value}`
+        )
+        note(
+          node,
+          "RV1-LAYOUT-013",
+          `a card opens the record's \`read\` view where that view opens: declare \`views: { read: { ${values.join(", ")} } }\` on the resource.`
+        )
+        return print(migrated.call, indentOf(node))
+      }
+    }
+
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
       const callee = node.expression.text
 
@@ -438,17 +549,20 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         const args = node.arguments.map((arg, index) =>
           index === 1 ? migrateDeclaration(arg, node) : valueOf(arg)
         )
-        return unlessSame(node, print(
-          {
-            kind: "call",
-            callee,
-            typeArguments: node.typeArguments
-              ? `<${node.typeArguments.map((type) => rewrite(type)).join(", ")}>`
-              : "",
-            args,
-          },
-          indentOf(node)
-        ))
+        return unlessSame(
+          node,
+          print(
+            {
+              kind: "call",
+              callee,
+              typeArguments: node.typeArguments
+                ? `<${node.typeArguments.map((type) => rewrite(type)).join(", ")}>`
+                : "",
+              args,
+            },
+            indentOf(node)
+          )
+        )
       }
 
       if (isFactory(callee)) {
@@ -494,7 +608,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
             ts.isArrayLiteralExpression(list) && ts.isPropertyAssignment(list.parent)
               ? keyOf(list.parent.name)
               : undefined
-          if (resource && entries.length === 1 && (owner === "menu" || owner === "items")) {
+          if (
+            resource &&
+            entries.length === 1 &&
+            (owner === "menu" || owner === "items")
+          ) {
             return rewrite(resource.node)
           }
         }
@@ -524,12 +642,16 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       const keys = migrated.entries.map((entry) => entry.key)
       const isBoard =
         keys.length > 0 &&
-        keys.every((key) => ["openRecord", "selectable", "bulkActions"].includes(key))
+        keys.every((key) => ["selectable", "bulkActions"].includes(key))
       if (isBoard) {
         used.types.add("BoardLayoutOptions")
         return `${node.name.getText(file)}: Partial<BoardLayoutOptions> = ${print(migrated, indentOf(node))}`
       }
-      note(node, "RV1-BEHAV-001", "the type annotation described the 0.x `behavior`: it was removed.")
+      note(
+        node,
+        "RV1-BEHAV-001",
+        "the type annotation described the 0.x `behavior`: it was removed."
+      )
       return `${node.name.getText(file)} = ${print(migrated, indentOf(node))}`
     }
 
@@ -549,7 +671,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         property.initializer.properties.length > 0 &&
         property.initializer.properties.every(
           (option) =>
-            ts.isPropertyAssignment(option) && BEHAVIOR_KEYS.includes(keyOf(option.name))
+            ts.isPropertyAssignment(option) &&
+            BEHAVIOR_KEYS.includes(keyOf(option.name))
         )
     ) && !isInsideDeclaration(literal)
 
@@ -575,17 +698,58 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     return prop(entry.key, valueOf(entry.node), entry.comments)
   }
 
+  /**
+   * `layout.board({ openRecord, expandable })`, as the 1.0 previews wrote it:
+   * a card now opens the record's `read` view where that view says. The call
+   * without them, and what goes to `views.read`.
+   */
+  function migrateBoardOpen(call) {
+    if (!ts.isCallExpression(call)) return undefined
+    if (call.expression.getText(file) !== "layout.board") return undefined
+    const [argument] = call.arguments
+    if (!isObjectLiteral(argument)) return undefined
+    const entries = entriesOf(argument)
+    const moved = entries.filter(
+      (entry) =>
+        entry.kind === "prop" &&
+        (entry.key === "openRecord" || entry.key === "expandable")
+    )
+    if (!moved.length) return undefined
+
+    return {
+      call: {
+        kind: "call",
+        callee: "layout.board",
+        typeArguments: call.typeArguments
+          ? `<${call.typeArguments.map((type) => rewrite(type)).join(", ")}>`
+          : "",
+        args: [
+          object(entries.filter((entry) => !moved.includes(entry)).map(asEntry)),
+        ],
+      },
+      read: moved.map((entry) =>
+        prop(
+          entry.key === "openRecord" ? "open" : "expandable",
+          valueOf(entry.node),
+          entry.comments
+        )
+      ),
+    }
+  }
+
   /* ------------------------------------------------------- behaviors */
 
   /**
    * The options of a `behavior` object, each told where it goes:
-   * `{ view: [...], list: [...], resource: [...], board: [...] }`.
+   * `{ view: [...], list: [...], resource: [...], board: [...], read: [...] }`.
    */
   function splitBehavior(literal) {
-    const out = { view: [], list: [], resource: [], board: [], todo: [] }
+    const out = { view: [], list: [], resource: [], board: [], read: [], todo: [] }
     const entries = entriesOf(literal)
     const byKey = Object.fromEntries(
-      entries.filter((entry) => entry.kind === "prop").map((entry) => [entry.key, entry])
+      entries
+        .filter((entry) => entry.kind === "prop")
+        .map((entry) => [entry.key, entry])
     )
 
     // What follows a save: one value, the three 0.x options having been
@@ -608,7 +772,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           : text(`${rewrite(close.node)} ? "close" : "stay"`)
     }
     if ([redirect, refresh, close].filter(Boolean).length > 1) {
-      note(literal, "RV1-BEHAV-003", "several after-save options combined: check `afterSave`.")
+      note(
+        literal,
+        "RV1-BEHAV-003",
+        "several after-save options combined: check `afterSave`."
+      )
     }
 
     // Closing is what a dialog or a drawer does after a save anyway.
@@ -653,10 +821,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           out.resource.push(prop("realtime", valueOf(entry.node), comments))
           break
         case "openRecordIn": {
+          // A card opens the record's `read` view where that view opens.
           const value = literalValue(entry.node)
-          out.board.push(
+          out.read.push(
             prop(
-              "openRecord",
+              "open",
               typeof value === "string"
                 ? quoted(OPEN_VALUES[value] ?? value)
                 : valueOf(entry.node),
@@ -715,29 +884,58 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     // `as const` keeps it the value `open` expects — unless the whole object
     // already is.
     const isConst =
-      ts.isAsExpression(literal.parent) && literal.parent.type.getText(file) === "const"
+      ts.isAsExpression(literal.parent) &&
+      literal.parent.type.getText(file) === "const"
     const isTypeScript = kind !== ts.ScriptKind.JS
     const narrow = (entry) =>
       !isConst &&
       !annotated &&
       isTypeScript &&
-      ["open", "openRecord", "afterSave"].includes(entry.key) &&
+      ["open", "afterSave"].includes(entry.key) &&
       entry.value.kind === "text" &&
       entry.value.value.startsWith('"')
         ? prop(entry.key, text(`${entry.value.value} as const`), entry.comments)
         : entry
     for (const entry of entriesOf(literal)) {
-      if (entry.kind === "prop" && entry.key === "behavior" && isObjectLiteral(entry.node)) {
+      if (
+        entry.kind === "prop" &&
+        entry.key === "behavior" &&
+        isObjectLiteral(entry.node)
+      ) {
         const split = splitBehavior(entry.node)
         const first = [...split.view, ...split.list, ...split.board].map(narrow)
         if (first[0]) first[0].comments = entry.comments + first[0].comments
         result.push(...first)
+        const owner =
+          literal.parent && ts.isAsExpression(literal.parent)
+            ? literal.parent.parent
+            : literal.parent
+        const handled =
+          owner &&
+          ts.isVariableDeclaration(owner) &&
+          ts.isIdentifier(owner.name) &&
+          fragmentsInDeclarations.has(owner.name.text)
+        for (const moved of handled ? [] : split.read) {
+          note(
+            entry.node,
+            "RV1-BEHAV-006",
+            `a card opens the record's \`read\` view where that view opens: declare \`views: { read: { open: ${moved.value.value} } }\` on the resource.`
+          )
+        }
         for (const moved of split.resource) {
-          note(entry.node, "RV1-BEHAV-005", "an option of the resource itself (`realtime`, `permissions.export`) cannot be set from a shared fragment.")
+          note(
+            entry.node,
+            "RV1-BEHAV-005",
+            "an option of the resource itself (`realtime`, `permissions.export`) cannot be set from a shared fragment."
+          )
           if (moved.kind === "prop") result.push(moved)
         }
         for (const left of split.todo) {
-          note(left.node, "RV1-BEHAV-001", `\`${left.key ?? "…"}\` has no 1.0 equivalent here.`)
+          note(
+            left.node,
+            "RV1-BEHAV-001",
+            `\`${left.key ?? "…"}\` has no 1.0 equivalent here.`
+          )
         }
         continue
       }
@@ -759,7 +957,12 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       : ""
 
     if (!argument) {
-      return { kind: "call", callee: `layout.${factory.type}`, typeArguments, args: [] }
+      return {
+        kind: "call",
+        callee: `layout.${factory.type}`,
+        typeArguments,
+        args: [],
+      }
     }
     if (!isObjectLiteral(argument)) {
       note(call, factory.id, "options passed as a variable: rename them by hand.")
@@ -799,8 +1002,24 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       if (key === "behavior" && isObjectLiteral(node)) {
         const split = splitBehavior(node)
         entries.push(...split.board)
-        for (const left of [...split.view, ...split.list, ...split.resource, ...split.todo]) {
-          note(node, "RV1-BEHAV-001", `\`${left.key ?? "an option"}\` of a layout's behavior has no effect there and was dropped.`)
+        for (const moved of split.read) {
+          note(
+            node,
+            "RV1-BEHAV-006",
+            `a card opens the record's \`read\` view where that view opens: declare \`views: { read: { open: ${moved.value.value} } }\` on the resource.`
+          )
+        }
+        for (const left of [
+          ...split.view,
+          ...split.list,
+          ...split.resource,
+          ...split.todo,
+        ]) {
+          note(
+            node,
+            "RV1-BEHAV-001",
+            `\`${left.key ?? "an option"}\` of a layout's behavior has no effect there and was dropped.`
+          )
         }
         continue
       }
@@ -834,12 +1053,20 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
   function migrateCreateView(call) {
     const [argument] = call.arguments
     if (!isObjectLiteral(argument)) {
-      note(call, "RV1-LAYOUT-012", "`createView` with arguments built elsewhere: rewrite it with `layout.custom({ type, components, options })`.")
+      note(
+        call,
+        "RV1-LAYOUT-012",
+        "`createView` with arguments built elsewhere: rewrite it with `layout.custom({ type, components, options })`."
+      )
       return undefined
     }
     const entries = entriesOf(argument)
     if (entries.some((entry) => entry.kind !== "prop")) {
-      note(call, "RV1-LAYOUT-012", "`createView` spreads its options: rewrite it with `layout.custom({ type, components, options })`, and read the options with `useLayout().options`.")
+      note(
+        call,
+        "RV1-LAYOUT-012",
+        "`createView` spreads its options: rewrite it with `layout.custom({ type, components, options })`, and read the options with `useLayout().options`."
+      )
       return undefined
     }
 
@@ -853,8 +1080,14 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       if (key === "name") {
         const name = literalValue(value)
         type = typeof name === "string" ? slug(name) : undefined
-        const label = typeof name === "string" ? name.charAt(0).toUpperCase() + name.slice(1) : undefined
-        if (type === undefined || label !== type.charAt(0).toUpperCase() + type.slice(1)) {
+        const label =
+          typeof name === "string"
+            ? name.charAt(0).toUpperCase() + name.slice(1)
+            : undefined
+        if (
+          type === undefined ||
+          label !== type.charAt(0).toUpperCase() + type.slice(1)
+        ) {
           result.push(prop("label", valueOf(value), comments))
         }
       } else if (LAYOUT_COMPONENT_KEYS[key]) {
@@ -866,7 +1099,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       }
     }
     if (!type) {
-      note(call, "RV1-LAYOUT-012", "`createView` without a literal `name`: give the layout a `type`.")
+      note(
+        call,
+        "RV1-LAYOUT-012",
+        "`createView` without a literal `name`: give the layout a `type`."
+      )
       type = "custom"
     }
 
@@ -906,7 +1143,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
 
     // `inputs: FIELDS`, with `const FIELDS = { … }` in the same file: its keys
     // are the columns, and the inputs stay as they were written.
-    const declared = inputs && ts.isIdentifier(inputs.node) && constantObject(inputs.node.text)
+    const declared =
+      inputs && ts.isIdentifier(inputs.node) && constantObject(inputs.node.text)
     if (declared) {
       const keys = entriesOf(declared)
       if (keys.every((entry) => entry.kind === "prop")) {
@@ -918,12 +1156,22 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     }
 
     if (!inputs || !isObjectLiteral(inputs.node)) {
-      note(literal, "RV1-LAYOUT-011", "a layout's form is now merged over the resource's: list its fields with `fields: [\"…\"]`.")
+      note(
+        literal,
+        "RV1-LAYOUT-011",
+        "a layout's form is now merged over the resource's: list its fields with `fields: [\"…\"]`."
+      )
       return [
         prop(
           "form",
           object(entries.map(asEntry)),
-          [comments, todo("RV1-LAYOUT-011", "a layout's form is now merged over the resource's — list the columns with `fields`")]
+          [
+            comments,
+            todo(
+              "RV1-LAYOUT-011",
+              "a layout's form is now merged over the resource's — list the columns with `fields`"
+            ),
+          ]
             .filter(Boolean)
             .join("\n")
         ),
@@ -939,7 +1187,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         entry.kind !== "prop" ||
         !(
           entry.shorthand ||
-          (ts.isPropertyAccessExpression(entry.node) && entry.node.name.text === entry.key)
+          (ts.isPropertyAccessExpression(entry.node) &&
+            entry.node.name.text === entry.key)
         )
     )
 
@@ -950,7 +1199,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           "form",
           object([
             ...rest.map(asEntry),
-            ...(sayMore.length ? [prop("inputs", object(sayMore.map(asEntry)))] : []),
+            ...(sayMore.length
+              ? [prop("inputs", object(sayMore.map(asEntry)))]
+              : []),
           ])
         )
       )
@@ -1017,12 +1268,32 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           if (isObjectLiteral(node)) {
             for (const labelEntry of entriesOf(node)) {
               if (labelEntry.kind === "prop" && ACTIONS.includes(labelEntry.key)) {
-                addTo(labelEntry.key, prop("buttonLabel", valueOf(labelEntry.node), labelEntry.comments), "label")
+                addTo(
+                  labelEntry.key,
+                  prop("buttonLabel", valueOf(labelEntry.node), labelEntry.comments),
+                  "label"
+                )
               }
             }
           } else {
-            note(node, "RV1-VIEW-004", "`label` is a variable: write `views.<action>.buttonLabel` by hand.")
-            out.own.push(prop("label", valueOf(node), [comments, todo("RV1-VIEW-004", "write views.<action>.buttonLabel for each action")].join("\n")))
+            note(
+              node,
+              "RV1-VIEW-004",
+              "`label` is a variable: write `views.<action>.buttonLabel` by hand."
+            )
+            out.own.push(
+              prop(
+                "label",
+                valueOf(node),
+                [
+                  comments,
+                  todo(
+                    "RV1-VIEW-004",
+                    "write views.<action>.buttonLabel for each action"
+                  ),
+                ].join("\n")
+              )
+            )
           }
           break
         case "behavior":
@@ -1033,17 +1304,31 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
             if (action === "root") {
               // A root behaviour reached every action.
               for (const moved of split.view) {
-                const targets = moved.key === "afterSave" ? ["create", "update"] : ["read", "create", "update", "delete"]
+                const targets =
+                  moved.key === "afterSave"
+                    ? ["create", "update"]
+                    : ["read", "create", "update", "delete"]
                 for (const target of targets) addTo(target, moved, "behavior")
               }
             } else if (action === "list") {
               for (const moved of split.view) {
-                note(node, "RV1-BEHAV-001", `\`${moved.key}\` has no effect on a list and was dropped.`)
+                note(
+                  node,
+                  "RV1-BEHAV-001",
+                  `\`${moved.key}\` has no effect on a list and was dropped.`
+                )
               }
             } else {
               for (const moved of split.view) {
-                if (moved.key === "afterSave" && !["create", "update"].includes(action)) {
-                  note(node, "RV1-BEHAV-003", `\`afterSave\` has no effect on \`${action}\` and was dropped.`)
+                if (
+                  moved.key === "afterSave" &&
+                  !["create", "update"].includes(action)
+                ) {
+                  note(
+                    node,
+                    "RV1-BEHAV-003",
+                    `\`afterSave\` has no effect on \`${action}\` and was dropped.`
+                  )
                   continue
                 }
                 out.own.push(moved)
@@ -1051,16 +1336,34 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
             }
             out.list.push(...split.list)
             out.board.push(...split.board)
+            for (const moved of split.read) addTo("read", moved, "openRecordIn")
             for (const moved of split.resource) {
               if (moved.export) out.exportPermission = moved.export
               else out.resource.push(moved)
             }
             for (const left of split.todo) {
-              note(left.node ?? node, "RV1-BEHAV-001", `\`${left.key ?? "…"}\` of \`behavior\` has no 1.0 equivalent.`)
+              note(
+                left.node ?? node,
+                "RV1-BEHAV-001",
+                `\`${left.key ?? "…"}\` of \`behavior\` has no 1.0 equivalent.`
+              )
             }
           } else {
-            note(node, "RV1-BEHAV-001", "`behavior` is a variable: flatten it by hand.")
-            out.own.push(prop(key, valueOf(node), [comments, todo("RV1-BEHAV-001", "behavior is gone — see MIGRATION-1.0.md")].join("\n")))
+            note(
+              node,
+              "RV1-BEHAV-001",
+              "`behavior` is a variable: flatten it by hand."
+            )
+            out.own.push(
+              prop(
+                key,
+                valueOf(node),
+                [
+                  comments,
+                  todo("RV1-BEHAV-001", "behavior is gone — see MIGRATION-1.0.md"),
+                ].join("\n")
+              )
+            )
           }
           break
         case "viewComponent":
@@ -1070,7 +1373,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         case "listComponent":
         case "rowComponent":
         case "itemComponent":
-          out.layoutComponents.push(prop(COMPONENT_KEYS[key], valueOf(node), comments))
+          out.layoutComponents.push(
+            prop(COMPONENT_KEYS[key], valueOf(node), comments)
+          )
           break
         case "components":
           if (isObjectLiteral(node)) {
@@ -1078,7 +1383,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
             entriesOf(node).forEach((component, index) => {
               if (index === 0) component.comments = comments + component.comments
               if (component.kind === "prop" && component.key === "noResult") {
-                out.components.push(prop("empty", valueOf(component.node), component.comments))
+                out.components.push(
+                  prop("empty", valueOf(component.node), component.comments)
+                )
               } else {
                 out.components.push(asEntry(component))
               }
@@ -1102,11 +1409,36 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           }
           break
         case "defaultFilter":
-          out.filters.push({ ...prop("initial", valueOf(node), comments), source: "initial" })
+          out.filters.push({
+            ...prop("initial", valueOf(node), comments),
+            source: "initial",
+          })
           break
         case "viewVariants":
           out.layouts = { node, comments }
           break
+        case "layouts": {
+          // A 1.0 preview's board saying where its cards open.
+          let changed = false
+          const items =
+            action === "list" && ts.isArrayLiteralExpression(node)
+              ? node.elements.map((element) => {
+                  const migrated = migrateBoardOpen(element)
+                  if (!migrated) return withComments(valueOf(element), element)
+                  changed = true
+                  for (const moved of migrated.read) {
+                    addTo(
+                      "read",
+                      moved,
+                      moved.key === "open" ? "openRecord" : "expandable"
+                    )
+                  }
+                  return withComments(migrated.call, element)
+                })
+              : []
+          out.own.push(prop(key, changed ? array(items) : valueOf(node), comments))
+          break
+        }
         case "titleKey":
           out.own.push(prop("titleField", valueOf(node), comments))
           break
@@ -1119,12 +1451,32 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
             const tabs = migrateTabs(node)
             addTo("read", prop("tabs", tabs, comments), "subViewResource")
             addTo("update", prop("tabs", tabs), "subViewResource")
-            note(node, "RV1-TABS-001", "`view.subViewResource` reached every action: its tabs now sit on `views.read` and `views.update` — remove one if it had no use there.")
+            note(
+              node,
+              "RV1-TABS-001",
+              "`view.subViewResource` reached every action: its tabs now sit on `views.read` and `views.update` — remove one if it had no use there."
+            )
           } else if (action === "read" || action === "update") {
             out.own.push(prop("tabs", migrateTabs(node), comments))
           } else {
-            note(node, "RV1-TABS-001", `tabs are declared on \`views.read\` or \`views.update\`, not on ${action === "root" ? "`view`" : `\`views.${action}\``}.`)
-            out.own.push(prop("tabs", migrateTabs(node), [comments, todo("RV1-TABS-001", "move these tabs to views.read or views.update")].join("\n")))
+            note(
+              node,
+              "RV1-TABS-001",
+              `tabs are declared on \`views.read\` or \`views.update\`, not on ${action === "root" ? "`view`" : `\`views.${action}\``}.`
+            )
+            out.own.push(
+              prop(
+                "tabs",
+                migrateTabs(node),
+                [
+                  comments,
+                  todo(
+                    "RV1-TABS-001",
+                    "move these tabs to views.read or views.update"
+                  ),
+                ].join("\n")
+              )
+            )
           }
           break
         default:
@@ -1137,7 +1489,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
 
   function migrateTabs(node) {
     if (!isObjectLiteral(node)) {
-      note(node, "RV1-TABS-001", "`subViewResource` is a variable: rename `list` → `items` by hand.")
+      note(
+        node,
+        "RV1-TABS-001",
+        "`subViewResource` is a variable: rename `list` → `items` by hand."
+      )
       return valueOf(node)
     }
     const entries = entriesOf(node).map((entry) => {
@@ -1146,7 +1502,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       if (entry.key === "list" && ts.isArrayLiteralExpression(entry.node)) {
         return prop(
           "items",
-          array(entry.node.elements.map((tab) => withComments(migrateTab(tab), tab))),
+          array(
+            entry.node.elements.map((tab) => withComments(migrateTab(tab), tab))
+          ),
           entry.comments
         )
       }
@@ -1182,7 +1540,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
   }
 
   const actionValue = (node) =>
-    ts.isPropertyAccessExpression(node) && node.expression.getText(file) === "ActionList"
+    ts.isPropertyAccessExpression(node) &&
+    node.expression.getText(file) === "ActionList"
       ? quoted(node.name.text)
       : valueOf(node)
 
@@ -1192,15 +1551,34 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
    */
   function migrateOnInit(fn, comments) {
     const fallback = () => {
-      note(fn, "RV1-TABS-003", "`onInitViewResource` could not be read: write `filter: ({ item }) => …` and `defaultData: ({ item }) => …` by hand.")
-      return [prop("onInitViewResource", valueOf(fn), [comments, todo("RV1-TABS-003", "replace with filter: ({ item }) => … and defaultData: ({ item }) => …")].join("\n"))]
+      note(
+        fn,
+        "RV1-TABS-003",
+        "`onInitViewResource` could not be read: write `filter: ({ item }) => …` and `defaultData: ({ item }) => …` by hand."
+      )
+      return [
+        prop(
+          "onInitViewResource",
+          valueOf(fn),
+          [
+            comments,
+            todo(
+              "RV1-TABS-003",
+              "replace with filter: ({ item }) => … and defaultData: ({ item }) => …"
+            ),
+          ].join("\n")
+        ),
+      ]
     }
 
     if (!(ts.isArrowFunction(fn) || ts.isFunctionExpression(fn))) return fallback()
     const [viewParam, parentParam] = fn.parameters
     if (!viewParam || !ts.isIdentifier(viewParam.name)) return fallback()
     const viewName = viewParam.name.text
-    const parentName = parentParam && ts.isIdentifier(parentParam.name) ? parentParam.name.text : undefined
+    const parentName =
+      parentParam && ts.isIdentifier(parentParam.name)
+        ? parentParam.name.text
+        : undefined
 
     let statements = []
     let returned
@@ -1219,7 +1597,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     for (const statement of statements) {
       if (!ts.isVariableStatement(statement)) return fallback()
       for (const declaration of statement.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name) || !declaration.initializer) return fallback()
+        if (!ts.isIdentifier(declaration.name) || !declaration.initializer)
+          return fallback()
         constants.set(declaration.name.text, declaration.initializer)
       }
     }
@@ -1227,7 +1606,10 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     const parts = {}
     for (const entry of entriesOf(returned)) {
       if (entry.kind === "spread" && entry.node.getText(file) === viewName) continue
-      if (entry.kind === "prop" && (entry.key === "filter" || entry.key === "defaultData")) {
+      if (
+        entry.kind === "prop" &&
+        (entry.key === "filter" || entry.key === "defaultData")
+      ) {
         parts[entry.key] = entry
         continue
       }
@@ -1242,8 +1624,13 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         "item"
       )
     }
-    const usesParent = (code) => parentName && new RegExp(`\\b${parentName}\\b`).test(code)
-    if (new RegExp(`\\b${viewName}\\b`).test(statements.map((s) => s.getText(file)).join("\n"))) {
+    const usesParent = (code) =>
+      parentName && new RegExp(`\\b${parentName}\\b`).test(code)
+    if (
+      new RegExp(`\\b${viewName}\\b`).test(
+        statements.map((s) => s.getText(file)).join("\n")
+      )
+    ) {
       return fallback()
     }
 
@@ -1251,17 +1638,34 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       // Each constant used by the value is written in its place.
       const replacements = []
       const visit = (current) => {
-        if (ts.isShorthandPropertyAssignment(current) && constants.has(current.name.text)) {
-          replacements.push([current.getStart(file) - node.getStart(file), current.end - node.getStart(file), `${current.name.text}: ${constants.get(current.name.text).getText(file)}`])
+        if (
+          ts.isShorthandPropertyAssignment(current) &&
+          constants.has(current.name.text)
+        ) {
+          replacements.push([
+            current.getStart(file) - node.getStart(file),
+            current.end - node.getStart(file),
+            `${current.name.text}: ${constants.get(current.name.text).getText(file)}`,
+          ])
           return
         }
         if (
           ts.isIdentifier(current) &&
           constants.has(current.text) &&
-          !(ts.isPropertyAccessExpression(current.parent) && current.parent.name === current) &&
-          !(ts.isPropertyAssignment(current.parent) && current.parent.name === current)
+          !(
+            ts.isPropertyAccessExpression(current.parent) &&
+            current.parent.name === current
+          ) &&
+          !(
+            ts.isPropertyAssignment(current.parent) &&
+            current.parent.name === current
+          )
         ) {
-          replacements.push([current.getStart(file) - node.getStart(file), current.end - node.getStart(file), `(${constants.get(current.text).getText(file)})`])
+          replacements.push([
+            current.getStart(file) - node.getStart(file),
+            current.end - node.getStart(file),
+            `(${constants.get(current.text).getText(file)})`,
+          ])
           return
         }
         ts.forEachChild(current, visit)
@@ -1282,7 +1686,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       const params = usesParent(body) ? `{ item, ${parentName} }` : "{ item }"
       const isObject = ts.isObjectLiteralExpression(part.node)
       result.push(
-        prop(key, text(`(${params}) => ${isObject ? `(${body})` : body}`), result.length ? part.comments : comments + part.comments)
+        prop(
+          key,
+          text(`(${params}) => ${isObject ? `(${body})` : body}`),
+          result.length ? part.comments : comments + part.comments
+        )
       )
     }
     return result
@@ -1297,7 +1705,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
   function migrateDefinitionObject(literal, { defaults = false, call } = {}) {
     const entries = entriesOf(literal)
     const byKey = Object.fromEntries(
-      entries.filter((entry) => entry.kind === "prop").map((entry) => [entry.key, entry])
+      entries
+        .filter((entry) => entry.kind === "prop")
+        .map((entry) => [entry.key, entry])
     )
     const root = []
     const views = Object.fromEntries(ACTIONS.map((action) => [action, []]))
@@ -1318,7 +1728,9 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     const resourceName =
       (byKey.name && literalValue(byKey.name.node)) ??
       (byKey.view && isObjectLiteral(byKey.view.node)
-        ? literalValue(entriesOf(byKey.view.node).find((entry) => entry.key === "name")?.node)
+        ? literalValue(
+            entriesOf(byKey.view.node).find((entry) => entry.key === "name")?.node
+          )
         : undefined)
     // The title 1.0 derives anyway: written out, it would only repeat it.
     const derivedTitle = (action) => {
@@ -1331,21 +1743,42 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     const hasRepository = REPOSITORY_KEYS.every((key) => byKey[key])
 
     // ------------------------------------------------- the old `view`
-    const rootView = byKey.view && isObjectLiteral(byKey.view.node) ? migrateView(byKey.view.node, "root") : undefined
+    const rootView =
+      byKey.view && isObjectLiteral(byKey.view.node)
+        ? migrateView(byKey.view.node, "root")
+        : undefined
     if (byKey.view && !rootView) {
-      note(byKey.view.node, "RV1-VIEW-001", "`view` is a variable: spread its common keys at the root and its list keys in `views.list` by hand.")
+      note(
+        byKey.view.node,
+        "RV1-VIEW-001",
+        "`view` is a variable: spread its common keys at the root and its list keys in `views.list` by hand."
+      )
     }
 
     // ------------------------------------------------- the old `views`
     const viewParts = {}
     if (byKey.views && isObjectLiteral(byKey.views.node)) {
       for (const entry of entriesOf(byKey.views.node)) {
-        if (entry.kind === "prop" && ACTIONS.includes(entry.key) && isObjectLiteral(entry.node)) {
-          viewParts[entry.key] = { ...migrateView(entry.node, entry.key), comments: entry.comments }
+        if (
+          entry.kind === "prop" &&
+          ACTIONS.includes(entry.key) &&
+          isObjectLiteral(entry.node)
+        ) {
+          viewParts[entry.key] = {
+            ...migrateView(entry.node, entry.key),
+            comments: entry.comments,
+          }
         } else if (entry.kind === "prop" && ACTIONS.includes(entry.key)) {
-          viewParts[entry.key] = { spreadValue: valueOf(entry.node), comments: entry.comments }
+          viewParts[entry.key] = {
+            spreadValue: valueOf(entry.node),
+            comments: entry.comments,
+          }
         } else {
-          note(entry.node ?? byKey.views.node, "RV1-VIEW-002", "an entry of `views` could not be read.")
+          note(
+            entry.node ?? byKey.views.node,
+            "RV1-VIEW-002",
+            "an entry of `views` could not be read."
+          )
         }
       }
     }
@@ -1368,7 +1801,10 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         views[action].unshift(prop("title", title.value, title.comments))
       }
       views[action].push(
-        ...withComponents(part.own, part.components.length ? object(part.components) : undefined)
+        ...withComponents(
+          part.own,
+          part.components.length ? object(part.components) : undefined
+        )
       )
       views.list.push(...part.list)
       if (part.filters.length) {
@@ -1383,7 +1819,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       board.push(...part.board)
       resourceLevel.push(...part.resource)
       if (part.exportPermission) exportPermission = part.exportPermission
-      for (const [target, moved] of Object.entries(part.perAction)) views[target].push(...moved)
+      for (const [target, moved] of Object.entries(part.perAction))
+        views[target].push(...moved)
       if (part.layoutComponents.length) {
         listLayoutComponents.push(...part.layoutComponents)
       }
@@ -1416,7 +1853,19 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           if (rootView) {
             root.push({ kind: "placeholder", name: "view", comments })
           } else {
-            root.push(prop("view", valueOf(node), [comments, todo("RV1-VIEW-001", "`view` is gone: move its keys to the root and to views.list")].join("\n")))
+            root.push(
+              prop(
+                "view",
+                valueOf(node),
+                [
+                  comments,
+                  todo(
+                    "RV1-VIEW-001",
+                    "`view` is gone: move its keys to the root and to views.list"
+                  ),
+                ].join("\n")
+              )
+            )
           }
           break
         case "views":
@@ -1426,7 +1875,13 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
           if (!isObjectLiteral(node)) {
             note(node, "RV1-VIEW-002", "`views` is a variable: migrate it by hand.")
             viewsVariable = valueOf(node)
-            viewsComments = [comments, todo("RV1-VIEW-002", "views is a variable: rewrite what it holds in 1.0")].join("\n")
+            viewsComments = [
+              comments,
+              todo(
+                "RV1-VIEW-002",
+                "views is a variable: rewrite what it holds in 1.0"
+              ),
+            ].join("\n")
           }
           break
         case "components":
@@ -1452,7 +1907,8 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         case "preCreate":
         case "preUpdate":
           hooks.push(prop(HOOK_KEYS[key], valueOf(node), comments))
-          if (!root.some((item) => item.name === "hooks")) root.push({ kind: "placeholder", name: "hooks" })
+          if (!root.some((item) => item.name === "hooks"))
+            root.push({ kind: "placeholder", name: "hooks" })
           break
         case "getCollection":
         case "getItem":
@@ -1460,23 +1916,45 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
         case "updateItem":
         case "removeItem":
           repository.push(prop(key, valueOf(node), comments))
-          if (!root.some((item) => item.name === "repository")) root.push({ kind: "placeholder", name: "repository" })
+          if (!root.some((item) => item.name === "repository"))
+            root.push({ kind: "placeholder", name: "repository" })
           break
         case "limit":
           if (isObjectLiteral(node)) {
-            root.push(prop("quota", object(entriesOf(node).map((limitEntry) =>
-              limitEntry.kind === "prop" && limitEntry.key === "getLimit"
-                ? prop("get", valueOf(limitEntry.node), limitEntry.comments)
-                : asEntry(limitEntry)
-            )), comments))
+            root.push(
+              prop(
+                "quota",
+                object(
+                  entriesOf(node).map((limitEntry) =>
+                    limitEntry.kind === "prop" && limitEntry.key === "getLimit"
+                      ? prop("get", valueOf(limitEntry.node), limitEntry.comments)
+                      : asEntry(limitEntry)
+                  )
+                ),
+                comments
+              )
+            )
           } else {
-            root.push(prop("quota", valueOf(node), [comments, todo("RV1-DATA-004", "`getLimit` is now `get`")].join("\n")))
-            note(node, "RV1-DATA-004", "`limit` is a variable: rename `getLimit` → `get` by hand.")
+            root.push(
+              prop(
+                "quota",
+                valueOf(node),
+                [comments, todo("RV1-DATA-004", "`getLimit` is now `get`")].join(
+                  "\n"
+                )
+              )
+            )
+            note(
+              node,
+              "RV1-DATA-004",
+              "`limit` is a variable: rename `getLimit` → `get` by hand."
+            )
           }
           break
         case "decoratorComponent":
           components.push(prop("wrapper", valueOf(node), comments))
-          if (!root.some((item) => item.name === "components")) root.push({ kind: "placeholder", name: "components" })
+          if (!root.some((item) => item.name === "components"))
+            root.push({ kind: "placeholder", name: "components" })
           break
         case "resourceBuild":
         case "onChange":
@@ -1526,30 +2004,65 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       const node = layoutsSource.node
       let layouts
       if (ts.isArrayLiteralExpression(node)) {
-        layouts = array(node.elements.map((element) => {
-          if (board.length && ts.isCallExpression(element) && ts.isIdentifier(element.expression) && FACTORIES[imported.get(element.expression.text) ?? element.expression.text]?.type === "board") {
-            const call = migrateFactory(element)
-            const options = call.args[0] ?? object([])
-            options.entries.push(...board)
-            call.args = [options]
-            board.length = 0
-            return withComments(call, element)
-          }
-          return withComments(valueOf(element), element)
-        }))
+        layouts = array(
+          node.elements.map((element) => {
+            if (
+              board.length &&
+              ts.isCallExpression(element) &&
+              ts.isIdentifier(element.expression) &&
+              FACTORIES[
+                imported.get(element.expression.text) ?? element.expression.text
+              ]?.type === "board"
+            ) {
+              const call = migrateFactory(element)
+              const options = call.args[0] ?? object([])
+              options.entries.push(...board)
+              call.args = [options]
+              board.length = 0
+              return withComments(call, element)
+            }
+            return withComments(valueOf(element), element)
+          })
+        )
       } else {
         layouts = valueOf(node)
       }
       views.list.push(prop("layouts", layouts, layoutsSource.comments))
       if (listLayoutComponents.length) {
-        note(node, "RV1-LAYOUT-010", "list, row and item components declared on a view next to layouts had no effect and were dropped.")
+        note(
+          node,
+          "RV1-LAYOUT-010",
+          "list, row and item components declared on a view next to layouts had no effect and were dropped."
+        )
       }
     } else if (listLayoutComponents.length) {
       used.layout = true
-      views.list.push(prop("layouts", array([{ kind: "call", callee: "layout.table", args: [object([prop("components", object(listLayoutComponents))])] }])))
+      views.list.push(
+        prop(
+          "layouts",
+          array([
+            {
+              kind: "call",
+              callee: "layout.table",
+              args: [object([prop("components", object(listLayoutComponents))])],
+            },
+          ])
+        )
+      )
     }
     if (board.length) {
-      note(literal, "RV1-BEHAV-006", "board options (`openRecord`, `selectable`, `bulkActions`) found no board in this declaration: pass them to `layout.board()`.")
+      note(
+        literal,
+        "RV1-BEHAV-006",
+        "board options (`selectable`, `bulkActions`) found no board in this declaration: pass them to `layout.board()`."
+      )
+    }
+
+    // A shared board fragment spread in here says where the cards open.
+    for (const name of fragmentsSpreadIn(literal)) {
+      if (!views.read.some((entry) => entry.key === "open")) {
+        views.read.push(prop("open", text(fragmentOpens.get(name))))
+      }
     }
 
     // ---------------------------------------------------- permissions
@@ -1569,9 +2082,15 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       ...written,
       ...ACTIONS.filter((action) => !written.includes(action) && action !== "list"),
     ]
-    const viewsEntries = order.filter((action) => views[action].length).map((action) =>
-      prop(action, object(dedupe(views[action])), viewParts[action]?.comments ?? "")
-    )
+    const viewsEntries = order
+      .filter((action) => views[action].length)
+      .map((action) =>
+        prop(
+          action,
+          object(dedupe(views[action])),
+          viewParts[action]?.comments ?? ""
+        )
+      )
     for (const item of root) {
       if (item.kind !== "placeholder") {
         out.push(item)
@@ -1632,16 +2151,22 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     }
 
     // Without a path, 0.x kept the records in localStorage without a word.
-    const rootComponents = byKey.components && isObjectLiteral(byKey.components.node)
-      ? entriesOf(byKey.components.node)
-      : []
-    const hasPageComponent = [...(rootView?.components ?? []), ...rootComponents].some(
-      (entry) => entry.key === "view"
-    )
+    const rootComponents =
+      byKey.components && isObjectLiteral(byKey.components.node)
+        ? entriesOf(byKey.components.node)
+        : []
+    const hasPageComponent = [
+      ...(rootView?.components ?? []),
+      ...rootComponents,
+    ].some((entry) => entry.key === "view")
     const hasDataSource =
       hasPath || hasRepository || Boolean(byKey.storage) || Boolean(byKey.repository)
     if (!defaults && !hasDataSource && !hasPageComponent) {
-      const anchor = Math.max(...["name", "icon", "alias"].map((key) => out.findIndex((entry) => entry.key === key)))
+      const anchor = Math.max(
+        ...["name", "icon", "alias"].map((key) =>
+          out.findIndex((entry) => entry.key === key)
+        )
+      )
       out.splice(anchor + 1, 0, prop("storage", quoted("local")))
     }
 
@@ -1698,7 +2223,11 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     // 0.x: that was the default nobody chose, and 1.0 offers everything.
     if (!PERMISSION_KEYS.some((key) => byKey[key]) && !exportEntry) {
       if (isLegacy(byKey)) {
-        note(declaration, "RV1-PERM-002", "no permission was declared: 0.x offered no read, create, update or delete button here, 1.0 offers them all. Add `permissions` if that was the intent.")
+        note(
+          declaration,
+          "RV1-PERM-002",
+          "no permission was declared: 0.x offered no read, create, update or delete button here, 1.0 offers them all. Add `permissions` if that was the intent."
+        )
       }
       return undefined
     }
@@ -1728,7 +2257,10 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
       const allowed = keys.filter((key) => values[key])
       if (allowed.length === keys.length) return undefined
       const readonly = hasPath ? ["list", "read", "export"] : ["list", "read"]
-      if (allowed.length === readonly.length && readonly.every((key) => allowed.includes(key))) {
+      if (
+        allowed.length === readonly.length &&
+        readonly.every((key) => allowed.includes(key))
+      ) {
         return quoted("readonly")
       }
     }
@@ -1737,11 +2269,14 @@ export function transformSource(source, fileName, ts, { packages = [PACKAGE] } =
     return object(
       keys
         .filter((key) => values[key] !== true)
-        .map((key) => prop(key, values[key] === false ? text("false") : text(values[key])))
+        .map((key) =>
+          prop(key, values[key] === false ? text("false") : text(values[key]))
+        )
     )
   }
 
-  const migrateDeclaration = (literal, call) => migrateDefinitionObject(literal, { call })
+  const migrateDeclaration = (literal, call) =>
+    migrateDefinitionObject(literal, { call })
 
   /* ------------------------------------------------------------ run */
 
@@ -1821,17 +2356,25 @@ function fixImports(source, fileName, ts, { used, renamed, packages }) {
       const isType = element.isTypeOnly ? "type " : ""
       if (isPackage) {
         // A factory still used as a value is left for the hand to see.
-        if (FACTORIES[(element.propertyName ?? element.name).text] && !references.get(local)) {
+        if (
+          FACTORIES[(element.propertyName ?? element.name).text] &&
+          !references.get(local)
+        ) {
           continue
         }
         if (renamed.has(local) && IDENTIFIERS[local]) {
           names.push(isType + IDENTIFIERS[local])
           continue
         }
-        if (local === "createItemMenuWithResource" && !references.get(local)) continue
+        if (local === "createItemMenuWithResource" && !references.get(local))
+          continue
         if (local === "createView" && !references.get(local)) continue
       }
-      if (module === "react-data-form" && local === "ActionList" && !references.get(local)) {
+      if (
+        module === "react-data-form" &&
+        local === "ActionList" &&
+        !references.get(local)
+      ) {
         continue
       }
       names.push(element.getText(file))
@@ -1842,12 +2385,16 @@ function fixImports(source, fileName, ts, { used, renamed, packages }) {
         names.push("configureResourceView")
       }
       for (const type of used.types) {
-        if (!names.includes(type) && !names.includes(`type ${type}`)) names.push(`type ${type}`)
+        if (!names.includes(type) && !names.includes(`type ${type}`))
+          names.push(`type ${type}`)
       }
     }
 
     const original = elements.map((element) => element.getText(file))
-    if (original.length === names.length && original.every((name, index) => name === names[index])) {
+    if (
+      original.length === names.length &&
+      original.every((name, index) => name === names[index])
+    ) {
       continue
     }
 
@@ -1872,7 +2419,11 @@ function fixImports(source, fileName, ts, { used, renamed, packages }) {
       ...(used.layout ? ["layout"] : []),
       ...(used.configureResourceView ? ["configureResourceView"] : []),
     ]
-    edits.push([lastImportEnd, lastImportEnd, `\nimport { ${names.join(", ")} } from "${PACKAGE}"`])
+    edits.push([
+      lastImportEnd,
+      lastImportEnd,
+      `\nimport { ${names.join(", ")} } from "${PACKAGE}"`,
+    ])
   }
 
   let output = source
@@ -1888,7 +2439,14 @@ function fixImports(source, fileName, ts, { used, renamed, packages }) {
 /* -------------------------------------------------------------------------- */
 
 const EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs"]
-const SKIPPED = new Set(["node_modules", "dist", "build", ".git", ".next", "coverage"])
+const SKIPPED = new Set([
+  "node_modules",
+  "dist",
+  "build",
+  ".git",
+  ".next",
+  "coverage",
+])
 
 async function collectFiles(path) {
   const stat = statSync(path)
@@ -1899,7 +2457,10 @@ async function collectFiles(path) {
     if (SKIPPED.has(entry.name)) continue
     const child = join(path, entry.name)
     if (entry.isDirectory()) files.push(...(await collectFiles(child)))
-    else if (EXTENSIONS.includes(extname(entry.name)) && !entry.name.endsWith(".d.ts")) {
+    else if (
+      EXTENSIONS.includes(extname(entry.name)) &&
+      !entry.name.endsWith(".d.ts")
+    ) {
       files.push(child)
     }
   }
@@ -1951,8 +2512,17 @@ listed below the summary; every id is explained in MIGRATION-1.0.md and in
 migrations/1.0.json (shipped with the package).
 `
 
-export async function runMigrate(argv, { cwd = process.cwd(), log = console.log } = {}) {
-  const options = { paths: [], dryRun: false, check: false, format: true, help: false }
+export async function runMigrate(
+  argv,
+  { cwd = process.cwd(), log = console.log } = {}
+) {
+  const options = {
+    paths: [],
+    dryRun: false,
+    check: false,
+    format: true,
+    help: false,
+  }
   for (const arg of argv) {
     if (arg === "--dry-run") options.dryRun = true
     else if (arg === "--check") options.check = true
@@ -1972,7 +2542,9 @@ export async function runMigrate(argv, { cwd = process.cwd(), log = console.log 
   const roots = (options.paths.length ? options.paths : ["src"]).map((path) =>
     resolve(cwd, path)
   )
-  const files = (await Promise.all(roots.filter(existsSync).map(collectFiles))).flat()
+  const files = (
+    await Promise.all(roots.filter(existsSync).map(collectFiles))
+  ).flat()
 
   let changed = 0
   const allNotes = []
@@ -2001,15 +2573,21 @@ export async function runMigrate(argv, { cwd = process.cwd(), log = console.log 
     log(`${options.check || options.dryRun ? "would rewrite" : "rewrote"} ${shown}`)
   }
 
-  log(`\n${changed} file${changed === 1 ? "" : "s"} ${options.check || options.dryRun ? "to rewrite" : "rewritten"}.`)
+  log(
+    `\n${changed} file${changed === 1 ? "" : "s"} ${options.check || options.dryRun ? "to rewrite" : "rewritten"}.`
+  )
 
   if (allScopes.length) {
-    log(`\nScopes (RV1-SCOPE-001) — a resource no longer names its scope: list each of these in the \`resources\` of its scope.`)
-    for (const item of allScopes) log(`  ${item.file}:${item.line}  scope ${item.scope}`)
+    log(
+      `\nScopes (RV1-SCOPE-001) — a resource no longer names its scope: list each of these in the \`resources\` of its scope.`
+    )
+    for (const item of allScopes)
+      log(`  ${item.file}:${item.line}  scope ${item.scope}`)
   }
   if (allNotes.length) {
     log(`\nTo do by hand (see MIGRATION-1.0.md):`)
-    for (const item of allNotes) log(`  ${item.file}:${item.line}  ${item.id}  ${item.message}`)
+    for (const item of allNotes)
+      log(`  ${item.file}:${item.line}  ${item.id}  ${item.message}`)
   }
 
   return options.check && changed ? 1 : 0

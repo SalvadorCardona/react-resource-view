@@ -227,13 +227,13 @@ function withRows(resource: ReturnType<typeof createTasks>) {
   })
 }
 
-/** The button of an action in the row of a task, if it is drawn. */
+/** The button of an action in the row of a task — a link — if it is drawn. */
 function buttonOf(id: string, action: string) {
   const row = screen.queryByTestId(`row-${id}`)
   if (!row) return null
 
   return (
-    Array.from(row.querySelectorAll("button")).find((button) =>
+    Array.from(row.querySelectorAll("a")).find((button) =>
       button.textContent?.includes(action)
     ) ?? null
   )

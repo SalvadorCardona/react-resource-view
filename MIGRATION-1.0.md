@@ -89,12 +89,12 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
         layout.board({
           groupBy: "status",
           columns: TASK_STATUSES,
-          openRecord: "drawer",
           bulkActions: [markUrgent],
         }),
         layout.table(),
       ],
     },
+    read: { open: "drawer" }, // where a card of the board opens
     update: { fullWidth: false, open: "dialog" },
   },
 })
@@ -136,7 +136,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-BEHAV-003](#rv1-behav-003)   | `closeAfterUpdate`, `refreshDataAfterUpdate`, `redirectToAfterUpdate` become one `afterSave`                                                                                                     | merge    | automatic, then check |
 | [RV1-BEHAV-004](#rv1-behav-004)   | `rowActions` moves to `views.list.rowActions`, as strings                                                                                                                                        | move     | automatic             |
 | [RV1-BEHAV-005](#rv1-behav-005)   | `eventSourced` becomes `realtime` at the root of the resource                                                                                                                                    | move     | automatic             |
-| [RV1-BEHAV-006](#rv1-behav-006)   | `openRecordIn`, `selectable`, `bulkActions` become options of `layout.board()`                                                                                                                   | move     | automatic             |
+| [RV1-BEHAV-006](#rv1-behav-006)   | `openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `layout.board()`                                                                                | move     | automatic             |
 | [RV1-LAYOUT-001](#rv1-layout-001) | `viewVariants` becomes `views.list.layouts`                                                                                                                                                      | move     | automatic             |
 | [RV1-LAYOUT-002](#rv1-layout-002) | `tableViewOptionFactory` becomes `layout.table`                                                                                                                                                  | rename   | automatic             |
 | [RV1-LAYOUT-003](#rv1-layout-003) | `cardViewOptionFactory` becomes `layout.cards` (`grid` → `columns`)                                                                                                                              | rename   | automatic             |
@@ -149,6 +149,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-LAYOUT-010](#rv1-layout-010) | `listComponent`, `rowComponent`, `itemComponent` of a layout become `components.list\|row\|item`                                                                                                 | move     | automatic             |
 | [RV1-LAYOUT-011](#rv1-layout-011) | A layout's `form` is merged over the resource's; `fields` picks the columns                                                                                                                      | semantic | automatic, then check |
 | [RV1-LAYOUT-012](#rv1-layout-012) | Custom layouts: `createView` becomes `layout.custom`, options are read with `useLayout()`                                                                                                        | semantic | automatic, then check |
+| [RV1-LAYOUT-013](#rv1-layout-013) | `layout.board({ openRecord, expandable })` disappears: a card opens `read` where `views.read` says                                                                                               | move     | automatic             |
 | [RV1-COMP-001](#rv1-comp-001)     | `viewComponent`, `listComponent`, `rowComponent`, `itemComponent` become `components.view\|list\|row\|item`                                                                                      | move     | automatic             |
 | [RV1-COMP-002](#rv1-comp-002)     | `decoratorComponent` of a resource becomes `components.wrapper`                                                                                                                                  | move     | automatic             |
 | [RV1-COMP-003](#rv1-comp-003)     | `components.noResult` becomes `components.empty`                                                                                                                                                 | rename   | automatic             |
@@ -577,7 +578,7 @@ views: { read: { open: "drawer", expandable: false } } // as in 0.x
 
 Why: A window too narrow for its record had to be closed, and the record found again by hand.
 
-By hand: Nothing to rewrite. `read` and `update` opened with `open: "dialog"` or `"drawer"` — and the records a board opens with `openRecord` — now show an "Open in full page" link beside the close button; `create` and `delete` do not. Declare `expandable: false` on a view (or on `layout.board()`) to take it away, `expandable: true` to add it to `create`.
+By hand: Nothing to rewrite. `read` and `update` opened with `open: "dialog"`, `"drawer"` or a frame of one's own — and the records a board opens — now show an "Open in full page" link beside the close button; `create` and `delete` do not. Declare `expandable: false` on a view to take it away, `expandable: true` to add it to `create`.
 
 Note: The link is a real link (`<a href>`): Ctrl/Cmd+click opens the page in a new tab. It keeps the layout of the list it was opened from.
 
@@ -707,7 +708,7 @@ Why: It is a property of the data (Mercure), not of a view.
 
 ### RV1-BEHAV-006
 
-**`openRecordIn`, `selectable`, `bulkActions` become options of `layout.board()`** — move, rewritten by `migrate`.
+**`openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `layout.board()`** — move, rewritten by `migrate`.
 
 Before (0.x):
 
@@ -720,12 +721,15 @@ columnViewOptionFactory({
 After (1.0):
 
 ```ts
-layout.board({ openRecord: "drawer", bulkActions: [markUrgent] })
+views: {
+  read: { open: "drawer" },
+  list: { layouts: [layout.board({ bulkActions: [markUrgent] })] },
+}
 ```
 
-Why: They only ever applied to the Kanban board.
+Why: They only ever applied to the Kanban board — and where a card opens is where the record's `read` view opens: one decision, the same URL from a card, a button or a link.
 
-Note: Declared on `view`, they used to reach the board through the merge; the codemod moves them into the board's options when the board is in the same declaration.
+Note: Declared on `view`, they used to reach the board through the merge; the codemod moves `selectable` and `bulkActions` into the board's options when the board is in the same declaration, and `openRecordIn` to `views.read.open`. Written on a layout or in a shared fragment, `openRecordIn` is reported: declare `views.read.open` on the resource.
 
 ## Layouts
 
@@ -1006,6 +1010,29 @@ export function heatmapLayout(options = {}) {
 Why: The built-in layouts and yours share one shape; a layout's options are no longer mixed into the view.
 
 By hand: The codemod rewrites a `createView({ … })` call written out in place. A factory of one's own that spreads its arguments into `createView` is left to the hand: rewrite it with `layout.custom`, and read its options in the components with `useLayout().options` instead of `useCurrentViewResourceContext().view`. `npx react-resource-view create-view-variant` writes the new shape.
+
+### RV1-LAYOUT-013
+
+**`layout.board({ openRecord, expandable })` disappears: a card opens `read` where `views.read` says** — move, rewritten by `migrate`.
+
+Before (1.0 previews):
+
+```ts
+layout.board({ groupBy: "status", columns: STATUSES, openRecord: "drawer" })
+```
+
+After (1.0):
+
+```ts
+views: {
+  read: { open: "drawer" },
+  list: { layouts: [layout.board({ groupBy: "status", columns: STATUSES })] },
+}
+```
+
+Why: Where a view opens was decided in four places, each with its own default: a board's card, a row's button, the form, the route. It is decided once, by the view: a card, a button and a shared link open the same frame at the same URL, Back closes it and a reload opens it again.
+
+Note: A board's card now always opens the record's `read` view — on its page unless `views.read.open` says otherwise. `expandable` is only declared on the view. The codemod moves both to `views.read` when the board is written in the resource's `views.list.layouts`, and reports the boards built elsewhere.
 
 ## Components
 

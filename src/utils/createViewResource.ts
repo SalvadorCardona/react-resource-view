@@ -13,6 +13,7 @@ import type {
 } from "@/ResourceDefinition"
 import type { ViewResource } from "@/ViewResource"
 import {
+  getRegisteredOpenFrames,
   getResourceViewDefaults,
   onResourceViewDefaultsChange,
 } from "@/ResourceConfig"
@@ -42,7 +43,10 @@ import { validateDefinition } from "@/definition/validateDefinition"
 export function createViewResource<
   Item extends BaseJsonLdItemInterface = any,
   Write extends object = Item,
->(id: JsonLdIri, definition: ResourceDefinition<Item, Write>): ViewResource<Item, Write> {
+>(
+  id: JsonLdIri,
+  definition: ResourceDefinition<Item, Write>
+): ViewResource<Item, Write> {
   const name = definition.name ?? getIdFromIri(id)
   validateDefinition(id, definition as Record<string, any>, name)
 
@@ -82,7 +86,12 @@ function resolve(resource: ViewResource): void {
   const defaults = getResourceViewDefaults()
   const { definition } = resource
 
-  resource.views = resolveViews(definition, defaults, resource.name)
+  resource.views = resolveViews(
+    definition,
+    defaults,
+    resource.name,
+    getRegisteredOpenFrames()
+  )
   resource.permissions = normalizePermissions(
     defaults.permissions,
     definition.permissions
@@ -165,7 +174,9 @@ function withHooks<Item, Write extends object>(
 ): Repository<Item, Write> {
   return {
     getCollection: async (params, context: ResourceContext = {}) => {
-      let payload = hooks.beforeList ? await hooks.beforeList(params, context) : params
+      let payload = hooks.beforeList
+        ? await hooks.beforeList(params, context)
+        : params
       if (context.viewResourceContext?.filter) {
         payload = { ...payload, ...context.viewResourceContext.filter }
       }
@@ -173,7 +184,9 @@ function withHooks<Item, Write extends object>(
       return repository.getCollection(payload, context)
     },
     getItem: async (params, context: ResourceContext = {}) => {
-      const payload = hooks.beforeRead ? await hooks.beforeRead(params, context) : params
+      const payload = hooks.beforeRead
+        ? await hooks.beforeRead(params, context)
+        : params
 
       return repository.getItem(payload, context)
     },
@@ -188,7 +201,9 @@ function withHooks<Item, Write extends object>(
       return response
     },
     updateItem: async (item, context: ResourceContext = {}) => {
-      const payload = hooks.beforeUpdate ? await hooks.beforeUpdate(item, context) : item
+      const payload = hooks.beforeUpdate
+        ? await hooks.beforeUpdate(item, context)
+        : item
       const response = await repository.updateItem(payload, context)
       await hooks.afterSave?.(response.data, { ...context, action: "update" })
       onChange.publish({ data: response.data, action: ActionList.update })
@@ -196,7 +211,9 @@ function withHooks<Item, Write extends object>(
       return response
     },
     createItem: async (item, context: ResourceContext = {}) => {
-      const payload = hooks.beforeCreate ? await hooks.beforeCreate(item, context) : item
+      const payload = hooks.beforeCreate
+        ? await hooks.beforeCreate(item, context)
+        : item
       const response = await repository.createItem(payload, context)
       await hooks.afterSave?.(response.data, { ...context, action: "create" })
       onChange.publish({ data: response.data, action: ActionList.create })

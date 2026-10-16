@@ -10,7 +10,7 @@ import {
   Rows2,
   Table,
 } from "lucide-react"
-import type { FieldOf, FormDefinition, OpenMode } from "@/ResourceDefinition"
+import type { FieldOf, FormDefinition } from "@/ResourceDefinition"
 import type {
   BulkActionInterface,
   IconType,
@@ -65,6 +65,9 @@ export interface LayoutComponents {
   item?: FC<ItemComponentPropsInterface>
 }
 
+/** What a layout may declare it can draw — see `Layout.supports`. */
+export type LayoutSupport = "inline"
+
 /** What every layout accepts. */
 export interface LayoutOptions<Item = any> {
   /**
@@ -102,6 +105,12 @@ export interface Layout<Item = any, Options extends object = Record<string, any>
   readonly fields?: string[]
   readonly form?: FormDefinition
   readonly components: LayoutComponents
+  /**
+   * What the layout can draw besides its records: `"inline"`, a view opened
+   * under the row of its record (see `open.custom({ placement: "inline" })`).
+   * A view opened inline over a layout without it falls back to a dialog.
+   */
+  readonly supports?: readonly LayoutSupport[]
   /** The layout's own options — `groupBy`, `dateField`… — with their defaults. */
   readonly options: Options
   /** @internal Carries `Item` for the type checker; never set. */
@@ -109,8 +118,9 @@ export interface Layout<Item = any, Options extends object = Record<string, any>
 }
 
 /** A layout inside a built view: its form merged with the view's. */
-export interface ResolvedLayout<Options extends object = Record<string, any>>
-  extends Omit<Layout<any, Options>, "form"> {
+export interface ResolvedLayout<
+  Options extends object = Record<string, any>,
+> extends Omit<Layout<any, Options>, "form"> {
   readonly form?: FormInterface
 }
 
@@ -126,6 +136,10 @@ export interface CardsLayoutOptions {
   columns?: 1 | 2 | 3 | 4 | 5 | 6
 }
 
+/**
+ * A click on a card opens the record's `read` view where that view says —
+ * `views.read.open` — and links to its page as `views.read.expandable` says.
+ */
 export interface BoardLayoutOptions<Item = any> {
   /**
    * The field a card's column is read from — and written to when the card is
@@ -134,17 +148,6 @@ export interface BoardLayoutOptions<Item = any> {
   groupBy: NoInfer<FieldOf<Item>>
   /** The columns, in order: one per value of `groupBy`. */
   columns: ValueOptionInterface[]
-  /**
-   * What a click on a card opens: the record's `read` view, in a `drawer`, a
-   * `dialog` or on its own `page`. The first two stay over the board and are
-   * written into the URL. Left unset, a card opens nothing.
-   */
-  openRecord?: OpenMode
-  /**
-   * Whether the drawer or the dialog a card opens links to the record's full
-   * page. Defaults to the `expandable` of the view it opens.
-   */
-  expandable?: boolean
   /**
    * Whether cards can be selected — checkbox, Ctrl/Cmd+click, Shift+click, a
    * long press on a phone — and moved together. Defaults to `true`.
@@ -247,13 +250,14 @@ interface BuildParams<Options extends object> {
   type: string
   icon: IconType
   components: LayoutComponents
+  supports?: LayoutSupport[]
   /** The options this type accepts, besides the common ones. */
   optionKeys: readonly string[]
   defaults: Partial<Options>
 }
 
 function build<Item, Options extends object>(
-  { type, icon, components, optionKeys, defaults }: BuildParams<Options>,
+  { type, icon, components, supports, optionKeys, defaults }: BuildParams<Options>,
   args: (LayoutOptions<Item> & Record<string, any>) | undefined
 ): Layout<Item, Options> {
   const given = args ?? {}
@@ -273,6 +277,7 @@ function build<Item, Options extends object>(
     fields: given.fields as string[] | undefined,
     form: given.form,
     components: { ...components, ...given.components },
+    supports,
     options: options as Options,
   }
 }
@@ -286,6 +291,7 @@ function table<Item = any>(
       type: "table",
       icon: Table,
       components: { list: ListTable, row: RowTable, item: ItemTable },
+      supports: ["inline"],
       optionKeys: [],
       defaults: {},
     },
@@ -302,6 +308,7 @@ function cards<Item = any>(
       type: "cards",
       icon: Rows2,
       components: { list: ListCard, row: DumpRowComponent, item: DumpItemComponent },
+      supports: ["inline"],
       optionKeys: ["columns"],
       defaults: { columns: 4 },
     },
@@ -321,15 +328,7 @@ function board<Item = any>(
       type: "board",
       icon: Columns3,
       components: { list: ListColumn, row: RowColumn, item: DumpItemComponent },
-      optionKeys: [
-        "groupBy",
-        "columns",
-        "openRecord",
-        "expandable",
-        "selectable",
-        "bulkActions",
-        "titleField",
-      ],
+      optionKeys: ["groupBy", "columns", "selectable", "bulkActions", "titleField"],
       defaults: { selectable: true, bulkActions: [] },
     },
     options
@@ -438,6 +437,7 @@ function items<Item = any>(
       type: "items",
       icon: List,
       components: { list: ListItem, row: DumpRowComponent, item: DumpItemComponent },
+      supports: ["inline"],
       optionKeys: [],
       defaults: {},
     },
@@ -446,14 +446,21 @@ function items<Item = any>(
 }
 
 /** What `layout.custom` takes. */
-export interface CustomLayoutOptions<Item = any, Options extends object = object>
-  extends Omit<LayoutOptions<Item>, "components"> {
+export interface CustomLayoutOptions<
+  Item = any,
+  Options extends object = object,
+> extends Omit<LayoutOptions<Item>, "components"> {
   /** The layout's type — its default `id` and `label`. */
   type: string
   /** The components it draws with; `list` at least. */
   components: LayoutComponents
   /** Its own options, read back with `useLayout().options`. */
   options?: Options
+  /**
+   * What its list component draws besides the records: `["inline"]` when it
+   * draws `<InlineChildView row={row} />` under each of them.
+   */
+  supports?: LayoutSupport[]
 }
 
 /**
@@ -465,6 +472,7 @@ function custom<Item = any, Options extends object = object>({
   type,
   components,
   options,
+  supports,
   ...rest
 }: CustomLayoutOptions<Item, Options>): Layout<Item, Options> {
   const given = { ...rest, components } as LayoutOptions<Item>
@@ -479,6 +487,7 @@ function custom<Item = any, Options extends object = object>({
     fields: given.fields as string[] | undefined,
     form: given.form,
     components: { item: DumpItemComponent, row: DumpRowComponent, ...components },
+    supports,
     options: (options ?? {}) as Options,
   }
 }

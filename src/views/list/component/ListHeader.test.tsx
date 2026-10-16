@@ -112,7 +112,7 @@ describe("the header of a list", () => {
     const header = container.querySelector('[data-slot="list-header"]')!
 
     expect(header).toContainElement(screen.getByRole("tab", { name: "Alpha" }))
-    expect(header).toContainElement(screen.getByRole("button", { name: /create/i }))
+    expect(header).toContainElement(screen.getByRole("link", { name: /create/i }))
   })
 
   // They share one container so that a name too long for the line takes the
@@ -124,9 +124,7 @@ describe("the header of a list", () => {
     const controls = container.querySelector('[data-slot="list-header-controls"]')!
 
     expect(controls).toContainElement(screen.getByRole("tab", { name: "Alpha" }))
-    expect(controls).toContainElement(
-      screen.getByRole("button", { name: /create/i })
-    )
+    expect(controls).toContainElement(screen.getByRole("link", { name: /create/i }))
   })
 
   // A sub-view tab writes the name of the resource it opens; the list inside

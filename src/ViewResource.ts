@@ -8,7 +8,6 @@ import type { ResourceMutation } from "@/hook/useResourceMutation"
 import type { LayoutComponents, ResolvedLayout } from "@/layout/layout"
 import type {
   AfterSave,
-  OpenMode,
   Permission,
   PermissionKey,
   Quota,
@@ -19,6 +18,7 @@ import type {
   ComponentSlots,
   ListViewDefinition,
 } from "@/ResourceDefinition"
+import type { OpenFrame } from "@/open/open"
 
 /**
  * What `createViewResource` builds out of a {@link ResourceDefinition}: the
@@ -71,7 +71,8 @@ export interface ItemComponentPropsInterface {
  * The components of a view once every level is merged — and, in the context
  * of a list, those of the layout on screen.
  */
-export interface ResolvedComponents extends ComponentSlots, Partial<LayoutComponents> {
+export interface ResolvedComponents
+  extends ComponentSlots, Partial<LayoutComponents> {
   view: FC
 }
 
@@ -97,8 +98,9 @@ export interface ResolvedView {
   fullWidth: boolean
   className?: string
   titleField?: string
-  open: OpenMode
-  /** Whether a dialog or a drawer of this view links to its full page. */
+  /** Where the view is drawn when it is opened from another: resolved once, here. */
+  open: OpenFrame
+  /** Whether a frame of this view links to its full page. */
   expandable: boolean
   /** Whether this action's writes are drawn before the API answers. */
   optimistic: boolean
@@ -115,8 +117,7 @@ export interface ResolvedView {
 }
 
 export interface ViewResource<Item = any, Write extends object = Item & object>
-  extends BaseJsonLdItemInterface,
-    Repository<Item, Write> {
+  extends BaseJsonLdItemInterface, Repository<Item, Write> {
   "@type": "view-resource"
   name: string
   icon?: IconType

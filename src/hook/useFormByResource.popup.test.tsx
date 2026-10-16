@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { ActionList } from "react-data-form"
 import type { ResolvedView } from "@/ViewResource"
+import { createElement, ReactNode } from "react"
+import { OverlayContext, type OverlayInterface } from "@/action/overlayContext"
 
 /**
  * What happens once a record has been created, and where the user lands.
@@ -53,15 +55,23 @@ vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }))
 
 const { default: useFormByResource } = await import("@/hook/useFormByResource")
 
-async function createWith(view: Partial<ResolvedView>) {
-  renderHook(() =>
-    useFormByResource({
-      currentResource: {
-        resourceId: "items",
-        resourceAction: ActionList.create,
-        view: view as ResolvedView,
-      },
-    })
+const close = vi.fn()
+
+/** In a frame — a dialog, a drawer — when `frame` is set. */
+async function createWith(view: Partial<ResolvedView>, frame?: OverlayInterface) {
+  renderHook(
+    () =>
+      useFormByResource({
+        currentResource: {
+          resourceId: "items",
+          resourceAction: ActionList.create,
+          view: view as ResolvedView,
+        },
+      }),
+    {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(OverlayContext, { value: frame ?? null }, children),
+    }
   )
 
   await submit?.({ name: "A new one" })
@@ -72,35 +82,38 @@ describe("useFormByResource, after a creation", () => {
     navigate.mockClear()
     updateData.mockClear()
     createItem.mockClear()
+    close.mockClear()
   })
 
-  it("stays where it is when the form opened in a dialog", async () => {
-    await createWith({ open: "dialog" })
+  it("closes its frame rather than moving on, when it opened in one", async () => {
+    await createWith({}, { close })
 
     expect(navigate).not.toHaveBeenCalled()
+    expect(close).toHaveBeenCalledTimes(1)
   })
 
-  it("stays where it is when the form opened in a drawer", async () => {
-    await createWith({ open: "drawer" })
+  it("stays in its frame on `stay`", async () => {
+    await createWith({ afterSave: "stay" }, { close })
 
     expect(navigate).not.toHaveBeenCalled()
+    expect(close).not.toHaveBeenCalled()
   })
 
   it("moves on to the new record's edit screen on a screen of its own", async () => {
-    await createWith({ open: "page" })
+    await createWith({})
 
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(navigate.mock.calls[0][0].to).toContain("update")
   })
 
   it("builds that link in the resource's own scope", async () => {
-    await createWith({ open: "page" })
+    await createWith({})
 
     expect(navigate.mock.calls[0][0].to).toContain("admin")
   })
 
   it("hands the view context to the repository with the payload", async () => {
-    await createWith({ open: "page" })
+    await createWith({})
 
     expect(createItem).toHaveBeenCalledWith(
       expect.objectContaining({ name: "A new one" }),
@@ -118,23 +131,23 @@ describe("useFormByResource, `afterSave`", () => {
   })
 
   it("goes back to the list on `close`, from a page", async () => {
-    await createWith({ open: "page", afterSave: "close" })
+    await createWith({ afterSave: "close" })
 
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(navigate.mock.calls[0][0].to).toContain("list")
   })
 
   it("goes where `redirect` says, given the saved record", async () => {
-    await createWith({
-      open: "dialog",
-      afterSave: { redirect: (item) => `/done${item["@id"]}` },
-    })
+    await createWith(
+      { afterSave: { redirect: (item) => `/done${item["@id"]}` } },
+      { close }
+    )
 
     expect(navigate).toHaveBeenCalledWith({ to: "/done/items/1" })
   })
 
   it("fills the form again with the answer on `reload`", async () => {
-    await createWith({ open: "dialog", afterSave: "reload" })
+    await createWith({ afterSave: "reload" }, { close })
 
     expect(updateData).toHaveBeenCalledWith(created)
     expect(navigate).not.toHaveBeenCalled()

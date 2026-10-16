@@ -6,6 +6,7 @@ import type { ViewResourceContext } from "@/ViewResourceContext"
 import type { Layout } from "@/layout/layout"
 import type { ViewResource, IconType } from "@/ViewResource"
 import type { FilterInterface } from "@/views/list/filter/useFilter"
+import type { OpenMode } from "@/open/open"
 
 /**
  * What a resource declares — the object handed to `createViewResource`.
@@ -64,8 +65,7 @@ export interface PermissionContext<Item = any> {
  * stays the place where access is enforced.
  */
 export type Permission<Item = any> =
-  | boolean
-  | ((context: PermissionContext<Item>) => boolean | Promise<boolean>)
+  boolean | ((context: PermissionContext<Item>) => boolean | Promise<boolean>)
 
 /**
  * What a resource lets its users do. Everything is allowed by default — only
@@ -103,7 +103,10 @@ export interface Repository<Item = any, Write extends object = Item & object> {
     params?: Record<string, any>,
     context?: ResourceContext
   ) => Promise<{ data: JsonLdCollection<Item> }>
-  getItem: (params: IdAbleInterface, context?: ResourceContext) => Promise<{ data: Item }>
+  getItem: (
+    params: IdAbleInterface,
+    context?: ResourceContext
+  ) => Promise<{ data: Item }>
   createItem: (
     item: Partial<Write>,
     context?: ResourceContext
@@ -112,7 +115,10 @@ export interface Repository<Item = any, Write extends object = Item & object> {
     item: Partial<Write>,
     context?: ResourceContext
   ) => Promise<{ data: Item }>
-  removeItem: (params: IdAbleInterface, context?: ResourceContext) => Promise<unknown>
+  removeItem: (
+    params: IdAbleInterface,
+    context?: ResourceContext
+  ) => Promise<unknown>
 }
 
 type MaybePromise<T> = T | Promise<T>
@@ -157,7 +163,10 @@ export interface ResourceHooks<Item = any, Write extends object = Item & object>
     context: ResourceContext & { action: "create" | "update" }
   ) => MaybePromise<void>
   /** The record that was deleted. */
-  afterDelete?: (item: IdAbleInterface, context: ResourceContext) => MaybePromise<void>
+  afterDelete?: (
+    item: IdAbleInterface,
+    context: ResourceContext
+  ) => MaybePromise<void>
 }
 
 /** How many records exist, and how many are allowed at most. */
@@ -191,9 +200,6 @@ export interface Quota {
 /* Views                                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** Where a view is drawn when its button is pressed. */
-export type OpenMode = "page" | "dialog" | "drawer"
-
 /**
  * What a form does once the record is saved.
  *
@@ -207,10 +213,7 @@ export type OpenMode = "page" | "dialog" | "drawer"
  * Defaults to `"close"` in a dialog or a drawer, `"stay"` on a page.
  */
 export type AfterSave<Item = any> =
-  | "close"
-  | "stay"
-  | "reload"
-  | { redirect: (item: Item) => string }
+  "close" | "stay" | "reload" | { redirect: (item: Item) => string }
 
 /**
  * A form as `react-data-form` describes it, except that an input may be
@@ -256,7 +259,10 @@ export type ViewComponents = {
 }
 
 /** What every view of a resource accepts, at the root as well as per action. */
-export interface CommonViewOptions<Item = any, Write extends object = Item & object> {
+export interface CommonViewOptions<
+  Item = any,
+  Write extends object = Item & object,
+> {
   /** Shared by the forms of every action, the table's columns and the cards. */
   form?: FormDefinition<Write>
   /**
@@ -364,14 +370,19 @@ export interface ListViewDefinition<Item = any, Write extends object = Item & ob
 
 interface OpenableViewDefinition {
   /**
-   * Where the view is drawn when its button is pressed: the whole `page`, a
-   * `dialog` over it, or a `drawer` sliding in — from the right on a desktop,
-   * from the bottom on a phone. A direct link always opens the page.
+   * Where the view is drawn when it is opened from another — a row's button,
+   * a board's card: the whole `page`, a `dialog` over it, a `drawer` sliding
+   * in — from the right on a desktop, from the bottom on a phone —, a frame
+   * of one's own built with `open.custom()`, or the name of one registered
+   * with `configureResourceView({ open })`. Anything but `page` is written
+   * into the URL under the view it was opened from, so a link, Back and a
+   * reload find it as it was. Defaults to `"dialog"` for `delete`, `"page"`
+   * otherwise.
    */
   open?: OpenMode
   /**
-   * In a dialog or a drawer, an "Open in full page" link beside the close
-   * button — a real link, so Ctrl/Cmd+click opens a new tab. Defaults to
+   * In a dialog, a drawer or a frame of one's own, an "Open in full page"
+   * link beside the close button — a real link, so Ctrl/Cmd+click opens a new tab. Defaults to
    * `true` for `read` and `update`, whose content may be long, `false` for
    * `create` and `delete`.
    */
@@ -395,8 +406,12 @@ export interface ReadViewDefinition<Item = any, Write extends object = Item & ob
 }
 
 /** `views.create` */
-export interface CreateViewDefinition<Item = any, Write extends object = Item & object>
-  extends CommonViewOptions<Item, Write>,
+export interface CreateViewDefinition<
+  Item = any,
+  Write extends object = Item & object,
+>
+  extends
+    CommonViewOptions<Item, Write>,
     ActionViewOptions,
     OpenableViewDefinition,
     OptimisticViewDefinition {
@@ -404,14 +419,20 @@ export interface CreateViewDefinition<Item = any, Write extends object = Item & 
 }
 
 /** `views.update` */
-export interface UpdateViewDefinition<Item = any, Write extends object = Item & object>
-  extends CreateViewDefinition<Item, Write> {
+export interface UpdateViewDefinition<
+  Item = any,
+  Write extends object = Item & object,
+> extends CreateViewDefinition<Item, Write> {
   tabs?: TabsDefinition<Item>
 }
 
 /** `views.delete` */
-export interface DeleteViewDefinition<Item = any, Write extends object = Item & object>
-  extends CommonViewOptions<Item, Write>,
+export interface DeleteViewDefinition<
+  Item = any,
+  Write extends object = Item & object,
+>
+  extends
+    CommonViewOptions<Item, Write>,
     ActionViewOptions,
     OpenableViewDefinition,
     OptimisticViewDefinition {}
@@ -428,8 +449,10 @@ export interface ViewsDefinition<Item = any, Write extends object = Item & objec
 /* The declaration                                                            */
 /* -------------------------------------------------------------------------- */
 
-export interface ResourceDefinition<Item = any, Write extends object = Item & object>
-  extends CommonViewOptions<Item, Write> {
+export interface ResourceDefinition<
+  Item = any,
+  Write extends object = Item & object,
+> extends CommonViewOptions<Item, Write> {
   /** What the resource is called — the menu, the titles, the breadcrumb. */
   name?: string
   icon?: IconType

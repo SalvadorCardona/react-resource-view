@@ -23,7 +23,9 @@ const migrate = (source: string, fileName = "resource.ts") =>
 
 const fixtureFiles = [
   "shared.ts",
-  ...readdirSync(join(FIXTURES, "before/resources")).map((file) => `resources/${file}`),
+  ...readdirSync(join(FIXTURES, "before/resources")).map(
+    (file) => `resources/${file}`
+  ),
 ]
 
 describe("the playground, migrated", () => {
@@ -38,8 +40,9 @@ describe("the playground, migrated", () => {
   })
 
   it("needs nothing done by hand", () => {
-    const notes = fixtureFiles.flatMap((file) =>
-      migrate(readFileSync(join(FIXTURES, "before", file), "utf8"), file).notes
+    const notes = fixtureFiles.flatMap(
+      (file) =>
+        migrate(readFileSync(join(FIXTURES, "before", file), "utf8"), file).notes
     )
 
     expect(notes).toEqual([])
@@ -73,14 +76,16 @@ ${body}
   const outputOf = (body: string) => migrate(declare(body)).output
 
   it("writes the refusals the 0.x permissions implied", () => {
-    expect(outputOf(`  path: "/api/tasks",\n  canRead: true,\n  canUpdate: true,`)).toContain(
-      "permissions: { create: false, delete: false, export: false },"
-    )
+    expect(
+      outputOf(`  path: "/api/tasks",\n  canRead: true,\n  canUpdate: true,`)
+    ).toContain("permissions: { create: false, delete: false, export: false },")
     expect(outputOf(`  storage: "local",\n  canRead: true,`)).toContain(
       '  storage: "local",\n  permissions: "readonly",'
     )
     expect(
-      outputOf(`  path: "/api/tasks",\n  canRead: true,\n  canCreate: true,\n  canUpdate: true,\n  canDelete: true,\n  view: { behavior: { canExport: true } },`)
+      outputOf(
+        `  path: "/api/tasks",\n  canRead: true,\n  canCreate: true,\n  canUpdate: true,\n  canDelete: true,\n  view: { behavior: { canExport: true } },`
+      )
     ).not.toContain("permissions")
   })
 
@@ -89,11 +94,15 @@ ${body}
       `  path: "/api/tasks",\n  canRead: true,\n  canList: false,\n  canCreate: true,\n  canUpdate: () => isAdmin(),\n  canDelete: true,\n  view: { behavior: { canExport: true } },`
     )
 
-    expect(output).toContain("permissions: { list: false, update: () => isAdmin() },")
+    expect(output).toContain(
+      "permissions: { list: false, update: () => isAdmin() },"
+    )
   })
 
   it("leaves a declaration without permissions to the 1.0 default, and says so", () => {
-    const { output, notes } = migrate(declare(`  path: "/api/tasks",\n  scope: "admin",`))
+    const { output, notes } = migrate(
+      declare(`  path: "/api/tasks",\n  scope: "admin",`)
+    )
 
     expect(output).not.toContain("permissions")
     expect(notes.map((note) => note.id)).toEqual(["RV1-PERM-002"])
@@ -103,7 +112,9 @@ ${body}
     expect(outputOf(`  name: "Tasks",\n  canRead: true,`)).toContain(
       'name: "Tasks",\n  storage: "local",'
     )
-    expect(outputOf(`  name: "Tasks",\n  path: "/api/tasks",`)).not.toContain("storage")
+    expect(outputOf(`  name: "Tasks",\n  path: "/api/tasks",`)).not.toContain(
+      "storage"
+    )
   })
 
   it("moves the hooks and the repository methods", () => {
@@ -119,7 +130,9 @@ ${body}
 
   it("renames the quota", () => {
     expect(
-      outputOf(`  path: "/api/tasks",\n  limit: { getLimit: () => ({ current: 1, max: 3 }), fallback: Upgrade },`)
+      outputOf(
+        `  path: "/api/tasks",\n  limit: { getLimit: () => ({ current: 1, max: 3 }), fallback: Upgrade },`
+      )
     ).toContain("quota: { get: () => ({ current: 1, max: 3 }), fallback: Upgrade },")
   })
 
@@ -169,8 +182,10 @@ ${body}
 
     expect(output).toContain('rowActions: ["read", "delete"],')
     expect(output).toContain(
-      'layout.board({\n          groupBy: "status",\n          columns: STATUSES,\n          openRecord: "dialog",\n          bulkActions: [archive],\n        }),'
+      'layout.board({ groupBy: "status", columns: STATUSES, bulkActions: [archive] }),'
     )
+    // Where a card opens is where the record's `read` view opens.
+    expect(output).toContain('read: { open: "dialog" },')
     expect(output).toContain(
       'update: {\n      title: "Edit a task",\n      open: "page",\n      afterSave: { redirect: () => "/done" },\n    },'
     )
@@ -189,8 +204,37 @@ const BOARD: { behavior: object } = { behavior: { openRecordIn: "drawer", select
     expect(output).toContain('const POPUP = { open: "dialog" } as const')
     expect(output).toContain('const DRAWER = { open: "drawer" as const }')
     expect(output).toContain(
-      'const BOARD: Partial<BoardLayoutOptions> = { openRecord: "drawer", selectable: false }'
+      "const BOARD: Partial<BoardLayoutOptions> = { selectable: false }"
     )
+  })
+
+  it("moves where a board of a 1.0 preview opens its cards to `views.read`", () => {
+    const output = outputOf(`  path: "/api/tasks",
+  views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES, openRecord: "drawer", expandable: false }),
+        layout.table(),
+      ],
+    },
+  },`)
+
+    expect(output).toContain(
+      'layout.board({ groupBy: "status", columns: STATUSES }),'
+    )
+    expect(output).toContain('read: { open: "drawer", expandable: false },')
+    expect(output).not.toContain("openRecord")
+  })
+
+  it("reports a board of a 1.0 preview built away from its resource", () => {
+    const { output, notes } = migrate(`import { layout } from "react-resource-view"
+export const board = layout.board({ groupBy: "status", columns: STATUSES, openRecord: "dialog" })
+`)
+
+    expect(output).toContain(
+      'layout.board({ groupBy: "status", columns: STATUSES })'
+    )
+    expect(notes.map((note) => note.id)).toEqual(["RV1-LAYOUT-013"])
   })
 
   it("turns the sub-views into tabs, narrowed on the record", () => {
@@ -217,7 +261,9 @@ const BOARD: { behavior: object } = { behavior: { openRecordIn: "drawer", select
   },`)
 
     expect(output).toContain("aside: Summary,")
-    expect(output).toContain('id: "comments",\n            label: "Comments",\n            resource: COMMENTS_ID,')
+    expect(output).toContain(
+      'id: "comments",\n            label: "Comments",\n            resource: COMMENTS_ID,'
+    )
     expect(output).toContain(
       'filter: ({ item }) => ({ post: (item as Post | undefined)?.["@id"] }),'
     )
@@ -225,14 +271,16 @@ const BOARD: { behavior: object } = { behavior: { openRecordIn: "drawer", select
   })
 
   it("leaves an onInitViewResource it cannot read, with a TODO", () => {
-    const { output, notes } = migrate(declare(`  path: "/api/posts",
+    const { output, notes } = migrate(
+      declare(`  path: "/api/posts",
   views: {
     [ActionList.read]: {
       subViewResource: {
         list: [{ resourceId: "comments", onInitViewResource: init }],
       },
     },
-  },`))
+  },`)
+    )
 
     expect(output).toContain("// TODO(RV1-TABS-003)")
     expect(notes.map((note) => note.id)).toContain("RV1-TABS-003")
@@ -274,11 +322,14 @@ export const scope = {
       'configureResourceView({ defaults: { views: { update: { open: "dialog" } } } })'
     )
     expect(output).toContain("menu: [users],")
-    expect(output).toContain('import { configureResourceView } from "react-resource-view"')
+    expect(output).toContain(
+      'import { configureResourceView } from "react-resource-view"'
+    )
   })
 
   it("renames the types and hooks exported under another name", () => {
-    const { output } = migrate(`import { useLimit, type ViewResourceInterface } from "react-resource-view"
+    const { output } =
+      migrate(`import { useLimit, type ViewResourceInterface } from "react-resource-view"
 
 export function Quota({ resource }: { resource: ViewResourceInterface }) {
   return useLimit(resource.quota, context)
@@ -293,7 +344,8 @@ export function Quota({ resource }: { resource: ViewResourceInterface }) {
   })
 
   it("rewrites a layout written out with createView", () => {
-    const { output } = migrate(`import { createView, createViewResource } from "react-resource-view"
+    const { output } =
+      migrate(`import { createView, createViewResource } from "react-resource-view"
 
 createViewResource("tasks", {
   path: "/api/tasks",
@@ -304,7 +356,9 @@ createViewResource("tasks", {
     expect(output).toContain(
       'layout.custom({\n          type: "heatmap",\n          components: { list: HeatmapList },\n          options: { dense: true },\n        }),'
     )
-    expect(output).toContain('import { createViewResource, layout } from "react-resource-view"')
+    expect(output).toContain(
+      'import { createViewResource, layout } from "react-resource-view"'
+    )
   })
 
   it("keeps `views` given as a variable, with a TODO", () => {
@@ -346,7 +400,7 @@ createViewResource("tasks", {
 
   it("keeps a multi-line template literal as it was", () => {
     const output = outputOf(
-      "  path: \"/api/tasks\",\n  canRead: true,\n  view: { description: `first\n    second` },"
+      '  path: "/api/tasks",\n  canRead: true,\n  view: { description: `first\n    second` },'
     )
     expect(output).toContain("`first\n    second`")
   })
@@ -376,14 +430,19 @@ export const tasks = createViewResource("tasks", {
 describe("npx react-resource-view migrate", () => {
   it("reports what it would do without writing, and fails a check", async () => {
     const lines: string[] = []
-    const code = await runMigrate(["cli/__fixtures__/playground/before", "--check"], {
-      cwd: process.cwd(),
-      log: (line: string) => lines.push(line),
-    })
+    const code = await runMigrate(
+      ["cli/__fixtures__/playground/before", "--check"],
+      {
+        cwd: process.cwd(),
+        log: (line: string) => lines.push(line),
+      }
+    )
 
     expect(code).toBe(1)
     const report = lines.join("\n")
-    expect(report).toContain("would rewrite cli/__fixtures__/playground/before/resources/tasks.ts")
+    expect(report).toContain(
+      "would rewrite cli/__fixtures__/playground/before/resources/tasks.ts"
+    )
     expect(report).toContain("10 files to rewrite.")
     expect(report).toContain("Scopes (RV1-SCOPE-001)")
   })
@@ -392,7 +451,13 @@ describe("npx react-resource-view migrate", () => {
 describe("migrations/1.0.json and MIGRATION-1.0.md", () => {
   const changes = JSON.parse(
     readFileSync(join(process.cwd(), "migrations/1.0.json"), "utf8")
-  ).changes as { id: string; kind: string; codemod: boolean; before: string; after: string }[]
+  ).changes as {
+    id: string
+    kind: string
+    codemod: boolean
+    before: string
+    after: string
+  }[]
   const guide = readFileSync(join(process.cwd(), "MIGRATION-1.0.md"), "utf8")
 
   it("tell the same changes, in the same order", () => {
@@ -404,7 +469,9 @@ describe("migrations/1.0.json and MIGRATION-1.0.md", () => {
 
   it("give every change a kind, a before and an after", () => {
     for (const change of changes) {
-      expect(["rename", "move", "merge", "remove", "semantic"]).toContain(change.kind)
+      expect(["rename", "move", "merge", "remove", "semantic"]).toContain(
+        change.kind
+      )
       expect(typeof change.codemod).toBe("boolean")
       expect(change.before.length).toBeGreaterThan(0)
       expect(change.after.length).toBeGreaterThan(0)

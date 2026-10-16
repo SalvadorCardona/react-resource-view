@@ -1,6 +1,80 @@
-import { createViewResource } from "react-resource-view"
-import { MousePointerClick } from "lucide-react"
-import { CodeBlock, PageHeader, Section } from "../DocLayout"
+import { ActionList } from "react-data-form"
+import {
+  createViewResource,
+  layout,
+  open,
+  ViewResourceContextProvider,
+  type OpenFrameProps,
+} from "react-resource-view"
+import { localStorageRepository } from "jsonld-repository"
+import { ChevronUp, Maximize2, MousePointerClick } from "lucide-react"
+import { CodeBlock, LiveExample, PageHeader, Section } from "../DocLayout"
+
+/**
+ * An accordion: the record unfolds under its row instead of over the page.
+ * The library hands it the title, the view, `close` and the link to the full
+ * page; the URL, closing after a save and the focus stay its own.
+ */
+function Accordion({ title, children, close, expandHref }: OpenFrameProps) {
+  return (
+    <section
+      aria-label="Accordion"
+      className="m-2 rounded-xl border border-border bg-muted/30 p-4"
+    >
+      <header className="mb-3 flex items-center gap-2">
+        <h3 className="flex-1 text-sm font-semibold">{title}</h3>
+        {expandHref && (
+          <a
+            href={expandHref}
+            aria-label="Open in full page"
+            title="Open in full page"
+          >
+            <Maximize2 className="size-4" />
+          </a>
+        )}
+        <button type="button" onClick={close} aria-label="Collapse" title="Collapse">
+          <ChevronUp className="size-4" />
+        </button>
+      </header>
+      {children}
+    </section>
+  )
+}
+
+const accordion = open.custom({
+  type: "accordion",
+  placement: "inline",
+  component: Accordion,
+})
+
+const demoArticles = localStorageRepository({ path: "demo_articles" })
+
+/** The demo's articles again, read in an accordion under their row. */
+export const accordionArticlesResource = createViewResource("demo_accordion", {
+  name: "Articles",
+  storage: "local",
+  // The live demo's records, kept in the browser's storage.
+  repository: {
+    getCollection: demoArticles.getCollection as never,
+    getItem: demoArticles.getItem as never,
+    createItem: demoArticles.createItem as never,
+    updateItem: demoArticles.updateItem as never,
+    removeItem: demoArticles.removeItem as never,
+  },
+  form: {
+    inputs: {
+      title: { label: "Title" },
+      author: { label: "Author" },
+    },
+  },
+  views: {
+    list: {
+      layouts: [layout.table(), layout.items()],
+      rowActions: ["read"],
+    },
+    read: { title: "Article", open: accordion },
+  },
+})
 
 const actionsResource = createViewResource("actions", {
   name: "Actions",
@@ -15,9 +89,40 @@ const actionsResource = createViewResource("actions", {
 
         <Section
           title="Where an action opens"
-          intro="views.<action>.open: the whole page, a dialog over it, or a drawer sliding in. A direct link always opens the page."
+          intro="views.<action>.open: the whole page, a dialog over it, a drawer sliding in, or a frame of your own."
         >
-          <CodeBlock>{open}</CodeBlock>
+          <CodeBlock>{openCode}</CodeBlock>
+          <p>
+            Anything but <code>page</code> is written into the URL, under the view it
+            was opened from: <code>…/tasks/list/tasks/update/12</code>, with the
+            list's filter and layout. A row's button, a board's card and a link typed
+            by hand give the same URL — Back closes the frame, a reload opens it
+            again over the same list, and a save closes it by going back to the
+            list's URL.
+          </p>
+        </Section>
+
+        <Section
+          title="A frame of your own"
+          intro="open.custom() builds a frame the way layout.custom() builds a layout: a component that draws it, and where it sits."
+        >
+          <CodeBlock>{customOpen}</CodeBlock>
+          <p>
+            <code>placement: "inline"</code> draws the view under the row that opened
+            it, in a table, a plain list or a card grid —{" "}
+            <code>layout.custom({'{ supports: ["inline"] }'})</code> for a layout of
+            your own. A board, a calendar or a timeline has no row to draw under:
+            there the frame falls back to a dialog, with a warning in development.{" "}
+            <code>"overlay"</code> draws it over the page, like the dialog and the
+            drawer.
+          </p>
+          <LiveExample label="read, in an accordion under the row">
+            <ViewResourceContextProvider
+              resource={accordionArticlesResource}
+              resourceAction={ActionList.list}
+              scope="docs"
+            />
+          </LiveExample>
         </Section>
 
         <Section
@@ -28,9 +133,9 @@ const actionsResource = createViewResource("actions", {
           <p>
             It is on by default for <code>read</code> and <code>update</code>, whose
             content may be long, and off for <code>create</code> and{" "}
-            <code>delete</code> — a confirmation has no page worth opening. The
-            records a board opens with <code>openRecord</code> follow the view they
-            open, unless <code>layout.board()</code> says otherwise.
+            <code>delete</code> — a confirmation has no page worth opening. A board's
+            card opens the record's <code>read</code> view, so it follows{" "}
+            <code>views.read</code>.
           </p>
           <p>
             The button is a real link: Ctrl/Cmd+click opens the page in a new tab and
@@ -85,18 +190,40 @@ const actionsResource = createViewResource("actions", {
   },
 })
 
-const open = `views: {
-  read: { open: "drawer" },
+const openCode = `views: {
+  read: { open: "drawer" }, // also where a board's card opens
   update: { open: "dialog", afterSave: "close" },
   delete: { open: "dialog" }, // the default for a deletion
+}`
+
+const customOpen = `import { open, configureResourceView } from "react-resource-view"
+
+const accordion = open.custom({
+  type: "accordion",
+  placement: "inline", // "overlay" | "inline"
+  component: ({ title, children, close, expandHref }) => (
+    <Collapsible open onOpenChange={close}>
+      <h3>{title}</h3>
+      {children}
+    </Collapsible>
+  ),
+})
+
+views: { read: { open: accordion } }
+
+// Or once for the whole application, then \`open: "accordion"\`:
+configureResourceView({ open: { accordion } })
+
+declare module "react-resource-view" {
+  interface OpenFrames {
+    accordion: true // so a typo in the name stays a type error
+  }
 }`
 
 const expandable = `views: {
   read: { open: "drawer", expandable: true },    // the default
   update: { open: "dialog", expandable: false }, // no link to the page
-}
-
-layout.board({ groupBy: "status", columns: STATUSES, openRecord: "drawer", expandable: true })`
+}`
 
 const optimistic = `createViewResource<Task>("tasks", {
   path: "/api/tasks",

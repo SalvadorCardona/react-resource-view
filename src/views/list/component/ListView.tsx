@@ -15,6 +15,7 @@ import {
   ListFilterBar,
   listFilterFormClassName,
 } from "@/views/list/component/ListFilterBar"
+import { useInlineClaim } from "@/open/childViewRoute"
 
 export default function ListView() {
   return (
@@ -25,6 +26,10 @@ export default function ListView() {
 }
 
 export const ContentList = () => {
+  // The views opened inline are drawn under the rows of this list, when its
+  // layout can.
+  useInlineClaim()
+
   return (
     <div className={"g:p-0 lg:min-w-75 gap-2 flex flex-col"}>
       <ListHeader />

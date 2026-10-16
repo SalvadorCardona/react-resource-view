@@ -621,14 +621,11 @@ export const tasks = createViewResource<Task>("tasks", {
     list: {
       filters: { inputs: { title: { label: "Search a title" } } },
       layouts: [
-        layout.board({
-          groupBy: "status",
-          columns: TASK_STATUSES,
-          openRecord: "drawer",
-        }),
+        layout.board({ groupBy: "status", columns: TASK_STATUSES }),
         layout.table({ fields: ["title", "status", "dueDate"] }),
       ],
     },
+    read: { open: "drawer" }, // a row's button and a card of the board alike
     update: { fullWidth: false, open: "dialog", afterSave: "close" },
   },
 })
@@ -644,7 +641,7 @@ export const tasks = createViewResource<Task>("tasks", {
 | `quota`                                                        | root                                       | How many records may be created: `{ get: (ctx) => ({ current, max }), fallback }`                      |
 | `form`, `fullWidth`, `titleField`, `components`, `description` | root or `views.<action>`                   | Merged deeply, the action winning; `inputs: { notes: false }` removes a field                          |
 | `title`, `buttonLabel`                                         | `views.<action>`                           | The view's title, when the derived one will not do; the text of its button                             |
-| `open`                                                         | `views.read`, `create`, `update`, `delete` | `"page"`, `"dialog"` or `"drawer"`                                                                     |
+| `open`                                                         | `views.read`, `create`, `update`, `delete` | `"page"`, `"dialog"`, `"drawer"` or `open.custom()` — written into the URL, see below                  |
 | `afterSave`                                                    | `views.create`, `update`                   | `"close"`, `"stay"`, `"reload"` or `{ redirect: (item) => string }`                                    |
 | `tabs`                                                         | `views.read`, `update`                     | Sub-views under the record: `{ items: [{ resource, filter: ({ item }) => … }] }`                       |
 | `layouts`, `filters`, `pageSize`, `rowActions`                 | `views.list`                               | How the list is drawn, filtered, paged, and what its rows offer                                        |
@@ -660,6 +657,44 @@ A refused action hides its buttons and protects its route: `/books/update/1`
 draws the scope's `forbiddenFallback` instead of the form. A function is told
 the record, and may answer asynchronously; the answers are cached per record
 while a list is on screen. In a component, `usePermission("delete", record)`.
+
+### Where a view opens
+
+`views.<action>.open` is decided once, by the view. Anything but `page` is
+written into the URL under the view it was opened from —
+`…/tasks/list/tasks/update/12`, with the list's filter and layout — so a row's
+button, a board's card and a shared link open the same frame, Back closes it, a
+reload opens it again, and a save closes it by going back to the list's URL.
+
+A frame of your own is built like a layout of your own:
+
+```tsx
+import { open } from "react-resource-view"
+
+const accordion = open.custom({
+  type: "accordion",
+  placement: "inline", // under the row that opened it; or "overlay"
+  component: ({ title, children, close, expandHref }) => (
+    <Collapsible open onOpenChange={close}>
+      <h3>{title}</h3>
+      {children}
+    </Collapsible>
+  ),
+})
+
+views: {
+  read: {
+    open: accordion
+  }
+}
+```
+
+`configureResourceView({ open: { accordion } })` registers it under a name
+(`open: "accordion"`, typed by augmenting the `OpenFrames` interface). `inline`
+is drawn under the row by a table, a plain list and a card grid — a
+`layout.custom()` says it can with `supports: ["inline"]` and draws
+`<InlineChildView row={row} />`; elsewhere the frame falls back to a dialog,
+with a warning in development.
 
 ## Layouts
 
@@ -683,15 +718,13 @@ columns, the lines of a card), `label`, `icon`, `fullWidth` and `components`.
 
 ### Boards: opening, selecting, moving
 
-A card of a board opens the record when the board says where, and several cards
-move together:
+A card of a board opens the record's `read` view where `views.read.open` says,
+and several cards move together:
 
 ```tsx
 layout.board({
   groupBy: "status",
   columns: STATUSES,
-  // "drawer" | "dialog" | "page"; unset, a card opens nothing.
-  openRecord: "drawer",
   // On by default.
   selectable: true,
   // Beside "Move to…", in the bar a selection brings up.
@@ -700,10 +733,8 @@ layout.board({
 ```
 
 - **Opening** — the whole card is clickable and reachable with Tab, Enter opens
-  it. `drawer` and `dialog` show the record's `read` view over the board, with a
-  way to edit it, and write it into the URL as a child view
-  (`…/tasks/list/tasks/read/12`): the link can be shared and Back closes it.
-  `page` goes to the record's page through `generateLink`.
+  it, where `views.read.open` says: over the board — with a way to edit it — at
+  the same URL as the row's read button, or on the record's page.
 - **Controls first** — a button, a link, a menu, a checkbox or a drag handle in
   the card keeps its click (or anything marked `data-card-control`); selecting
   text does not open the card either.

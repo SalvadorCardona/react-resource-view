@@ -145,17 +145,17 @@ describe("configureResourceView", () => {
       views: { delete: { open: "dialog" } },
     })
 
-    expect(resource.views.update.open).toBe("drawer")
-    expect(resource.views.delete.open).toBe("dialog")
+    expect(resource.views.update.open.type).toBe("drawer")
+    expect(resource.views.delete.open.type).toBe("dialog")
   })
 
   it("reaches the resources declared before it is called", () => {
     const resource = createViewResource(id(), { storage: "local" })
-    expect(resource.views.update.open).toBe("page")
+    expect(resource.views.update.open.type).toBe("page")
 
     configureResourceView({ defaults: { views: { update: { open: "dialog" } } } })
 
-    expect(resource.views.update.open).toBe("dialog")
+    expect(resource.views.update.open.type).toBe("dialog")
   })
 
   // 0.x's `setResourceConfig` merged shallowly: a `defaultResource` erased the
@@ -177,7 +177,10 @@ describe("configureResourceView", () => {
 
   it('lets `"all"` lift a restriction the defaults set', () => {
     configureResourceView({ defaults: { permissions: "readonly" } })
-    const resource = createViewResource(id(), { storage: "local", permissions: "all" })
+    const resource = createViewResource(id(), {
+      storage: "local",
+      permissions: "all",
+    })
 
     expect(resource.permissions.delete).toBe(true)
   })

@@ -47,13 +47,10 @@ export function generateLinkFromIri({
   return undefined
 }
 
-function findResourceByPath(
-  path: string,
-  scope?: string
-): ViewResource | undefined {
-  const matches = (
-    Object.values(resourceRegistered) as ViewResource[]
-  ).filter((resource) => resource.path === path)
+function findResourceByPath(path: string, scope?: string): ViewResource | undefined {
+  const matches = (Object.values(resourceRegistered) as ViewResource[]).filter(
+    (resource) => resource.path === path
+  )
 
   if (matches.length === 0) return undefined
 
@@ -269,16 +266,11 @@ export function parseLink(url: string): ViewResourceContextParams {
 
   const actionValues = Object.values(ActionList) as string[]
 
-  // A list has no id of its own, so the child view drawn over it — the record
-  // a board card opens in a drawer — starts right after the action:
+  // A view without an id — a list, a page of one's own — has the child view
+  // drawn over it start right after the action:
   // .../{resourceId}/list/{childResourceId}/{childAction}/{childId}
   // What was read as the id is the child's resource.
-  if (
-    resourceAction === ActionList.list &&
-    id &&
-    rest[0] &&
-    actionValues.includes(rest[0])
-  ) {
+  if (id && rest[0] && actionValues.includes(rest[0])) {
     delete params.id
     const child: ViewResourceContextParams = {
       resourceId: decodeIri(id),

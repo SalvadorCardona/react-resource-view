@@ -54,7 +54,12 @@ const usersResource = createViewResource<Article>("admin_users", {
   storage: "local",
   repository: {
     getCollection: async () => ({
-      data: { "@id": "admin_users", "@type": "Collection", member: [], totalItems: 0 },
+      data: {
+        "@id": "admin_users",
+        "@type": "Collection",
+        member: [],
+        totalItems: 0,
+      },
     }),
   },
   views: {
@@ -68,7 +73,12 @@ const tasksResource = createViewResource<Article>("admin_tasks", {
   storage: "local",
   repository: {
     getCollection: async () => ({
-      data: { "@id": "admin_tasks", "@type": "Collection", member: [], totalItems: 0 },
+      data: {
+        "@id": "admin_tasks",
+        "@type": "Collection",
+        member: [],
+        totalItems: 0,
+      },
     }),
   },
   fullWidth: true,
@@ -82,10 +92,7 @@ const adminScope: ScopeInterface = {
   label: "Back office",
   decoratorComponent: AdminLayout,
   resources: [articlesResource, usersResource, tasksResource],
-  menu: [
-    articlesResource,
-    usersResource,
-  ],
+  menu: [articlesResource, usersResource],
   defaultViewResourceContextParams: {
     resourceId: articlesResource["@id"],
   },
@@ -203,7 +210,7 @@ describe("AdminLayout", () => {
     // The one in the breadcrumb, and the one above the title.
     expect(backLinks.length).toBeGreaterThanOrEqual(2)
 
-    expect(screen.getByRole("button", { name: "delete" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "delete" })).toBeInTheDocument()
   })
 
   it("lets a view write its own title and actions", async () => {
@@ -227,7 +234,7 @@ describe("AdminLayout", () => {
         await screen.findByRole("heading", { name: "Custom title" })
       ).toBeInTheDocument()
       expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument()
-      expect(screen.queryByRole("button", { name: "delete" })).toBeNull()
+      expect(screen.queryByRole("link", { name: "delete" })).toBeNull()
     } finally {
       view.components = components
     }
