@@ -67,7 +67,7 @@ export const Route = createRootRoute({
         { property: "og:url", content: canonical },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:image", content: ogImage },
-        { name: "theme-color", content: "#7c5cff" },
+        { name: "theme-color", content: "#e46212" },
       ],
       links: [
         { rel: "canonical", href: canonical },
@@ -78,16 +78,6 @@ export const Route = createRootRoute({
           rel: "icon",
           href: `${import.meta.env.BASE_URL}favicon.svg`,
           type: "image/svg+xml",
-        },
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        {
-          rel: "preconnect",
-          href: "https://fonts.gstatic.com",
-          crossOrigin: "anonymous",
-        },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
         },
       ],
       scripts: [

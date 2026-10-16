@@ -7,12 +7,25 @@
 @source "./";
 
 @layer base {
+  * {
+    @apply border-border;
+  }
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
   }
+}
+
+/* Outside any layer, this rule outranks the utilities: every heading of the
+   site takes the theme's font, weight and tracking. It lives here rather than
+   in the library's stylesheet, which must not restyle an application's own
+   headings. */
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--typeface-heading);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
 }
 
 /* A minimal prose style, rather than pulling in a typography plugin for the
