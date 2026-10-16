@@ -845,3 +845,5 @@ of his work, and how to reach him, is on [cardona.digital](https://cardona.digit
 ## License
 
 MIT
+
+A Hermez product
