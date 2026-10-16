@@ -4,7 +4,7 @@ import { IdAbleInterface, JsonLdCollection } from "jsonld-item"
 import { ApiDialectInterface } from "@/api/apiDialectInterface"
 import type { ViewResourceContext } from "@/ViewResourceContext"
 import type { Layout } from "@/layout/layout"
-import type { ViewResource, IconType } from "@/ViewResource"
+import type { ViewResource, IconType, BulkActionInterface } from "@/ViewResource"
 import type { FilterInterface } from "@/views/list/filter/useFilter"
 import type { OpenMode } from "@/open/open"
 
@@ -246,6 +246,19 @@ export interface ComponentSlots {
   pagination?: FC
   /** Drawn when a list has nothing to show. */
   empty?: FC
+  /**
+   * Drawn when the view could not load its records — the API down, a 500, a
+   * 403. Defaults to a message saying what the API answered, and "Try again".
+   */
+  error?: FC<LoadErrorProps>
+}
+
+/** What the `error` component of a view is given. */
+export interface LoadErrorProps {
+  /** What the failed request threw — read it with `normalizeApiError`. */
+  error?: unknown
+  /** Loads the view again. */
+  retry: () => void
 }
 
 /**
@@ -343,6 +356,35 @@ export interface TabDefinition<Item = any> {
   component?: FC
 }
 
+/** Which way a field is sorted. */
+export type SortDirection = "asc" | "desc"
+
+/** The sort of a list, field by field: `{ createdAt: "desc" }`. */
+export type SortState<Item = any> = Partial<
+  Record<FieldOf<Item> | (string & {}), SortDirection>
+>
+
+/**
+ * Which fields the list can be sorted by, and the sort it opens on. The sort
+ * goes to the API — every dialect knows how to spell it — and into the URL.
+ */
+export interface SortDefinition<Item = any> {
+  /**
+   * The fields a click on their column header sorts by. None by default: an
+   * API only sorts by the fields it was told to.
+   */
+  fields?: NoInfer<FieldOf<Item>>[]
+  /** The sort applied as long as the URL carries none. */
+  initial?: SortState<Item>
+}
+
+/**
+ * An action run on every selected record of a list at once — or `"delete"`,
+ * which deletes them after a confirmation, record by record, as far as
+ * `permissions.delete` allows.
+ */
+export type BulkAction<Item = any> = "delete" | BulkActionInterface<Item & object>
+
 /** `views.list` */
 export interface ListViewDefinition<Item = any, Write extends object = Item & object>
   extends CommonViewOptions<Item, Write>, ActionViewOptions {
@@ -366,6 +408,20 @@ export interface ListViewDefinition<Item = any, Write extends object = Item & ob
    * `["update", "delete"]`; permissions still apply on top.
    */
   rowActions?: Extract<Action, "read" | "update" | "delete" | ActionList>[]
+  /** The columns a click sorts by, and the sort the list opens on. */
+  sort?: SortDefinition<Item>
+  /**
+   * Whether records can be selected — a checkbox on the table's rows, the
+   * cards, the items; Ctrl/Cmd+click, Shift+click and a long press on the
+   * board. Defaults to `true` on a board, whose cards are moved together, and
+   * elsewhere to whether `bulkActions` declares any.
+   */
+  selectable?: boolean
+  /**
+   * The actions run on the selected records, in the bar that comes up once
+   * one is selected, in every layout that draws a selection.
+   */
+  bulkActions?: BulkAction<Item>[]
 }
 
 interface OpenableViewDefinition {

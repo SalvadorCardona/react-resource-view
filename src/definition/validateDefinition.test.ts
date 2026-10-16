@@ -158,6 +158,30 @@ describe("the development checks of createViewResource", () => {
   })
 })
 
+describe("the options of the list", () => {
+  it("take the selection, its actions and the sort, for every layout", () => {
+    expect(
+      messagesOf({
+        storage: "local",
+        components: { error: () => null },
+        views: {
+          list: {
+            selectable: true,
+            bulkActions: ["delete"],
+            sort: { fields: ["title"], initial: { title: "asc" } },
+          },
+        },
+      })
+    ).toEqual([])
+  })
+
+  it("say where the selection goes when written on another action", () => {
+    expect(
+      messagesOf({ storage: "local", views: { update: { bulkActions: [] } } })
+    ).toContainEqual(expect.stringContaining("it goes in views.list.bulkActions"))
+  })
+})
+
 describe("the development checks of layout.*", () => {
   it("refuses a board that does not know what to group by", () => {
     expect(() =>
@@ -182,6 +206,12 @@ describe("the development checks of layout.*", () => {
       layout.board({ groupBy: "status", columns: [], openRecord: "drawer" })
     ).toThrow(
       "`openRecord` is a 0.x key (RV1-LAYOUT-013): a card opens the record's `read` view where that view says"
+    )
+    expect(() =>
+      // @ts-expect-error — the selection is the list's
+      layout.board({ groupBy: "status", columns: [], bulkActions: [] })
+    ).toThrow(
+      "`bulkActions` is a 0.x key (RV1-LAYOUT-014): the selection is the list's, for every layout"
     )
     // @ts-expect-error — a 0.x option
     expect(() => layout.cards({ grid: 3 })).toThrow("`grid` → `columns`")

@@ -3,6 +3,7 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 import { cn } from "@/ui/cn"
 import useFormByResource from "@/hook/useFormByResource"
 import { useEffect } from "react"
+import { LoadError } from "@/components/LoadError"
 
 export default function EditView() {
   const currentResource = useCurrentViewResourceContext()
@@ -16,6 +17,10 @@ export default function EditView() {
     if (!currentResource.data) return
     formContext.updateData(currentResource.data, true)
   }, [currentResource.data])
+
+  // A record that could not be loaded is not drawn as an empty form, which
+  // could be saved over it.
+  if (currentResource.error && !currentResource.data) return <LoadError />
 
   return (
     <div

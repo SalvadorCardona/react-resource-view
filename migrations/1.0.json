@@ -366,7 +366,7 @@
           "key": "behavior"
         }
       ],
-      "hint": "`behavior` is gone: `openIn` → `open`, `closeAfterUpdate`/`refreshDataAfterUpdate`/`redirectToAfterUpdate` → `afterSave`, `rowActions` → `views.list.rowActions`, `canExport` → `permissions.export`, `eventSourced` → `realtime` (root), `openRecordIn` → `views.read.open`, `selectable`/`bulkActions` → `layout.board({ selectable, bulkActions })`."
+      "hint": "`behavior` is gone: `openIn` → `open`, `closeAfterUpdate`/`refreshDataAfterUpdate`/`redirectToAfterUpdate` → `afterSave`, `rowActions` → `views.list.rowActions`, `canExport` → `permissions.export`, `eventSourced` → `realtime` (root), `openRecordIn` → `views.read.open`, `selectable`/`bulkActions` → `views.list.selectable`/`views.list.bulkActions`."
     },
     {
       "id": "RV1-BEHAV-002",
@@ -475,20 +475,20 @@
     {
       "id": "RV1-BEHAV-006",
       "area": "behavior",
-      "title": "`openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `layout.board()`",
+      "title": "`openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `views.list`",
       "kind": "move",
       "from": [
         "behavior.openRecordIn",
         "behavior.selectable",
         "behavior.bulkActions"
       ],
-      "to": "views.read.open, layout.board({ selectable, bulkActions })",
+      "to": "views.read.open, views.list.selectable, views.list.bulkActions",
       "codemod": true,
       "manual": null,
-      "why": "They only ever applied to the Kanban board — and where a card opens is where the record's `read` view opens: one decision, the same URL from a card, a button or a link.",
-      "before": "columnViewOptionFactory({\n  behavior: { openRecordIn: \"drawer\", bulkActions: [markUrgent] },\n})",
-      "after": "views: {\n  read: { open: \"drawer\" },\n  list: { layouts: [layout.board({ bulkActions: [markUrgent] })] },\n}",
-      "note": "Declared on `view`, they used to reach the board through the merge; the codemod moves `selectable` and `bulkActions` into the board's options when the board is in the same declaration, and `openRecordIn` to `views.read.open`. Written on a layout or in a shared fragment, `openRecordIn` is reported: declare `views.read.open` on the resource.",
+      "why": "Where a card opens is where the record's `read` view opens: one decision, the same URL from a card, a button or a link. And a selection is the list's, not one layout's: declared once on `views.list`, every layout — table, cards, items, board — selects the same records and offers the same bulk actions.",
+      "before": "columnViewOptionFactory({\n  identifierKey: \"status\",\n  identifierKeyList: STATUSES,\n  behavior: { openRecordIn: \"drawer\", bulkActions: [markUrgent] },\n})",
+      "after": "views: {\n  read: { open: \"drawer\" },\n  list: {\n    bulkActions: [markUrgent],\n    layouts: [layout.board({ groupBy: \"status\", columns: STATUSES })],\n  },\n}",
+      "note": "Declared on `view`, on a view or in a layout's `behavior`, `selectable` and `bulkActions` go to `views.list`; a shared fragment of them spread into a layout of the declaration is spread into `views.list` instead, and a layout built away from its resource keeps them, marked `TODO(RV1-BEHAV-006)`. `openRecordIn` goes to `views.read.open`; written on a layout or in a shared fragment, it is reported: declare `views.read.open` on the resource. `selectable` defaults to `true` when `bulkActions` is non-empty, and a board stays selectable for \"Move to…\".",
       "detect": [
         {
           "in": "behavior",
@@ -503,7 +503,7 @@
           "key": "bulkActions"
         }
       ],
-      "hint": "`openRecordIn` does not exist here: a card opens the record's `read` view where `views.read.open` says. `selectable` and `bulkActions` are options of `layout.board()`.",
+      "hint": "`openRecordIn` does not exist here: a card opens the record's `read` view where `views.read.open` says. `selectable` and `bulkActions` are options of the list: `views.list.selectable`, `views.list.bulkActions`.",
       "map": {
         "openRecordIn": "open"
       },
@@ -879,6 +879,34 @@
         }
       ],
       "hint": "a card opens the record's `read` view where that view says: `views: { read: { open: \"drawer\", expandable: true } }` instead of `layout.board({ openRecord, expandable })`."
+    },
+    {
+      "id": "RV1-LAYOUT-014",
+      "area": "layouts",
+      "title": "`layout.board({ selectable, bulkActions })` disappears: the selection is declared on `views.list`, for every layout",
+      "kind": "move",
+      "from": [
+        "layout.board.selectable",
+        "layout.board.bulkActions"
+      ],
+      "to": "views.list.selectable, views.list.bulkActions",
+      "codemod": true,
+      "manual": null,
+      "why": "A selection is the list's, not one layout's: declared once on `views.list`, every layout — table, cards, items, board — selects the same records and offers the same bulk actions.",
+      "before": "layout.board({ groupBy: \"status\", columns: STATUSES, bulkActions: [markUrgent] })",
+      "after": "views: {\n  list: {\n    bulkActions: [markUrgent],\n    layouts: [layout.board({ groupBy: \"status\", columns: STATUSES })],\n  },\n}",
+      "note": "`selectable` defaults to `true` when `bulkActions` is non-empty; a board stays selectable for \"Move to…\" unless `selectable: false`. `bulkActions` also takes `\"delete\"`, the built-in deletion of the selected records. The codemod moves both to `views.list` when the board is written in the resource's `views.list.layouts`, and marks with `TODO(RV1-LAYOUT-014)` those of the boards built elsewhere.",
+      "detect": [
+        {
+          "in": "layout:board",
+          "key": "selectable"
+        },
+        {
+          "in": "layout:board",
+          "key": "bulkActions"
+        }
+      ],
+      "hint": "the selection is the list's, for every layout: `views: { list: { selectable, bulkActions } }` instead of `layout.board({ selectable, bulkActions })`."
     },
     {
       "id": "RV1-COMP-001",

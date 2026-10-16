@@ -16,6 +16,8 @@ import {
   listFilterFormClassName,
 } from "@/views/list/component/ListFilterBar"
 import { useInlineClaim } from "@/open/childViewRoute"
+import { LoadError } from "@/components/LoadError"
+import { ListSelectionBar } from "@/views/list/selection/ListSelectionBar"
 
 export default function ListView() {
   return (
@@ -36,6 +38,7 @@ export const ContentList = () => {
       <FormFilter />
       <List />
       <NoResult />
+      <SelectionBar />
     </div>
   )
 }
@@ -46,8 +49,8 @@ const List = () => {
   const viewOptionName = currentResource.viewVariant
   const listView = useListViewContext()
 
+  if (currentResource.error) return <LoadError />
   if (currentResource.isLoading && listView.data.length === 0) return <PageLoader />
-  if (currentResource.error) return <Trans>An error occurred</Trans>
 
   if (listView.data.length === 0) {
     return <></>
@@ -56,6 +59,17 @@ const List = () => {
   return (
     <ListComponent rows={listView.rows} key={"view-" + view.id + viewOptionName} />
   )
+}
+
+/**
+ * The selection bar of every layout but the board, which draws its own with
+ * "Move to…" in it.
+ */
+function SelectionBar() {
+  const { layout } = useCurrentViewResourceContext()
+  if (layout?.type === "board") return null
+
+  return <ListSelectionBar />
 }
 
 function FormFilter() {

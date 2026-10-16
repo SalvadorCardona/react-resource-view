@@ -181,7 +181,7 @@ const actionsResource = createViewResource("actions", {
           <p>
             Every call resolves with the API's answer, or rejects once the record is
             back to what it was — after a toast, unless <code>notify: false</code>. A
-            board's <code>bulkActions</code> receive the same object as their second
+            list's <code>bulkActions</code> receive the same object as their second
             argument.
           </p>
         </Section>

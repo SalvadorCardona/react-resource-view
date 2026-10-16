@@ -25,7 +25,7 @@ export const LEGACY_HINTS: Record<string, string> = {
   "RV1-VIEW-009":
     "a view has no `id` or `icon` of its own: the resource's `icon` is used; a layout takes `id` and `icon`.",
   "RV1-BEHAV-001":
-    "`behavior` is gone: `openIn` → `open`, `closeAfterUpdate`/`refreshDataAfterUpdate`/`redirectToAfterUpdate` → `afterSave`, `rowActions` → `views.list.rowActions`, `canExport` → `permissions.export`, `eventSourced` → `realtime` (root), `openRecordIn` → `views.read.open`, `selectable`/`bulkActions` → `layout.board({ selectable, bulkActions })`.",
+    "`behavior` is gone: `openIn` → `open`, `closeAfterUpdate`/`refreshDataAfterUpdate`/`redirectToAfterUpdate` → `afterSave`, `rowActions` → `views.list.rowActions`, `canExport` → `permissions.export`, `eventSourced` → `realtime` (root), `openRecordIn` → `views.read.open`, `selectable`/`bulkActions` → `views.list.selectable`/`views.list.bulkActions`.",
   "RV1-BEHAV-002":
     '`open: "page" | "dialog" | "drawer"` on the action\'s view (`window` is now `page`, `popup` is `dialog`).',
   "RV1-BEHAV-003":
@@ -34,7 +34,7 @@ export const LEGACY_HINTS: Record<string, string> = {
     'the buttons of a row are `views.list.rowActions: ["read", "update", "delete"]`.',
   "RV1-BEHAV-005": "live updates are `realtime: true` at the root of the resource.",
   "RV1-BEHAV-006":
-    "`openRecordIn` does not exist here: a card opens the record's `read` view where `views.read.open` says. `selectable` and `bulkActions` are options of `layout.board()`.",
+    "`openRecordIn` does not exist here: a card opens the record's `read` view where `views.read.open` says. `selectable` and `bulkActions` are options of the list: `views.list.selectable`, `views.list.bulkActions`.",
   "RV1-LAYOUT-001":
     "a list's layouts are `views.list.layouts: [layout.table(), layout.board({ … })]`.",
   "RV1-LAYOUT-003": "this option of `layout.cards` was renamed: `grid` → `columns`.",
@@ -51,6 +51,8 @@ export const LEGACY_HINTS: Record<string, string> = {
   "RV1-LAYOUT-010": "a layout's components are `components: { list, row, item }`.",
   "RV1-LAYOUT-013":
     'a card opens the record\'s `read` view where that view says: `views: { read: { open: "drawer", expandable: true } }` instead of `layout.board({ openRecord, expandable })`.',
+  "RV1-LAYOUT-014":
+    "the selection is the list's, for every layout: `views: { list: { selectable, bulkActions } }` instead of `layout.board({ selectable, bulkActions })`.",
   "RV1-COMP-001":
     "components are injected through `components: { view, list, row, item, … }` (at the root, per action or per layout).",
   "RV1-COMP-002": "the wrapper of a resource's views is `components: { wrapper }`.",
@@ -122,6 +124,8 @@ export const LEGACY_KEYS: [level: string, key: string, change: string][] = [
   ["layout", "itemComponent", "RV1-LAYOUT-010"],
   ["layout:board", "openRecord", "RV1-LAYOUT-013"],
   ["layout:board", "expandable", "RV1-LAYOUT-013"],
+  ["layout:board", "selectable", "RV1-LAYOUT-014"],
+  ["layout:board", "bulkActions", "RV1-LAYOUT-014"],
   ["view", "viewComponent", "RV1-COMP-001"],
   ["view", "listComponent", "RV1-COMP-001"],
   ["view", "rowComponent", "RV1-COMP-001"],

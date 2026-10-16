@@ -80,14 +80,9 @@ describe("layout.*", () => {
   it("keeps the options of each layout, with their defaults", () => {
     expect(layout.cards({ columns: 3 }).options).toEqual({ columns: 3 })
     expect(layout.cards().options).toEqual({ columns: 4 })
-    expect(
-      layout.board({ groupBy: "status", columns: STATUSES, selectable: false })
-        .options
-    ).toEqual({
+    expect(layout.board({ groupBy: "status", columns: STATUSES }).options).toEqual({
       groupBy: "status",
       columns: STATUSES,
-      selectable: false,
-      bulkActions: [],
     })
     expect(layout.calendar({ dateField: "dueDate", mode: "week" }).options).toEqual({
       dateField: "dueDate",
@@ -192,8 +187,10 @@ describe("the types of layout.*", () => {
       layout.board({ groupBy: "status", columns: 3 })
       // @ts-expect-error — a board needs to know what to group by
       layout.board({ columns: STATUSES })
-      // @ts-expect-error — `selectable` belongs to the board
+      // @ts-expect-error — `selectable` belongs to the list, not to a layout
       layout.table({ selectable: false })
+      // @ts-expect-error — `bulkActions` belong to the list, not to the board
+      layout.board({ groupBy: "status", columns: STATUSES, bulkActions: [] })
       // @ts-expect-error — `grid` was renamed `columns`
       layout.cards({ grid: 3 })
     })

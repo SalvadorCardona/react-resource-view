@@ -85,12 +85,9 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
   views: {
     list: {
       filters: { inputs: { title: { label: "Search a title" } } },
+      bulkActions: [markUrgent], // every layout of the list selects
       layouts: [
-        layout.board({
-          groupBy: "status",
-          columns: TASK_STATUSES,
-          bulkActions: [markUrgent],
-        }),
+        layout.board({ groupBy: "status", columns: TASK_STATUSES }),
         layout.table(),
       ],
     },
@@ -136,7 +133,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-BEHAV-003](#rv1-behav-003)   | `closeAfterUpdate`, `refreshDataAfterUpdate`, `redirectToAfterUpdate` become one `afterSave`                                                                                                     | merge    | automatic, then check |
 | [RV1-BEHAV-004](#rv1-behav-004)   | `rowActions` moves to `views.list.rowActions`, as strings                                                                                                                                        | move     | automatic             |
 | [RV1-BEHAV-005](#rv1-behav-005)   | `eventSourced` becomes `realtime` at the root of the resource                                                                                                                                    | move     | automatic             |
-| [RV1-BEHAV-006](#rv1-behav-006)   | `openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `layout.board()`                                                                                | move     | automatic             |
+| [RV1-BEHAV-006](#rv1-behav-006)   | `openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `views.list`                                                                                    | move     | automatic             |
 | [RV1-LAYOUT-001](#rv1-layout-001) | `viewVariants` becomes `views.list.layouts`                                                                                                                                                      | move     | automatic             |
 | [RV1-LAYOUT-002](#rv1-layout-002) | `tableViewOptionFactory` becomes `layout.table`                                                                                                                                                  | rename   | automatic             |
 | [RV1-LAYOUT-003](#rv1-layout-003) | `cardViewOptionFactory` becomes `layout.cards` (`grid` → `columns`)                                                                                                                              | rename   | automatic             |
@@ -150,6 +147,7 @@ export const tasks = createViewResource<Task>(TASKS_ID, {
 | [RV1-LAYOUT-011](#rv1-layout-011) | A layout's `form` is merged over the resource's; `fields` picks the columns                                                                                                                      | semantic | automatic, then check |
 | [RV1-LAYOUT-012](#rv1-layout-012) | Custom layouts: `createView` becomes `layout.custom`, options are read with `useLayout()`                                                                                                        | semantic | automatic, then check |
 | [RV1-LAYOUT-013](#rv1-layout-013) | `layout.board({ openRecord, expandable })` disappears: a card opens `read` where `views.read` says                                                                                               | move     | automatic             |
+| [RV1-LAYOUT-014](#rv1-layout-014) | `layout.board({ selectable, bulkActions })` disappears: the selection is declared on `views.list`, for every layout                                                                              | move     | automatic             |
 | [RV1-COMP-001](#rv1-comp-001)     | `viewComponent`, `listComponent`, `rowComponent`, `itemComponent` become `components.view\|list\|row\|item`                                                                                      | move     | automatic             |
 | [RV1-COMP-002](#rv1-comp-002)     | `decoratorComponent` of a resource becomes `components.wrapper`                                                                                                                                  | move     | automatic             |
 | [RV1-COMP-003](#rv1-comp-003)     | `components.noResult` becomes `components.empty`                                                                                                                                                 | rename   | automatic             |
@@ -708,12 +706,14 @@ Why: It is a property of the data (Mercure), not of a view.
 
 ### RV1-BEHAV-006
 
-**`openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `layout.board()`** — move, rewritten by `migrate`.
+**`openRecordIn` becomes the `open` of `views.read`; `selectable`, `bulkActions` become options of `views.list`** — move, rewritten by `migrate`.
 
 Before (0.x):
 
 ```ts
 columnViewOptionFactory({
+  identifierKey: "status",
+  identifierKeyList: STATUSES,
   behavior: { openRecordIn: "drawer", bulkActions: [markUrgent] },
 })
 ```
@@ -723,13 +723,16 @@ After (1.0):
 ```ts
 views: {
   read: { open: "drawer" },
-  list: { layouts: [layout.board({ bulkActions: [markUrgent] })] },
+  list: {
+    bulkActions: [markUrgent],
+    layouts: [layout.board({ groupBy: "status", columns: STATUSES })],
+  },
 }
 ```
 
-Why: They only ever applied to the Kanban board — and where a card opens is where the record's `read` view opens: one decision, the same URL from a card, a button or a link.
+Why: Where a card opens is where the record's `read` view opens: one decision, the same URL from a card, a button or a link. And a selection is the list's, not one layout's: declared once on `views.list`, every layout — table, cards, items, board — selects the same records and offers the same bulk actions.
 
-Note: Declared on `view`, they used to reach the board through the merge; the codemod moves `selectable` and `bulkActions` into the board's options when the board is in the same declaration, and `openRecordIn` to `views.read.open`. Written on a layout or in a shared fragment, `openRecordIn` is reported: declare `views.read.open` on the resource.
+Note: Declared on `view`, on a view or in a layout's `behavior`, `selectable` and `bulkActions` go to `views.list`; a shared fragment of them spread into a layout of the declaration is spread into `views.list` instead, and a layout built away from its resource keeps them, marked `TODO(RV1-BEHAV-006)`. `openRecordIn` goes to `views.read.open`; written on a layout or in a shared fragment, it is reported: declare `views.read.open` on the resource. `selectable` defaults to `true` when `bulkActions` is non-empty, and a board stays selectable for "Move to…".
 
 ## Layouts
 
@@ -1033,6 +1036,31 @@ views: {
 Why: Where a view opens was decided in four places, each with its own default: a board's card, a row's button, the form, the route. It is decided once, by the view: a card, a button and a shared link open the same frame at the same URL, Back closes it and a reload opens it again.
 
 Note: A board's card now always opens the record's `read` view — on its page unless `views.read.open` says otherwise. `expandable` is only declared on the view. The codemod moves both to `views.read` when the board is written in the resource's `views.list.layouts`, and reports the boards built elsewhere.
+
+### RV1-LAYOUT-014
+
+**`layout.board({ selectable, bulkActions })` disappears: the selection is declared on `views.list`, for every layout** — move, rewritten by `migrate`.
+
+Before (1.0 previews):
+
+```ts
+layout.board({ groupBy: "status", columns: STATUSES, bulkActions: [markUrgent] })
+```
+
+After (1.0):
+
+```ts
+views: {
+  list: {
+    bulkActions: [markUrgent],
+    layouts: [layout.board({ groupBy: "status", columns: STATUSES })],
+  },
+}
+```
+
+Why: A selection is the list's, not one layout's: declared once on `views.list`, every layout — table, cards, items, board — selects the same records and offers the same bulk actions.
+
+Note: `selectable` defaults to `true` when `bulkActions` is non-empty; a board stays selectable for "Move to…" unless `selectable: false`. `bulkActions` also takes `"delete"`, the built-in deletion of the selected records. The codemod moves both to `views.list` when the board is written in the resource's `views.list.layouts`, and marks with `TODO(RV1-LAYOUT-014)` those of the boards built elsewhere.
 
 ## Components
 

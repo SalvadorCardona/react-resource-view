@@ -17,6 +17,7 @@ import type {
   TabDefinition,
   ComponentSlots,
   ListViewDefinition,
+  BulkAction,
 } from "@/ResourceDefinition"
 import type { OpenFrame } from "@/open/open"
 
@@ -39,12 +40,12 @@ export interface RowInterface<Data extends object = any> {
   pending?: "create" | "update"
 }
 
-/** An action run on every selected card of a board at once. */
+/** An action run on every selected record of a list at once. */
 export interface BulkActionInterface<Data extends object = any> {
   label: string
   icon?: IconType
   /**
-   * Receives the selected records, and may return a promise. The board
+   * Receives the selected records, and may return a promise. The list
    * refreshes once it has settled, and the selection is cleared if it resolves.
    * Writes made through `mutation` — the resource's
    * {@link ResourceMutation} — are drawn before the API answers.
@@ -113,6 +114,10 @@ export interface ResolvedView {
   filters?: ListViewDefinition["filters"]
   pageSize?: number
   rowActions: `${ActionList}`[]
+  sort?: ListViewDefinition["sort"]
+  /** As declared: the default depends on the layout on screen. */
+  selectable?: boolean
+  bulkActions: BulkAction[]
   tabs?: ResolvedTabs
 }
 

@@ -719,17 +719,24 @@ columns, the lines of a card), `label`, `icon`, `fullWidth` and `components`.
 ### Boards: opening, selecting, moving
 
 A card of a board opens the record's `read` view where `views.read.open` says,
-and several cards move together:
+and several cards move together. The selection is the list's: declared once on
+`views.list`, it holds for every layout — table, cards, items, board:
 
 ```tsx
-layout.board({
-  groupBy: "status",
-  columns: STATUSES,
-  // On by default.
-  selectable: true,
-  // Beside "Move to…", in the bar a selection brings up.
-  bulkActions: [{ label: "Archive", onAction: (records) => archive(records) }],
-})
+views: {
+  list: {
+    // On by default when there are bulk actions; a board stays selectable
+    // for "Move to…" unless `selectable: false`.
+    selectable: true,
+    // In the bar a selection brings up — beside "Move to…" on a board.
+    // `"delete"` is the built-in deletion of the selected records.
+    bulkActions: [
+      { label: "Archive", onAction: (records) => archive(records) },
+      "delete",
+    ],
+    layouts: [layout.board({ groupBy: "status", columns: STATUSES })],
+  },
+}
 ```
 
 - **Opening** — the whole card is clickable and reachable with Tab, Enter opens

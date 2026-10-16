@@ -8,7 +8,7 @@ import {
 import {
   createViewResource,
   layout,
-  type BoardLayoutOptions,
+  type ListViewDefinition,
 } from "react-resource-view"
 import { TaskRow } from "@/demo/playground/adminRows"
 import {
@@ -63,7 +63,7 @@ const TASK_FIELDS = {
  * keys of. Both keep the declaration compiling against whichever release the
  * site is installed on.
  */
-const BOARD_BEHAVIOR: Partial<BoardLayoutOptions> = {
+const BOARD_BEHAVIOR: Pick<ListViewDefinition, "bulkActions"> = {
   bulkActions: [
     {
       label: "Mark as urgent",
@@ -115,11 +115,11 @@ export const tasksResource = createViewResource<Task>(TASKS_ID, {
           },
         },
       },
+      ...BOARD_BEHAVIOR,
       layouts: [
         // One column per status, and the list opens on it: dropping a card in
         // another column writes the new status back.
         layout.board({
-          ...BOARD_BEHAVIOR,
           groupBy: "status",
           columns: TASK_STATUSES,
           components: { row: TaskRow },

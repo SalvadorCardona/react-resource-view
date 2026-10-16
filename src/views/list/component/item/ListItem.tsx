@@ -5,6 +5,7 @@ import ListResourceViewButton from "@/action/ListResourceViewButton"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 import { ScrollArea } from "@/ui/scroll-area"
 import { InlineChildView } from "@/components/ChildViewResourceDialog"
+import { SelectRowCheckbox } from "@/views/list/selection/SelectRowCheckbox"
 
 export function ListItem({ rows = [] }: ListComponentPropsInterface) {
   if (!rows.length) {
@@ -28,6 +29,7 @@ export function ListItem({ rows = [] }: ListComponentPropsInterface) {
           {rows.map((row, e) => (
             <li key={"row-" + e}>
               <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/40">
+                <SelectRowCheckbox row={row} />
                 <div className="min-w-0 flex-1">
                   <DefaultRowComponent row={row} />
                 </div>

@@ -1,3 +1,4 @@
+import { LoadError } from "@/components/LoadError"
 import { useMemo, useState } from "react"
 import {
   addDays,
@@ -33,10 +34,7 @@ import { cn } from "@/ui/cn"
 import { ScrollArea } from "@/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover"
-import {
-  ListComponentPropsInterface,
-  RowInterface,
-} from "@/ViewResource"
+import { ListComponentPropsInterface, RowInterface } from "@/ViewResource"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { getDateLocale, getWeekStartsOn } from "@/ports"
 import { EventPreview } from "@/views/list/component/preview/EventPreview"
@@ -261,7 +259,8 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
   const handleToday = () => setCurrentDate(new Date())
 
   const getViewTitle = () => {
-    if (mode === "month") return format(currentDate, "MMMM yyyy", { locale: getDateLocale() })
+    if (mode === "month")
+      return format(currentDate, "MMMM yyyy", { locale: getDateLocale() })
     if (mode === "week") {
       const start = startOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() })
       const end = endOfWeek(currentDate, { weekStartsOn: getWeekStartsOn() })
@@ -278,7 +277,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
   }
 
   if (currentResourceContext.error) {
-    return <Trans>An error occurred</Trans>
+    return <LoadError />
   }
 
   return (
@@ -306,10 +305,7 @@ export function ListCalendar({ rows = [] }: ListComponentPropsInterface) {
           {getViewTitle()}
         </h3>
 
-        <Tabs
-          value={mode}
-          onValueChange={(value) => setMode(value as CalendarMode)}
-        >
+        <Tabs value={mode} onValueChange={(value) => setMode(value as CalendarMode)}>
           <TabsList>
             <TabsTrigger value="day" className="gap-1.5">
               <CalendarDays className="size-4" />
@@ -742,8 +738,10 @@ function PositionedEvent({
     options.titleField
   )
   const color =
-    getRowColor(entry.row as RowInterface<Record<string, unknown>>, options.colorField) ??
-    "var(--primary)"
+    getRowColor(
+      entry.row as RowInterface<Record<string, unknown>>,
+      options.colorField
+    ) ?? "var(--primary)"
   const Icon = options.getIcon?.(entry.row as RowInterface<Record<string, unknown>>)
 
   return (

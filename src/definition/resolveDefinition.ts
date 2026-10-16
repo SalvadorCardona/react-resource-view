@@ -162,6 +162,9 @@ export function resolveViews(
         filters: merged.filters,
         pageSize: merged.pageSize,
         rowActions: merged.rowActions ?? ["update", "delete"],
+        sort: merged.sort,
+        selectable: merged.selectable,
+        bulkActions: merged.bulkActions ?? [],
         tabs: resolveTabs(merged.tabs),
       }
 

@@ -181,8 +181,10 @@ ${body}
   },`)
 
     expect(output).toContain('rowActions: ["read", "delete"],')
+    // The selection is the list's, whatever its layouts.
+    expect(output).toContain("bulkActions: [archive],")
     expect(output).toContain(
-      'layout.board({ groupBy: "status", columns: STATUSES, bulkActions: [archive] }),'
+      'layouts: [layout.board({ groupBy: "status", columns: STATUSES })],'
     )
     // Where a card opens is where the record's `read` view opens.
     expect(output).toContain('read: { open: "dialog" },')
@@ -204,8 +206,80 @@ const BOARD: { behavior: object } = { behavior: { openRecordIn: "drawer", select
     expect(output).toContain('const POPUP = { open: "dialog" } as const')
     expect(output).toContain('const DRAWER = { open: "drawer" as const }')
     expect(output).toContain(
-      "const BOARD: Partial<BoardLayoutOptions> = { selectable: false }"
+      'const BOARD: Pick<ListViewDefinition, "selectable"> = { selectable: false }'
     )
+  })
+
+  it("moves the selection of a board to the list", () => {
+    const output = outputOf(`  path: "/api/tasks",
+  view: {
+    viewVariants: [
+      columnViewOptionFactory({
+        behavior: { selectable: true, bulkActions: [archive] },
+        identifierKey: "status",
+        identifierKeyList: STATUSES,
+      }),
+    ],
+  },`)
+
+    expect(output).toContain(
+      'list: {\n      selectable: true,\n      bulkActions: [archive],\n      layouts: [layout.board({ groupBy: "status", columns: STATUSES })],'
+    )
+  })
+
+  it("moves a shared fragment of the selection spread into a board to the list", () => {
+    const { output } =
+      migrate(`import { createViewResource, columnViewOptionFactory } from "react-resource-view"
+const BOARD: { behavior: object } = { behavior: { openRecordIn: "drawer", bulkActions: [archive] } }
+export const tasks = createViewResource("tasks", {
+  path: "/api/tasks",
+  view: {
+    viewVariants: [
+      columnViewOptionFactory({ ...BOARD, identifierKey: "status", identifierKeyList: STATUSES }),
+    ],
+  },
+})
+`)
+
+    expect(output).toContain(
+      'const BOARD: Pick<ListViewDefinition, "bulkActions"> = { bulkActions: [archive] }'
+    )
+    expect(output).toContain(
+      'list: {\n      ...BOARD,\n      layouts: [layout.board({ groupBy: "status", columns: STATUSES })],'
+    )
+    expect(output).toContain('read: { open: "drawer" }')
+  })
+
+  it("moves the selection of a board of a 1.0 preview to `views.list`", () => {
+    const output = outputOf(`  path: "/api/tasks",
+  views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES, selectable: true, bulkActions: [archive] }),
+      ],
+    },
+  },`)
+
+    expect(output).toContain("selectable: true,")
+    expect(output).toContain("bulkActions: [archive],")
+    expect(output).toContain(
+      'layouts: [layout.board({ groupBy: "status", columns: STATUSES })],'
+    )
+  })
+
+  it("marks the selection of a board of a 1.0 preview built away from its resource", () => {
+    const source = `import { layout } from "react-resource-view"
+export const BOARD = layout.board({ groupBy: "status", columns: STATUSES, bulkActions: [archive] })
+`
+    const { output, notes } = migrate(source)
+
+    expect(output).toContain(
+      "// TODO(RV1-LAYOUT-014): move to the resource's views.list"
+    )
+    expect(output).toContain("bulkActions: [archive],")
+    expect(notes.map((entry) => entry.id)).toContain("RV1-LAYOUT-014")
+    // Run again, it is left as it is.
+    expect(migrate(output).output).toBe(output)
   })
 
   it("moves where a board of a 1.0 preview opens its cards to `views.read`", () => {

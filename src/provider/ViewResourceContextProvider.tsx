@@ -72,7 +72,10 @@ export interface CurrentViewResourceContext extends ViewResourceContext {
   isSelected: (data: JsonLdIriAble) => boolean
   parentResource?: ViewResourceContext
   isLoading: boolean
+  /** Whether the last load failed. */
   error: boolean
+  /** What the last failed load threw — read with `normalizeApiError`. */
+  loadError?: unknown
   viewResource: ViewResourceContext
 }
 
@@ -124,6 +127,7 @@ export default function ViewResourceContextProvider({
   const needFetch = !viewResource?.data
   const [isLoading, setIsLoading] = useState<boolean>(needFetch)
   const [error, setError] = useState<boolean>(false)
+  const [loadError, setLoadError] = useState<unknown>(undefined)
   const fetchTokenRef = useRef(0)
   const fetchInThisTickRef = useRef<{
     promise: Promise<void>
@@ -145,27 +149,15 @@ export default function ViewResourceContextProvider({
   const loadData = async () => {
     if (error) {
       setError(false)
+      setLoadError(undefined)
     }
 
     const token = ++fetchTokenRef.current
     const readAt = getOptimisticStore(viewResource.resource).now()
-    console.log(
-      "DBG load",
-      viewResource.resource["@id"],
-      viewResource.resourceAction,
-      token
-    )
     setIsLoading(true)
 
     try {
       const viewProcessed = await processViewResourceContext(viewResource)
-      console.log(
-        "DBG got",
-        viewResource.resource["@id"],
-        token,
-        fetchTokenRef.current,
-        viewProcessed.data
-      )
       if (token !== fetchTokenRef.current) return
 
       // A request brings back rows, nothing else. Writing the whole context
@@ -177,6 +169,7 @@ export default function ViewResourceContextProvider({
       if (token !== fetchTokenRef.current) return
       console.warn("Fetch Error", e)
       setError(true)
+      setLoadError(e)
     } finally {
       if (token === fetchTokenRef.current) setIsLoading(false)
     }
@@ -305,6 +298,7 @@ export default function ViewResourceContextProvider({
         setViewResource,
         setFilter,
         error,
+        loadError,
         isLoading,
         ...currentViewWithVariant,
         parentResource,

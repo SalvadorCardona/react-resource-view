@@ -9,6 +9,7 @@ import { ListComponentPropsInterface } from "@/ViewResource"
 import { RecordCard } from "@/views/list/component/RecordCard"
 import { InlineChildView } from "@/components/ChildViewResourceDialog"
 import { Fragment } from "react"
+import { SelectRowCheckbox } from "@/views/list/selection/SelectRowCheckbox"
 
 // Tailwind only generates classes written out in full in the sources. A class
 // built at runtime (`"md:grid-cols-" + grid`) is never detected, and works only
@@ -43,7 +44,22 @@ export function ListCard({ rows = [] }: ListComponentPropsInterface) {
             {/* The grid used to drop the row component straight onto the
                 page, so a "card" layout produced cards with no card around
                 them. */}
-            <RecordCard row={row} withActions />
+            <div className="relative flex min-w-0 flex-col [&>*]:flex-1">
+              <RecordCard
+                row={row}
+                withActions
+                className={cn(
+                  viewContext.selection?.selectable && "pr-10",
+                  viewContext.selection?.selectable &&
+                    row.pending !== "create" &&
+                    viewContext.selection.isSelected(
+                      viewContext.selection.idOf(row)
+                    ) &&
+                    "border-primary bg-primary/5"
+                )}
+              />
+              <SelectRowCheckbox row={row} className="absolute top-4 right-4" />
+            </div>
             {/* A view opened inline takes a line of its own, after the card. */}
             <div className="col-span-full empty:hidden">
               <InlineChildView row={row} />
