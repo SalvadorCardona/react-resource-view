@@ -92,7 +92,13 @@ export const KNOWN_KEYS: Record<string, string[]> = {
     "optimistic",
     "tabs",
   ],
-  "view:delete": [...COMMON_KEYS, ...ACTION_KEYS, "open", "expandable", "optimistic"],
+  "view:delete": [
+    ...COMMON_KEYS,
+    ...ACTION_KEYS,
+    "open",
+    "expandable",
+    "optimistic",
+  ],
   components: [
     "view",
     "list",
@@ -146,7 +152,7 @@ const HOME_OF: Record<string, string> = {
   title: "views.<action>.title",
   buttonLabel: "views.<action>.buttonLabel",
   groupBy: "layout.board({ groupBy }) or layout.timeline({ groupBy })",
-  openRecord: "layout.board({ openRecord })",
+  openRecord: "views.read.open",
   selectable: "layout.board({ selectable })",
   bulkActions: "layout.board({ bulkActions })",
   realtime: "the root of the resource",
@@ -295,7 +301,13 @@ export function inspectDefinition(
   const problems: DefinitionProblem[] = []
 
   checkKeys(definition, "(root)", "resource", ["resource", "view"], problems)
-  checkKeys(definition.components, "components", "components", ["components"], problems)
+  checkKeys(
+    definition.components,
+    "components",
+    "components",
+    ["components"],
+    problems
+  )
   checkKeys(definition.hooks, "hooks", "hooks", [], problems)
   checkKeys(definition.repository, "repository", "repository", [], problems)
   checkKeys(definition.quota, "quota", "quota", [], problems)
@@ -326,7 +338,13 @@ export function inspectDefinition(
       }
     }
 
-    checkKeys(view.components, `${path}.components`, "components", ["components"], problems)
+    checkKeys(
+      view.components,
+      `${path}.components`,
+      "components",
+      ["components"],
+      problems
+    )
 
     const tabs = checkKeys(view.tabs, `${path}.tabs`, "tabs", [], problems)
     if (tabs && Array.isArray(tabs.items)) {
@@ -335,7 +353,10 @@ export function inspectDefinition(
       )
     }
 
-    if (typeof view.title === "string" && view.title === derivedTitle(action, name)) {
+    if (
+      typeof view.title === "string" &&
+      view.title === derivedTitle(action, name)
+    ) {
       problems.push({
         level: "warning",
         path: `${path}.title`,
@@ -376,7 +397,11 @@ export function inspectDefinition(
     })
   }
 
-  if (!definition.path && !definition.storage && !hasCompleteRepository(definition)) {
+  if (
+    !definition.path &&
+    !definition.storage &&
+    !hasCompleteRepository(definition)
+  ) {
     if (!rendersWithoutData(definition)) {
       problems.push({
         level: "error",
@@ -474,7 +499,11 @@ export function checkLayoutOptions(
     problems.push({
       level: "error",
       path: key,
-      message: unknownKeyMessage(key, [...known], [`layout:${type}`, "layout", "behavior"]),
+      message: unknownKeyMessage(
+        key,
+        [...known],
+        [`layout:${type}`, "layout", "behavior"]
+      ),
     })
   }
 
@@ -484,7 +513,7 @@ export function checkLayoutOptions(
         level: "error",
         path: "groupBy",
         message:
-          "a board needs `groupBy`: the field a card's column is read from (`groupBy: \"status\"`).",
+          'a board needs `groupBy`: the field a card\'s column is read from (`groupBy: "status"`).',
       })
     }
     if (!Array.isArray(options.columns)) {

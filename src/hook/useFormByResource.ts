@@ -20,6 +20,7 @@ import { findResource } from "@/utils/findResource"
 import { ViewResource } from "@/ViewResource"
 import { translate } from "react-mini-i18n"
 import { createRecord, updateRecord } from "@/hook/useResourceMutation"
+import { useOverlay } from "@/action/overlayContext"
 
 export interface formByResourceInputsInterface<DataProps extends object = object> {
   currentResource: ViewResourceContextParams
@@ -45,17 +46,18 @@ export default function useFormByResource<DataMain extends object = object>({
   const view =
     currentResource.view ?? resolveViewResourceContext(currentResource).view
   /**
-   * A form drawn over the page — in a dialog or in a drawer — has nowhere to
-   * send anyone.
+   * A form drawn in a frame — a dialog, a drawer, an accordion — has nowhere
+   * to send anyone.
    *
    * After a creation the form moves on to the new record's edit screen, so a
-   * full-page "New user" does not sit there claiming to be empty. Over a page
-   * that same navigation leaves the one the form is drawn on: the list
+   * full-page "New user" does not sit there claiming to be empty. In a frame
+   * that same navigation leaves the page the form is drawn on: the list
    * underneath disappears, its filters and its page with it, and what the
    * user gets for filling in three fields is a screen they never asked for.
-   * The dialog closes itself on the resource's `onChange` instead.
+   * Closing is going back to the URL the frame was opened from instead.
    */
-  const opensOverThePage = view?.open === "dialog" || view?.open === "drawer"
+  const overlay = useOverlay()
+  const opensOverThePage = overlay !== null
   const afterSave = view?.afterSave ?? (opensOverThePage ? "close" : "stay")
   const resource = findResource({
     resourceId: currentResource.resourceId as string,
@@ -147,9 +149,15 @@ export default function useFormByResource<DataMain extends object = object>({
           formContext.updateData(response.data)
         }
 
-        // Closing a form drawn on its own page goes back to the list; over a
-        // page, the button that opened it closes it.
-        if (afterSave === "close" && !opensOverThePage) {
+        // Closing a form drawn in a frame closes the frame; on its own page,
+        // it goes back to the list.
+        if (afterSave === "close" && overlay) {
+          overlay.close()
+
+          return response.data
+        }
+
+        if (afterSave === "close") {
           router({
             to: generateLink({
               resourceId: resource?.["@id"] as string,
@@ -161,7 +169,11 @@ export default function useFormByResource<DataMain extends object = object>({
           return response.data
         }
 
-        if (action === ActionList.create && afterSave === "stay" && !opensOverThePage) {
+        if (
+          action === ActionList.create &&
+          afterSave === "stay" &&
+          !opensOverThePage
+        ) {
           router({
             to: generateLink({
               id: getIdFromObject(response.data, false, resource) as string,

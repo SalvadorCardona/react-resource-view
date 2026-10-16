@@ -81,13 +81,12 @@ describe("layout.*", () => {
     expect(layout.cards({ columns: 3 }).options).toEqual({ columns: 3 })
     expect(layout.cards().options).toEqual({ columns: 4 })
     expect(
-      layout.board({ groupBy: "status", columns: STATUSES, openRecord: "drawer" })
+      layout.board({ groupBy: "status", columns: STATUSES, selectable: false })
         .options
     ).toEqual({
       groupBy: "status",
       columns: STATUSES,
-      openRecord: "drawer",
-      selectable: true,
+      selectable: false,
       bulkActions: [],
     })
     expect(layout.calendar({ dateField: "dueDate", mode: "week" }).options).toEqual({
@@ -134,6 +133,25 @@ describe("layout.*", () => {
     })
     expect(heatmap.components.list).toBe(HeatmapList)
     expect(heatmap.components.row).toBeTypeOf("function")
+    expect(heatmap.supports).toBeUndefined()
+  })
+
+  it("says which layouts draw a view opened inline under a row", () => {
+    expect(layout.table().supports).toEqual(["inline"])
+    expect(layout.items().supports).toEqual(["inline"])
+    expect(layout.cards().supports).toEqual(["inline"])
+    expect(
+      layout.board({ groupBy: "status", columns: STATUSES }).supports
+    ).toBeUndefined()
+    expect(layout.calendar().supports).toBeUndefined()
+    expect(layout.timeline().supports).toBeUndefined()
+    expect(
+      layout.custom({
+        type: "tree",
+        components: { list: () => null },
+        supports: ["inline"],
+      }).supports
+    ).toEqual(["inline"])
   })
 })
 
@@ -174,8 +192,8 @@ describe("the types of layout.*", () => {
       layout.board({ groupBy: "status", columns: 3 })
       // @ts-expect-error — a board needs to know what to group by
       layout.board({ columns: STATUSES })
-      // @ts-expect-error — `openRecord` belongs to the board
-      layout.table({ openRecord: "drawer" })
+      // @ts-expect-error — `selectable` belongs to the board
+      layout.table({ selectable: false })
       // @ts-expect-error — `grid` was renamed `columns`
       layout.cards({ grid: 3 })
     })

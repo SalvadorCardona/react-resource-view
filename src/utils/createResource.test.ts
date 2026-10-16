@@ -113,10 +113,16 @@ describe("createViewResource", () => {
     it("opens the forms on a page and the deletion in a dialog by default", () => {
       const resource = createViewResource("my_items", { path: "/api/my_items" })
 
-      expect(resource.views.read.open).toBe("page")
-      expect(resource.views.create.open).toBe("page")
-      expect(resource.views.update.open).toBe("page")
-      expect(resource.views.delete.open).toBe("dialog")
+      expect(resource.views.read.open).toMatchObject({
+        type: "page",
+        placement: "page",
+      })
+      expect(resource.views.create.open.type).toBe("page")
+      expect(resource.views.update.open.type).toBe("page")
+      expect(resource.views.delete.open).toMatchObject({
+        type: "dialog",
+        placement: "overlay",
+      })
     })
 
     it("lists in a table when no layout is declared", () => {
@@ -213,7 +219,9 @@ describe("createViewResource", () => {
       mockHttpRepo.getCollection.mockResolvedValue({ data: { member: [] } })
 
       const resource = createViewResource("my_items", { path: "/api/my_items" })
-      const filtered = { viewResourceContext: { filter: { status: "active" } } } as any
+      const filtered = {
+        viewResourceContext: { filter: { status: "active" } },
+      } as any
       await resource.getCollection({ page: 1 }, filtered)
 
       expect(mockHttpRepo.getCollection).toHaveBeenCalledWith(
@@ -311,7 +319,10 @@ describe("createViewResource", () => {
       })
       await resource.updateItem({ "@id": "/api/my_items/1" }, context)
 
-      expect(beforeUpdate).toHaveBeenCalledWith({ "@id": "/api/my_items/1" }, context)
+      expect(beforeUpdate).toHaveBeenCalledWith(
+        { "@id": "/api/my_items/1" },
+        context
+      )
       expect(mockHttpRepo.updateItem).toHaveBeenCalledWith(
         expect.objectContaining({ transformed: true }),
         context

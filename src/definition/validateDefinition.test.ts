@@ -176,7 +176,13 @@ describe("the development checks of layout.*", () => {
     expect(() =>
       // @ts-expect-error — a 0.x option
       layout.board({ groupBy: "status", columns: [], openRecordIn: "drawer" })
-    ).toThrow("did you mean `layout.board({ openRecord })`?")
+    ).toThrow("where `views.read.open` says")
+    expect(() =>
+      // @ts-expect-error — where a card opens is the read view's to say
+      layout.board({ groupBy: "status", columns: [], openRecord: "drawer" })
+    ).toThrow(
+      "`openRecord` is a 0.x key (RV1-LAYOUT-013): a card opens the record's `read` view where that view says"
+    )
     // @ts-expect-error — a 0.x option
     expect(() => layout.cards({ grid: 3 })).toThrow("`grid` → `columns`")
     // @ts-expect-error — a 0.x option
@@ -261,7 +267,11 @@ describe("the types of a declaration", () => {
 describe("the 0.x keys the checks recognise", () => {
   it("are those of migrations/1.0.json, with the same rewrite", async () => {
     const { changes } = (await import("../../migrations/1.0.json")).default as {
-      changes: { id: string; hint?: string; detect?: { in: string; key: string }[] }[]
+      changes: {
+        id: string
+        hint?: string
+        detect?: { in: string; key: string }[]
+      }[]
     }
     const { LEGACY_HINTS, LEGACY_KEYS } = await import("@/definition/legacyKeys")
 
@@ -272,7 +282,8 @@ describe("the 0.x keys the checks recognise", () => {
     )
     expect(LEGACY_KEYS).toEqual(fromJson)
     for (const change of changes) {
-      if (change.hint && change.detect) expect(LEGACY_HINTS[change.id]).toBe(change.hint)
+      if (change.hint && change.detect)
+        expect(LEGACY_HINTS[change.id]).toBe(change.hint)
     }
   })
 })

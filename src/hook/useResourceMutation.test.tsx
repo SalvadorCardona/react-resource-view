@@ -13,6 +13,7 @@ import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceCont
 import { useResourceMutation } from "@/hook/useResourceMutation"
 import { layout } from "@/layout/layout"
 import type { ResourceDefinition } from "@/ResourceDefinition"
+import { RoutedViews, startMemoryRouter } from "@/internal/test/memoryRouter"
 
 const toast = vi.hoisted(() =>
   Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() })
@@ -105,7 +106,10 @@ function pendingRequest() {
   return call.promise
 }
 
-function renderList(definition: Partial<ResourceDefinition<Task>> = {}) {
+function renderList(
+  definition: Partial<ResourceDefinition<Task>> = {},
+  { mount = true }: { mount?: boolean } = {}
+) {
   const id = `mutation_tasks_${++count}`
   const tasks = createViewResource<Task>(id, {
     name: "Tasks",
@@ -129,12 +133,16 @@ function renderList(definition: Partial<ResourceDefinition<Task>> = {}) {
     ...definition,
   })
 
-  render(
-    <ResourceViewProvider
-      viewResourceContextParams={{ scope: id, resourceId: id }}
-      configuration={{ resources: [tasks], defaultScope: id }}
-    />
-  )
+  if (mount) {
+    render(
+      <ResourceViewProvider
+        viewResourceContextParams={{ scope: id, resourceId: id }}
+        configuration={{ resources: [tasks], defaultScope: id }}
+      />
+    )
+  }
+
+  return { id, tasks }
 }
 
 const rowOf = (text: string) => screen.getByText(text).closest("tr")!
@@ -280,16 +288,21 @@ describe("an action of the application's own", () => {
 
 describe("the delete confirmation", () => {
   it("closes and takes the row away without waiting for the API", async () => {
-    renderList()
+    // The confirmation opens in a dialog written into the URL.
+    const stopRouter = startMemoryRouter("/")
+    const { id, tasks } = renderList({}, { mount: false })
+    window.history.replaceState(null, "", `/${id}/${id}/list`)
+    render(<RoutedViews configuration={{ resources: [tasks], defaultScope: id }} />)
     await screen.findByText("Roast")
 
-    const [deleteRoast] = within(rowOf("Roast")).getAllByRole("button", {
+    const [deleteRoast] = within(rowOf("Roast")).getAllByRole("link", {
       name: /delete/i,
     })
     fireEvent.click(deleteRoast)
     fireEvent.click(await screen.findByRole("button", { name: "Continue" }))
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    stopRouter()
     expect(screen.queryByText("Roast")).toBeNull()
 
     await act(async () => pending[0].reject(new Error("409")))

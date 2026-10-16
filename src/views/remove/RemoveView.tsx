@@ -45,9 +45,12 @@ export default function RemoveViewComponent() {
             // The row is already gone from the list: the confirmation has
             // nothing left to ask. If the API refuses, the row comes back and
             // the toast says why.
-            if (isOptimistic(resource, "delete")) overlay?.close()
+            const optimistic = isOptimistic(resource, "delete")
+            if (optimistic) overlay?.close()
             try {
               await removal
+              // Waited for: the frame goes once the API has said yes.
+              if (!optimistic) overlay?.close()
               toast.success(translate("Deleted"), {
                 description: translate("The item has been removed"),
               })

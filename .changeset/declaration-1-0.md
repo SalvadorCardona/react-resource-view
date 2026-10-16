@@ -31,11 +31,11 @@ update | delete`, each typed with only the options that have an effect there.
   `closeAfterUpdate`, `refreshDataAfterUpdate`, `redirectToAfterUpdate` → one
   `afterSave: "close" | "stay" | "reload" | { redirect: (item) => string }`;
   `rowActions` → `views.list.rowActions`; `eventSourced` → `realtime` at the
-  root; `openRecordIn`, `selectable`, `bulkActions` → options of
-  `layout.board()`.
+  root; `openRecordIn` → `views.read.open`; `selectable`, `bulkActions` →
+  options of `layout.board()`.
 - **Layouts.** `viewVariants` becomes `views.list.layouts`, and the seven
   factories one `layout` namespace: `layout.table()`, `layout.cards({ columns })`,
-  `layout.board({ groupBy, columns, openRecord })`, `layout.calendar({ dateField })`,
+  `layout.board({ groupBy, columns, selectable })`, `layout.calendar({ dateField })`,
   `layout.timeline({ startField, endField, groupBy })`, `layout.split({ readInList })`,
   `layout.items()` and `layout.custom()` for one's own (read its options with
   `useLayout()`). Field options are checked against the resource's item type —
@@ -81,11 +81,28 @@ aside, items }`, a tab being `{ id, label, resource, filter: ({ item }) => … }
   (`create`, `update`, `remove`, `mutate`, `isPending`), and `RowInterface`
   gains `pending`. Built on the library's own state rather than React 19's
   `useOptimistic`: no new requirement on the React version.
-- **"Open in full page".** A `read` or `update` view opened in a dialog or a
-  drawer — a board's `openRecord` included — has a link to the same view on
-  its page beside the close button, a real `<a href>` that Ctrl/Cmd+click
-  opens in a new tab. `expandable: false` on the view, or on `layout.board()`,
-  takes it away; `create` and `delete` do not have it unless they say
+- **One routed opening.** `views.<action>.open` is resolved once, and anything
+  but `"page"` is written into the URL under the view it was opened from
+  (`…/tasks/list/tasks/update/12`, filter and layout kept): a row's button —
+  now a real link —, a board's card and a link typed by hand open the same
+  frame, Back closes it, a reload opens it again over the same list, and a
+  save closes it by going back to that URL. A list reads itself again once per
+  save, instead of once per button of its rows. `layout.board({ openRecord,
+expandable })` is gone: a card opens the record's `read` view where
+  `views.read.open` says — on its page by default, where it used to open
+  nothing.
+- **Frames of one's own.** `open.custom({ type, placement, component })`, on
+  the model of `layout.custom()`: the component receives the title, the view,
+  `close` and the link to the full page. `placement: "inline"` draws the view
+  under the row that opened it in a table, a plain list or a card grid — a
+  `layout.custom()` says it can with `supports: ["inline"]` and draws
+  `<InlineChildView row={row} />` — and falls back to a dialog elsewhere, with
+  a warning in development. `configureResourceView({ open: { accordion } })`
+  registers a frame under a name, typed through the `OpenFrames` interface.
+- **"Open in full page".** A `read` or `update` view opened in a frame has a
+  link to the same view on its page beside the close button, a real
+  `<a href>` that Ctrl/Cmd+click opens in a new tab. `expandable: false` on
+  the view takes it away; `create` and `delete` do not have it unless they say
   `expandable: true`.
 - **Checked in development.** `createViewResource` and `layout.*` throw on a key
   they do not read — with the closest key, or the exact 1.0 rewrite of a 0.x

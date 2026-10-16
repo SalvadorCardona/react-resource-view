@@ -4,6 +4,7 @@ import { Trans } from "react-mini-i18n"
 import ListResourceViewButton from "@/action/ListResourceViewButton"
 import { DefaultRowComponent } from "@/views/list/component/DefaultRowComponent"
 import { ScrollArea } from "@/ui/scroll-area"
+import { InlineChildView } from "@/components/ChildViewResourceDialog"
 
 export function ListItem({ rows = [] }: ListComponentPropsInterface) {
   if (!rows.length) {
@@ -25,16 +26,16 @@ export function ListItem({ rows = [] }: ListComponentPropsInterface) {
       >
         <ul className="divide-y divide-border">
           {rows.map((row, e) => (
-            <li
-              key={"row-" + e}
-              className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/40"
-            >
-              <div className="min-w-0 flex-1">
-                <DefaultRowComponent row={row} />
+            <li key={"row-" + e}>
+              <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/40">
+                <div className="min-w-0 flex-1">
+                  <DefaultRowComponent row={row} />
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <ListResourceViewButton data={row.data} />
+                </div>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <ListResourceViewButton data={row.data} />
-              </div>
+              <InlineChildView row={row} />
             </li>
           ))}
         </ul>

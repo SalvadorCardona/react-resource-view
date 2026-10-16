@@ -5,13 +5,13 @@ import { RowInterface } from "@/ViewResource"
 import { cn } from "@/ui/cn"
 import { Checkbox } from "@/ui/checkbox"
 import { useNavigate } from "@/ports"
-import { generateLink } from "@/routes/routes"
 import { usePermission } from "@/utils/permissionResource"
 import { useLayout } from "@/layout/useLayout"
 import type { BoardLayoutOptions } from "@/layout/layout"
 import { getRecordTitle } from "@/internal/object/getRecordTitle"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
 import { rememberChildViewOpener } from "@/components/childViewOpener"
+import { useViewLink } from "@/open/childViewRoute"
 import { RecordCard } from "@/views/list/component/RecordCard"
 import { BoardInterface } from "@/views/list/component/columns/useBoard"
 import {
@@ -43,10 +43,13 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
   const navigate = useNavigate()
   const id = board.idOf(row)
 
-  const { openRecord, titleField } = useLayout<BoardLayoutOptions>().options
+  const { titleField } = useLayout<BoardLayoutOptions>().options
   const canRead = usePermission(ActionList.read, row.data)
   const canUpdate = usePermission(ActionList.update, row.data)
-  const canOpen = !!openRecord && canRead
+  const canOpen = canRead
+  // The record's `read` view, where that view opens: the same URL as any
+  // other way of opening it.
+  const readLink = useViewLink({ resource, action: ActionList.read, id })
   const isSelected = board.isSelected(id)
   const isDragged = board.dragging.includes(id)
   const hasSelection = board.selected.length > 0
@@ -69,37 +72,12 @@ export function BoardCard({ row, board, columnIds }: BoardCardProps) {
   const open = (card: HTMLElement) => {
     if (!canOpen) return
 
-    if (openRecord === "page") {
-      navigate({
-        to: generateLink({
-          resource,
-          resourceAction: ActionList.read,
-          id,
-          scope: resource.scope,
-        }),
-      })
-      return
+    // Over the board, the board stays as it is underneath, with its filter
+    // and its layout, and the focus comes back to the card once closed.
+    if (readLink.frame.placement !== "page") {
+      rememberChildViewOpener(card, resource["@id"], id)
     }
-
-    // Over the board, and in the URL: the board stays as it is underneath,
-    // with its filter and its layout, and the record is a child view of it.
-    rememberChildViewOpener(card, resource["@id"], id)
-    navigate({
-      to: generateLink({
-        resource,
-        resourceAction: currentResource.resourceAction,
-        id: currentResource.id,
-        scope: resource.scope,
-        subResource: currentResource.subResource,
-        filter: currentResource.filter,
-        viewVariantId: currentResource.viewVariant,
-        childViewResource: {
-          resource,
-          resourceAction: ActionList.read,
-          id,
-        },
-      }),
-    })
+    navigate({ to: readLink.to })
   }
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

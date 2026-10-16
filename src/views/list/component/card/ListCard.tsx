@@ -7,6 +7,8 @@ import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { ListComponentPropsInterface } from "@/ViewResource"
 
 import { RecordCard } from "@/views/list/component/RecordCard"
+import { InlineChildView } from "@/components/ChildViewResourceDialog"
+import { Fragment } from "react"
 
 // Tailwind only generates classes written out in full in the sources. A class
 // built at runtime (`"md:grid-cols-" + grid`) is never detected, and works only
@@ -37,9 +39,16 @@ export function ListCard({ rows = [] }: ListComponentPropsInterface) {
         )}
       >
         {rows.map((row, e) => (
-          // The grid used to drop the row component straight onto the page, so
-          // a "card" layout produced cards with no card around them.
-          <RecordCard key={"row-" + e} row={row} withActions />
+          <Fragment key={"row-" + e}>
+            {/* The grid used to drop the row component straight onto the
+                page, so a "card" layout produced cards with no card around
+                them. */}
+            <RecordCard row={row} withActions />
+            {/* A view opened inline takes a line of its own, after the card. */}
+            <div className="col-span-full empty:hidden">
+              <InlineChildView row={row} />
+            </div>
+          </Fragment>
         ))}
       </div>
       <div className={"mt-5"}>

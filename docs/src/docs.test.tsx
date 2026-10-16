@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { ActionList } from "react-data-form"
 import { configurePorts, parseLink, ResourceViewProvider } from "react-resource-view"
 import { DocLayout } from "./DocLayout"
@@ -74,6 +74,20 @@ describe("the documentation site", () => {
     expect(
       screen.getByRole("heading", { name: "Optimistic writes" })
     ).toBeInTheDocument()
+  })
+
+  it("opens a record of the actions page in an accordion under its row", async () => {
+    renderAt("/?view=docs/actions/read/demo_accordion/read/2")
+
+    await screen.findByRole("region", { name: "Accordion" }, WAIT)
+    // The row just above it is the record's.
+    const title = "Reading an IRI without thinking about it"
+    await waitFor(() => {
+      const frame = screen.getByRole("region", { name: "Accordion" })
+      const row = frame.closest("tr")!.previousElementSibling as HTMLElement
+      expect(row.textContent).toContain(title)
+    }, WAIT)
+    expect(screen.queryByRole("dialog")).toBeNull()
   })
 
   it("renders the admin layout page", async () => {

@@ -4,7 +4,7 @@ import overviewResource from "./overview"
 import routingResource from "./routing"
 import navigationResource from "./navigation"
 import layoutsResource from "./layouts"
-import actionsResource from "./actions"
+import actionsResource, { accordionArticlesResource } from "./actions"
 import adminLayoutResource from "./adminLayout"
 import adminLayoutDemoResource from "./adminLayoutDemo"
 import demoResource, { articlesResource } from "./demo"
@@ -21,8 +21,8 @@ export const pages = [
   demoResource,
 ]
 
-/** The resources the site can render, pages plus the one the demo shows. */
-export const resources = [...pages, articlesResource]
+/** The resources the site can render, pages plus those the demos show. */
+export const resources = [...pages, articlesResource, accordionArticlesResource]
 
 /**
  * The sidebar entries, built on demand.

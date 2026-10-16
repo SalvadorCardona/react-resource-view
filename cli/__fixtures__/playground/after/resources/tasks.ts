@@ -64,7 +64,6 @@ const TASK_FIELDS = {
  * site is installed on.
  */
 const BOARD_BEHAVIOR: Partial<BoardLayoutOptions> = {
-  openRecord: "drawer",
   bulkActions: [
     {
       label: "Mark as urgent",
@@ -156,7 +155,7 @@ export const tasksResource = createViewResource<Task>(TASKS_ID, {
     },
     // A form is a column of fields: the whole width would only stretch them.
     create: { title: "New task", ...NARROW },
-    read: { title: "Task", ...NARROW },
+    read: { title: "Task", ...NARROW, open: "drawer" },
     update: { title: "Edit a task", ...NARROW },
     delete: { title: "Delete a task", ...POPUP },
   },

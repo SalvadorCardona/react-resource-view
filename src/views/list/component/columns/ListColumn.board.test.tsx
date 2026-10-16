@@ -14,6 +14,7 @@ import { configurePorts, getPorts } from "@/ports"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { RowComponentPropsInterface } from "@/ViewResource"
 import { layout, type BoardLayoutOptions } from "@/layout/layout"
+import type { ReadViewDefinition, UpdateViewDefinition } from "@/ResourceDefinition"
 
 const toast = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast, Toaster: () => null }))
@@ -88,13 +89,21 @@ function renderBoard(
   name: string,
   {
     board,
+    read,
+    update,
     updateItem,
     params,
     locked,
+    unreadable,
   }: {
     board?: Partial<BoardLayoutOptions>
+    /** Where a card opens: the record's `read` view. */
+    read?: ReadViewDefinition
+    update?: UpdateViewDefinition
     /** Titles of the tasks the resource refuses to update. */
     locked?: string[]
+    /** Whether the records may not be read. */
+    unreadable?: boolean
     updateItem?: (item: any) => Promise<any>
     params?: Partial<ViewResourceContextParams>
   } = {}
@@ -108,6 +117,7 @@ function renderBoard(
       create: false,
       delete: false,
       update: ({ item }) => !locked?.includes(item?.title),
+      read: !unreadable,
     },
     repository: updateItem ? { updateItem } : undefined,
     form: { inputs: { title: { label: "Title" } } },
@@ -122,7 +132,8 @@ function renderBoard(
           }),
         ],
       },
-      read: { title: "Task" },
+      read: { title: "Task", ...read },
+      update: { ...update },
     },
   })
 
@@ -158,7 +169,7 @@ afterEach(() => {
 
 describe("a click on a card", () => {
   it("opens the record in a drawer written into the URL", async () => {
-    renderBoard("drawer_board", { board: { openRecord: "drawer" } })
+    renderBoard("drawer_board", { read: { open: "drawer" } })
 
     fireEvent.click(await screen.findByText("Roast"))
 
@@ -168,7 +179,7 @@ describe("a click on a card", () => {
   })
 
   it("opens a popup at the same kind of URL", async () => {
-    renderBoard("popup_board", { board: { openRecord: "dialog" } })
+    renderBoard("popup_board", { read: { open: "dialog" } })
 
     fireEvent.click(await card("Pack"))
 
@@ -178,7 +189,7 @@ describe("a click on a card", () => {
   })
 
   it("goes to the record's own page when it opens in the window", async () => {
-    renderBoard("window_board", { board: { openRecord: "page" } })
+    renderBoard("window_board", { read: { open: "page" } })
 
     fireEvent.click(await screen.findByText("Roast"))
 
@@ -188,7 +199,7 @@ describe("a click on a card", () => {
   })
 
   it("opens with Enter, from the keyboard", async () => {
-    renderBoard("keyboard_board", { board: { openRecord: "drawer" } })
+    renderBoard("keyboard_board", { read: { open: "drawer" } })
 
     const roast = await card("Roast")
     roast.focus()
@@ -197,8 +208,18 @@ describe("a click on a card", () => {
     expect(navigate).toHaveBeenCalledTimes(1)
   })
 
-  it("opens nothing when the view says nothing", async () => {
+  it("goes to the record's page when the read view says nothing", async () => {
     renderBoard("silent_board")
+
+    fireEvent.click(await screen.findByText("Roast"))
+
+    expect(navigate).toHaveBeenCalledWith({
+      to: "/silent_board/silent_board_tasks/read/1",
+    })
+  })
+
+  it("opens nothing when the record may not be read", async () => {
+    renderBoard("unreadable_board", { read: { open: "drawer" }, unreadable: true })
 
     fireEvent.click(await screen.findByText("Roast"))
 
@@ -208,7 +229,7 @@ describe("a click on a card", () => {
 
 describe("the controls drawn in a card", () => {
   it("keep their click: the button runs, the card does not open", async () => {
-    renderBoard("cta_board", { board: { openRecord: "drawer" } })
+    renderBoard("cta_board", { read: { open: "drawer" } })
 
     const roast = await card("Roast")
     // On the words inside the button, not the button itself: where a real
@@ -220,7 +241,7 @@ describe("the controls drawn in a card", () => {
   })
 
   it("keep their click: a link, or the selection checkbox", async () => {
-    renderBoard("cta_link_board", { board: { openRecord: "drawer" } })
+    renderBoard("cta_link_board", { read: { open: "drawer" } })
 
     const roast = await card("Roast")
     fireEvent.click(within(roast).getByText("Spec"))
@@ -234,7 +255,7 @@ describe("the controls drawn in a card", () => {
   })
 
   it("do not include the card's text being selected", async () => {
-    renderBoard("text_board", { board: { openRecord: "drawer" } })
+    renderBoard("text_board", { read: { open: "drawer" } })
 
     const title = await screen.findByText("Roast")
     const range = document.createRange()
@@ -251,7 +272,7 @@ describe("the controls drawn in a card", () => {
 
 describe("selecting cards", () => {
   it("adds and removes with Ctrl/Cmd+click, and shows the bar", async () => {
-    renderBoard("ctrl_board", { board: { openRecord: "drawer" } })
+    renderBoard("ctrl_board", { read: { open: "drawer" } })
 
     fireEvent.click(await card("Roast"), { ctrlKey: true })
     fireEvent.click(await card("Ship"), { metaKey: true })
@@ -418,7 +439,9 @@ describe("moving several cards at once", () => {
 
   it("offers the view's bulk actions on the selection", async () => {
     const onAction = vi.fn()
-    renderBoard("bulk_board", { board: { bulkActions: [{ label: "Archive", onAction }] } })
+    renderBoard("bulk_board", {
+      board: { bulkActions: [{ label: "Archive", onAction }] },
+    })
 
     fireEvent.click(await card("Roast"), { ctrlKey: true })
     fireEvent.click(await card("Ship"), { ctrlKey: true })
@@ -444,7 +467,7 @@ describe("the record opened from a card", () => {
 
   it("is drawn in a drawer with a way to edit it", async () => {
     renderBoard("open_drawer_board", {
-      board: { openRecord: "drawer" },
+      read: { open: "drawer" },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,
@@ -456,15 +479,35 @@ describe("the record opened from a card", () => {
     const panel = await screen.findByRole("dialog")
     expect(panel).toHaveAttribute("data-slot", "drawer-popup")
     expect(within(panel).getByText("Task")).toBeInTheDocument()
+    // The form opens where `views.update.open` says: its page, here.
     expect(within(panel).getByRole("link", { name: /update/i })).toHaveAttribute(
       "href",
-      "/open_drawer_board/open_drawer_board_tasks/list/open_drawer_board_tasks/update/1?variant=board"
+      "/open_drawer_board/open_drawer_board_tasks/update/1"
+    )
+  })
+
+  it("edits the record over the board when the form opens over it", async () => {
+    renderBoard("edit_over_board", {
+      read: { open: "drawer" },
+      update: { open: "drawer" },
+      params: {
+        childViewResource: {
+          ...openedAt.childViewResource,
+          resourceId: "edit_over_board_tasks",
+        } as ViewResourceContextParams,
+      },
+    })
+
+    const panel = await screen.findByRole("dialog")
+    expect(within(panel).getByRole("link", { name: /update/i })).toHaveAttribute(
+      "href",
+      "/edit_over_board/edit_over_board_tasks/list/edit_over_board_tasks/update/1?variant=board"
     )
   })
 
   it("links to the record's full page, in the board's scope", async () => {
     renderBoard("expand_board", {
-      board: { openRecord: "drawer" },
+      read: { open: "drawer" },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,
@@ -479,9 +522,9 @@ describe("the record opened from a card", () => {
     ).toHaveAttribute("href", "/expand_board/expand_board_tasks/read/1")
   })
 
-  it("does not link to it when the board says `expandable: false`", async () => {
+  it("does not link to it when the read view says `expandable: false`", async () => {
     renderBoard("no_expand_board", {
-      board: { openRecord: "dialog", expandable: false },
+      read: { open: "dialog", expandable: false },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,
@@ -491,12 +534,14 @@ describe("the record opened from a card", () => {
     })
 
     const dialog = await screen.findByRole("dialog")
-    expect(within(dialog).queryByRole("link", { name: "Open in full page" })).toBeNull()
+    expect(
+      within(dialog).queryByRole("link", { name: "Open in full page" })
+    ).toBeNull()
   })
 
   it("is drawn in a centred dialog in popup mode, and closes to the board", async () => {
     renderBoard("open_popup_board", {
-      board: { openRecord: "dialog" },
+      read: { open: "dialog" },
       params: {
         childViewResource: {
           ...openedAt.childViewResource,

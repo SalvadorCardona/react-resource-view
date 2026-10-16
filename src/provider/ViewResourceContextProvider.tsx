@@ -4,8 +4,10 @@ import {
   FC,
   ReactNode,
   SetStateAction,
+  useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -39,10 +41,20 @@ import { getOptimisticStore } from "@/api/optimistic"
 import { useResourceViewConfiguration } from "@/provider/ResourceViewConfigurationContext"
 import { markViewLoading } from "@/navigation/navigationState"
 import { useViewEnterTransition } from "@/navigation/useViewEnterTransition"
+import { OverlayContext, OverlayInterface } from "@/action/overlayContext"
+import {
+  ChildViewRouteContext,
+  ChildViewRouteInterface,
+} from "@/open/childViewRoute"
 
 export interface CurrentViewResourceContextParams extends ViewResourceContextParams {
   decoratorComponent?: FC<{ children: ReactNode }>
   onSelected?: (value: string[]) => void
+  /**
+   * The frame this view is drawn in, when it was opened in one: its forms
+   * close it once saved. The views drawn inside this one do not inherit it.
+   */
+  overlay?: OverlayInterface
 }
 
 export interface CurrentViewResourceContext extends ViewResourceContext {
@@ -76,6 +88,7 @@ export default function ViewResourceContextProvider({
   id,
   decoratorComponent,
   onInitViewResource,
+  overlay,
   ...viewResourceContextParams
 }: Partial<CurrentViewResourceContextParams>) {
   const Decorator = decoratorComponent ?? DefaultDecorator
@@ -112,9 +125,10 @@ export default function ViewResourceContextProvider({
   const [isLoading, setIsLoading] = useState<boolean>(needFetch)
   const [error, setError] = useState<boolean>(false)
   const fetchTokenRef = useRef(0)
-  const fetchInThisTickRef = useRef<{ promise: Promise<void>; token: number } | null>(
-    null
-  )
+  const fetchInThisTickRef = useRef<{
+    promise: Promise<void>
+    token: number
+  } | null>(null)
   const isFirstFilterEffectRef = useRef(true)
   // When the rows on screen were asked for, on the clock of the writes in
   // flight: once drawn, the answers older than that are in them.
@@ -135,12 +149,23 @@ export default function ViewResourceContextProvider({
 
     const token = ++fetchTokenRef.current
     const readAt = getOptimisticStore(viewResource.resource).now()
-    console.log('DBG load', viewResource.resource['@id'], viewResource.resourceAction, token)
+    console.log(
+      "DBG load",
+      viewResource.resource["@id"],
+      viewResource.resourceAction,
+      token
+    )
     setIsLoading(true)
 
     try {
       const viewProcessed = await processViewResourceContext(viewResource)
-      console.log('DBG got', viewResource.resource['@id'], token, fetchTokenRef.current, viewProcessed.data)
+      console.log(
+        "DBG got",
+        viewResource.resource["@id"],
+        token,
+        fetchTokenRef.current,
+        viewProcessed.data
+      )
       if (token !== fetchTokenRef.current) return
 
       // A request brings back rows, nothing else. Writing the whole context
@@ -181,6 +206,22 @@ export default function ViewResourceContextProvider({
   )
 
   useMercure(realtimeTopic, !!viewResource.resource.realtime).onChange(fetchData)
+
+  // A list reads itself again once a record of its resource is saved —
+  // wherever it was saved: a form in a dialog, a cell edited in place, a card
+  // moved. Once per list, not once per button of its rows. Read when the
+  // record is saved, not when the list mounted: `fetchData` closes over the
+  // filter, which may have changed since.
+  const fetchDataRef = useRef(fetchData)
+  fetchDataRef.current = fetchData
+  const isList = viewResource.resourceAction === ActionList.list
+  useEffect(() => {
+    if (!isList) return
+    const sub = viewResource.resource.onChange.subscribe(() =>
+      fetchDataRef.current()
+    )
+    return () => sub.unsubscribe()
+  }, [viewResource.resource, isList])
 
   useEffect(() => {
     if (needFetch) {
@@ -231,7 +272,9 @@ export default function ViewResourceContextProvider({
   const configuration = useResourceViewConfiguration()
   useViewEnterTransition(
     viewRef,
-    !parentResource && configuration?.viewTransition !== false && access === "allowed"
+    !parentResource &&
+      configuration?.viewTransition !== false &&
+      access === "allowed"
   )
 
   const handleSetSelect = (item: JsonLdIriAble) => {
@@ -242,6 +285,12 @@ export default function ViewResourceContextProvider({
     setSelected(values)
     viewResourceContextParams.onSelected?.(values)
   }
+
+  const route = useChildViewRouteProvider(
+    !parentResource,
+    currentViewWithVariant,
+    viewResourceContextParams.childViewResource
+  )
 
   const isSelected = (item: JsonLdIriAble) => {
     const iri = getLdIri(item)
@@ -267,33 +316,119 @@ export default function ViewResourceContextProvider({
       }}
     >
       <PermissionCacheContext value={permissionCache}>
-        <MetaResourceComponent />
-        <Decorator>
-          <ViewDecorator>
-            <div ref={viewRef} aria-busy={isBusy || undefined}>
-              {access === "allowed" ? (
-                <>
-                  {components.top && <components.top />}
-                  <View />
-                  <MultiViewTab />
-                  {viewResourceContextParams.childViewResource && (
-                    <ChildViewResourceDialog
-                      childViewResource={viewResourceContextParams.childViewResource}
-                    />
+        <OverlayContext value={overlay ?? null}>
+          <RouteProvider value={route.value}>
+            <MetaResourceComponent />
+            <Decorator>
+              <ViewDecorator>
+                <div ref={viewRef} aria-busy={isBusy || undefined}>
+                  {access === "allowed" ? (
+                    <>
+                      {components.top && <components.top />}
+                      <View />
+                      <MultiViewTab />
+                      {viewResourceContextParams.childViewResource && (
+                        <ChildViewResourceDialog
+                          childViewResource={
+                            viewResourceContextParams.childViewResource
+                          }
+                          inlineClaimed={route.isInlineClaimed(
+                            viewResourceContextParams.childViewResource
+                          )}
+                        />
+                      )}
+                      {components.bottom && <components.bottom />}
+                    </>
+                  ) : access === "pending" ? (
+                    <PageLoader isLoading={true} />
+                  ) : (
+                    forbiddenFallback
                   )}
-                  {components.bottom && <components.bottom />}
-                </>
-              ) : access === "pending" ? (
-                <PageLoader isLoading={true} />
-              ) : (
-                forbiddenFallback
-              )}
-            </div>
-          </ViewDecorator>
-        </Decorator>
+                </div>
+              </ViewDecorator>
+            </Decorator>
+          </RouteProvider>
+        </OverlayContext>
       </PermissionCacheContext>
     </CurrentResourceContext>
   )
+}
+
+/** Provides the route when this view is the routed one; passes it on otherwise. */
+function RouteProvider({
+  value,
+  children,
+}: {
+  value: ChildViewRouteInterface | null
+  children: ReactNode
+}) {
+  if (!value) return <>{children}</>
+
+  return <ChildViewRouteContext value={value}>{children}</ChildViewRouteContext>
+}
+
+/**
+ * The routed view's side of the views opened over it: what they are written
+ * under — this view, with the filter and the layout on screen — and which
+ * lists draw the inline ones under their rows.
+ */
+function useChildViewRouteProvider(
+  isRouted: boolean,
+  context: ViewResourceContext,
+  child: ViewResourceContextParams | undefined
+) {
+  const [inlineClaims, setInlineClaims] = useState<Record<string, number>>({})
+
+  const claimInline = useCallback((resourceId: string) => {
+    const add = (delta: number) =>
+      setInlineClaims((claims) => ({
+        ...claims,
+        [resourceId]: (claims[resourceId] ?? 0) + delta,
+      }))
+    add(1)
+    return () => add(-1)
+  }, [])
+
+  const { resource, resourceAction, id, scope, subResource, filter, viewVariant } =
+    context
+  const value = useMemo<ChildViewRouteInterface | null>(
+    () =>
+      isRouted
+        ? {
+            parentParams: {
+              resource,
+              resourceAction,
+              id,
+              // The resource's own scope, as the links of its views write it.
+              scope: resource?.scope ?? scope,
+              subResource,
+              filter,
+              viewVariantId: viewVariant,
+            },
+            child,
+            claimInline,
+          }
+        : null,
+    [
+      isRouted,
+      resource,
+      resourceAction,
+      id,
+      scope,
+      subResource,
+      filter,
+      viewVariant,
+      child,
+      claimInline,
+    ]
+  )
+
+  const isInlineClaimed = (params: ViewResourceContextParams) => {
+    const resourceId = params.resource?.["@id"] ?? params.resourceId
+    return !!resourceId && (inlineClaims[resourceId] ?? 0) > 0
+  }
+
+  return { value, isInlineClaimed }
 }
 
 /**
