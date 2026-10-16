@@ -278,3 +278,38 @@ describe("a list that could not be loaded", () => {
     expect(await screen.findByRole("button", { name: "Oops" })).toBeInTheDocument()
   })
 })
+
+describe("a table wider than the screen", () => {
+  it("pins the row actions to the right, header included", async () => {
+    renderList({ layouts: [layout.table()] })
+
+    await screen.findAllByRole("row")
+    const cells = document.querySelectorAll("[data-slot=row-actions]")
+    expect(cells.length).toBe(ARTICLES.length)
+    cells.forEach((cell) => expect(cell.className).toContain("sticky right-0"))
+    const headers = screen.getAllByRole("columnheader")
+    expect(headers.at(-1)?.className).toContain("sticky right-0")
+    expect(headers.at(0)?.className).not.toContain("sticky")
+  })
+
+  it("leaves the actions in the flow with stickyActions: false", async () => {
+    renderList({ layouts: [layout.table({ stickyActions: false })] })
+
+    await screen.findAllByRole("row")
+    document
+      .querySelectorAll("[data-slot=row-actions]")
+      .forEach((cell) => expect(cell.className).not.toContain("sticky"))
+    expect(screen.getAllByRole("columnheader").at(-1)?.className).not.toContain(
+      "sticky"
+    )
+  })
+
+  it("pins the first column on demand", async () => {
+    renderList({ layouts: [layout.table({ stickyFirstColumn: true })] })
+
+    await screen.findAllByRole("row")
+    expect(screen.getAllByRole("columnheader").at(0)?.className).toContain(
+      "sticky left-0"
+    )
+  })
+})

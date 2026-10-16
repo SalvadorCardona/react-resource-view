@@ -11,9 +11,9 @@ import type { ResolvedLayout } from "@/layout/layout"
  *
  * Outside a list, a layout of no type with no options.
  */
-export function useLayout<Options extends object = Record<string, any>>(): ResolvedLayout<
-  Partial<Options>
-> {
+export function useLayout<
+  Options extends object = Record<string, any>,
+>(): ResolvedLayout<Partial<Options>> {
   const { layout } = useCurrentViewResourceContext()
 
   return (layout ?? NO_LAYOUT) as ResolvedLayout<Partial<Options>>

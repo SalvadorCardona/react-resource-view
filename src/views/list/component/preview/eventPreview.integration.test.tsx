@@ -57,45 +57,45 @@ const ROASTS: Roast[] = [
 
 function createRoastsResource(id: string, canUpdate: boolean) {
   return createViewResource<Roast>(id, {
-  name: "Roasts",
-  storage: "local",
-  permissions: { read: false, create: false, update: canUpdate, delete: false },
-  repository: {
-    getCollection: async () => ({
-      data: {
-        "@id": id,
-        "@type": "Collection",
-        member: ROASTS,
-        totalItems: ROASTS.length,
+    name: "Roasts",
+    storage: "local",
+    permissions: { read: false, create: false, update: canUpdate, delete: false },
+    repository: {
+      getCollection: async () => ({
+        data: {
+          "@id": id,
+          "@type": "Collection",
+          member: ROASTS,
+          totalItems: ROASTS.length,
+        },
+      }),
+    },
+    form: {
+      inputs: {
+        batch: { label: "Batch" },
+        origin: { label: "Origin" },
+        roaster: { label: "Roaster" },
+        status: { label: "Status" },
+        weight: { label: "Kilograms" },
+        profile: { label: "Profile" },
+        notes: { label: "Notes" },
+        startAt: { label: "Starts at" },
+        endAt: { label: "Ends at" },
       },
-    }),
-  },
-  form: {
-    inputs: {
-      batch: { label: "Batch" },
-      origin: { label: "Origin" },
-      roaster: { label: "Roaster" },
-      status: { label: "Status" },
-      weight: { label: "Kilograms" },
-      profile: { label: "Profile" },
-      notes: { label: "Notes" },
-      startAt: { label: "Starts at" },
-      endAt: { label: "Ends at" },
     },
-  },
-  views: {
-    list: {
-      layouts: [
-        layout.calendar({
-          mode: "day",
-          dateField: "startAt",
-          endDateField: "endAt",
-          titleField: "batch",
-        }),
-      ],
+    views: {
+      list: {
+        layouts: [
+          layout.calendar({
+            mode: "day",
+            dateField: "startAt",
+            endDateField: "endAt",
+            titleField: "batch",
+          }),
+        ],
+      },
     },
-  },
-})
+  })
 }
 
 const roastsResource = createRoastsResource("preview_roasts", true)

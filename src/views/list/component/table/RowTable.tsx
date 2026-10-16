@@ -17,6 +17,12 @@ import { FormInputViolation } from "react-data-form"
 
 import { DefaultItemComponent } from "@/views/list/component/DefaultItemComponent"
 import { cn } from "@/ui/cn"
+import { useLayout } from "@/layout/useLayout"
+import type { TableLayoutOptions } from "@/layout/layout"
+import {
+  STICKY_ACTIONS_CELL,
+  stickyFirstCellOfRow,
+} from "@/views/list/component/table/stickyCells"
 import { SelectRowCheckbox } from "@/views/list/selection/SelectRowCheckbox"
 
 function ListFormGroupProvider({
@@ -41,6 +47,8 @@ function ListFormGroupProvider({
 export function RowTable({ row }: RowComponentPropsInterface) {
   const currentResource = useCurrentViewResourceContext()
   const listViewContext = useListViewContext()
+  const { stickyActions, stickyFirstColumn } =
+    useLayout<TableLayoutOptions>().options
 
   // The short form the URL takes: the number behind an IRI, a `documentId`, a
   // primary key — whichever the resource's dialect addresses a row by.
@@ -74,6 +82,8 @@ export function RowTable({ row }: RowComponentPropsInterface) {
       <TableRow
         aria-busy={row.pending ? true : undefined}
         className={cn(
+          stickyFirstColumn &&
+            stickyFirstCellOfRow(!!listViewContext.selection?.selectable),
           (currentResource.isSelected(row.data) ||
             (listViewContext.selection?.selectable &&
               row.pending !== "create" &&
@@ -100,8 +110,16 @@ export function RowTable({ row }: RowComponentPropsInterface) {
               key={"item-cell" + e + formInput.id + formContext.form.version}
             />
           ))}
-        <TableCell className={"flex gap-2"}>
-          {row.pending !== "create" && <ListResourceViewButton data={row.data} />}
+        <TableCell
+          data-slot="row-actions"
+          className={cn(
+            "[&_button]:min-h-10 [&_button]:min-w-10",
+            stickyActions && STICKY_ACTIONS_CELL
+          )}
+        >
+          <div className="flex gap-2">
+            {row.pending !== "create" && <ListResourceViewButton data={row.data} />}
+          </div>
         </TableCell>
       </TableRow>
     </FormContext>

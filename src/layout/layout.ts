@@ -127,8 +127,15 @@ export interface ResolvedLayout<
 /* Options of each layout                                                     */
 /* -------------------------------------------------------------------------- */
 
-/** A table takes only the options every layout takes. */
-export type TableLayoutOptions = object
+export interface TableLayoutOptions {
+  /**
+   * Keeps the row actions' column pinned to the right edge, so the buttons stay
+   * in reach however wide the table is. Defaults to `true`.
+   */
+  stickyActions?: boolean
+  /** Pins the first column (the name) to the left edge. Defaults to `false`. */
+  stickyFirstColumn?: boolean
+}
 
 export interface CardsLayoutOptions {
   /** Cards per row on a desktop, from 1 to 6. Defaults to 4. */
@@ -286,8 +293,8 @@ function table<Item = any>(
       icon: Table,
       components: { list: ListTable, row: RowTable, item: ItemTable },
       supports: ["inline"],
-      optionKeys: [],
-      defaults: {},
+      optionKeys: ["stickyActions", "stickyFirstColumn"],
+      defaults: { stickyActions: true, stickyFirstColumn: false },
     },
     options
   )

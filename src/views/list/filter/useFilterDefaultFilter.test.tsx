@@ -28,8 +28,7 @@ vi.mock("@/provider/useCurrentViewResourceContext", () => ({
   }),
 }))
 
-const { default: useFilter } =
-  await import("@/views/list/filter/useFilter")
+const { default: useFilter } = await import("@/views/list/filter/useFilter")
 
 describe("useFilter with initial filters", () => {
   it("pre-fills the form with the default filter", () => {

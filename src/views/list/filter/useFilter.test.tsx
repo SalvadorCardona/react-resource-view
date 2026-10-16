@@ -26,8 +26,7 @@ vi.mock("@/provider/useCurrentViewResourceContext", () => ({
   }),
 }))
 
-const { default: useFilter } =
-  await import("@/views/list/filter/useFilter")
+const { default: useFilter } = await import("@/views/list/filter/useFilter")
 
 describe("useFilter", () => {
   it("exposes the filters injected by the context on top of what was typed", () => {
