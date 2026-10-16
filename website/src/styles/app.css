@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* The headings' font, served with the site (Fontsource): no request to a third
+   party. The text keeps the system's font. */
+@import "@fontsource-variable/bricolage-grotesque/index.css";
 
 /* Tailwind generates classes for what it can see. The libraries ship their own,
    so their compiled files have to be scanned alongside the site's source. */
@@ -15,83 +18,123 @@
    -------------------------------------------------------------------------- */
 
 @layer base {
+  /* The Hermez design system (SalvadorCardona/brand-assets): warm "stone"
+     greys, the brand orange (#e46212 for focus rings and data, #bf4a02 under
+     white text for contrast), Bricolage Grotesque for headings and the
+     system's font for text. The dark theme keeps the same hue. */
   :root {
+    --typeface-heading:
+      "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+    --typeface-body:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+    --typeface-mono: ui-monospace, Menlo, Consolas, monospace;
+    --heading-weight: 800;
+    --heading-tracking: -0.025em;
+
     --radius: 0.75rem;
 
-    --background: oklch(0.995 0.002 265);
-    --foreground: oklch(0.21 0.02 265);
+    --background: #fafaf9;
+    --foreground: #1c1917;
 
-    --card: oklch(1 0 0);
+    --card: #ffffff;
     --card-foreground: var(--foreground);
-    --popover: oklch(1 0 0);
+    --popover: #ffffff;
     --popover-foreground: var(--foreground);
 
-    --primary: oklch(0.52 0.19 273);
-    --primary-foreground: oklch(0.99 0 0);
+    --primary: #bf4a02;
+    --primary-foreground: #ffffff;
 
-    --secondary: oklch(0.96 0.008 265);
-    --secondary-foreground: oklch(0.3 0.03 265);
+    --secondary: #f5f5f4;
+    --secondary-foreground: #292524;
 
-    --muted: oklch(0.965 0.006 265);
-    --muted-foreground: oklch(0.53 0.02 265);
+    --muted: #f5f5f4;
+    --muted-foreground: #57534e;
 
-    --accent: oklch(0.95 0.02 273);
-    --accent-foreground: oklch(0.35 0.11 273);
+    --accent: #fff6ee;
+    --accent-foreground: #1c1917;
 
-    --destructive: oklch(0.58 0.22 27);
-    --destructive-foreground: oklch(0.99 0 0);
+    /* Red 700 rather than 600: the destructive button writes it on its own
+       10% tint, where 600 stays under 4.5:1. */
+    --destructive: #b91c1c;
+    --destructive-foreground: #ffffff;
 
-    --border: oklch(0.9 0.008 265);
-    --input: oklch(0.97 0.006 265);
-    --ring: oklch(0.52 0.19 273);
+    --success: #15803d;
+    --info: #2563eb;
+    --glory: #7c3aed;
+    --warning: #b45309;
 
-    /* One hue per library. The sidebar is split in two; so is the palette. */
-    --form: oklch(0.62 0.16 55);
-    --form-soft: oklch(0.96 0.035 65);
-    --view: oklch(0.55 0.16 250);
-    --view-soft: oklch(0.96 0.03 250);
+    --border: #e7e5e4;
+    --input: #d6d3d1;
+    --ring: #e46212;
 
-    --grid-line: oklch(0.92 0.01 265);
-    --code-bg: oklch(0.975 0.006 265);
+    --chart-1: #e46212;
+    --chart-2: #0f766e;
+    --chart-3: #ca8a04;
+    --chart-4: #7c3aed;
+    --chart-5: #2563eb;
+
+    --shadow-color: 28 25 23;
+    --shadow-strength: 0.08;
+
+    /* One hue per library. The sidebar is split in two; so is the palette:
+       the brand orange for the forms, the data palette's teal for the views,
+       both dark enough to be read as text. */
+    --form: #bf4a02;
+    --form-soft: #fff6ee;
+    --view: #0f766e;
+    --view-soft: #effaf8;
+
+    --grid-line: #e7e5e4;
+    --code-bg: #f5f5f4;
 
     color-scheme: light;
   }
 
   .dark {
-    --background: oklch(0.17 0.015 270);
-    --foreground: oklch(0.95 0.006 265);
+    --background: #0c0a09;
+    --foreground: #fafaf9;
 
-    --card: oklch(0.21 0.018 270);
+    --card: #1c1917;
     --card-foreground: var(--foreground);
-    --popover: oklch(0.22 0.018 270);
+    --popover: #292524;
     --popover-foreground: var(--foreground);
 
-    --primary: oklch(0.72 0.15 275);
-    --primary-foreground: oklch(0.18 0.02 270);
+    --primary: #ff8b44;
+    --primary-foreground: #1c1917;
 
-    --secondary: oklch(0.26 0.02 270);
-    --secondary-foreground: oklch(0.95 0.006 265);
+    --secondary: #292524;
+    --secondary-foreground: #fafaf9;
 
-    --muted: oklch(0.25 0.018 270);
-    --muted-foreground: oklch(0.7 0.015 265);
+    --muted: #292524;
+    --muted-foreground: #a8a29e;
 
-    --accent: oklch(0.29 0.04 275);
-    --accent-foreground: oklch(0.93 0.03 275);
+    --accent: #2e1d12;
+    --accent-foreground: #fafaf9;
 
-    --destructive: oklch(0.7 0.19 22);
-    --destructive-foreground: oklch(0.17 0.02 270);
+    --destructive: #f87171;
+    --destructive-foreground: #1c1917;
 
-    --border: oklch(1 0 0 / 12%);
-    --input: oklch(1 0 0 / 10%);
-    --ring: oklch(0.72 0.15 275);
+    --border: #fafaf91c;
+    --input: #fafaf929;
+    --ring: #ff8b44;
 
-    --form: oklch(0.78 0.14 62);
-    --form-soft: oklch(0.3 0.05 62);
-    --view: oklch(0.74 0.13 250);
-    --view-soft: oklch(0.28 0.05 255);
+    --chart-1: #ff8b44;
+    --chart-2: #2dd4bf;
+    --chart-3: #facc15;
+    --chart-4: #a78bfa;
+    --chart-5: #60a5fa;
 
-    --grid-line: oklch(1 0 0 / 7%);
-    --code-bg: oklch(0.2 0.018 270);
+    --shadow-color: 0 0 0;
+    --shadow-strength: 0.4;
+
+    --form: #ff8b44;
+    --form-soft: #2e1d12;
+    --view: #2dd4bf;
+    --view-soft: #102a27;
+
+    --grid-line: #fafaf912;
+    --code-bg: #1c1917;
 
     color-scheme: dark;
   }
@@ -114,9 +157,18 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-glory: var(--glory);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
   --color-form: var(--form);
   --color-form-soft: var(--form-soft);
@@ -125,14 +177,25 @@
   --color-grid-line: var(--grid-line);
   --color-code-bg: var(--code-bg);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-3xl: calc(var(--radius) * 1.8);
+  --radius-4xl: calc(var(--radius) * 2.2);
 
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  --font-sans: var(--typeface-body);
+  --font-heading: var(--typeface-heading);
+  --font-mono: var(--typeface-mono);
+}
+
+@theme {
+  --shadow-sm: 0 1px 2px 0
+    rgb(var(--shadow-color) / calc(var(--shadow-strength) * 0.8));
+  --shadow-md: 0 4px 12px -2px rgb(var(--shadow-color) / var(--shadow-strength));
+  --shadow-lg: 0 12px 28px -6px
+    rgb(var(--shadow-color) / calc(var(--shadow-strength) * 1.2));
 }
 
 @layer base {
@@ -195,16 +258,16 @@
 
 @layer components {
   .builder-paper {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.22 0.015 265);
-    --card: oklch(1 0 0);
+    --background: #ffffff;
+    --foreground: #1c1917;
+    --card: #ffffff;
     --card-foreground: var(--foreground);
-    --muted: oklch(0.96 0.005 265);
-    --muted-foreground: oklch(0.52 0.015 265);
-    --border: oklch(0.91 0.006 265);
-    --primary: oklch(0.52 0.19 273);
-    --primary-foreground: oklch(0.99 0 0);
-    --view: oklch(0.55 0.16 250);
+    --muted: #f5f5f4;
+    --muted-foreground: #57534e;
+    --border: #e7e5e4;
+    --primary: #bf4a02;
+    --primary-foreground: #ffffff;
+    --view: #0f766e;
 
     color: var(--foreground);
     color-scheme: light;
@@ -528,6 +591,14 @@
   width: 100%;
   background-color: color-mix(in oklab, var(--color-view) 16%, transparent);
   box-shadow: inset 2px 0 0 var(--color-view);
+}
+
+/* Outside any layer, this rule outranks the utilities: every heading takes
+   the theme's font, weight and tracking, whatever the page. */
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--typeface-heading);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
 }
 
 @media (prefers-reduced-motion: reduce) {

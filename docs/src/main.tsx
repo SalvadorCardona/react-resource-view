@@ -5,6 +5,7 @@ import { configurePorts, parseLink, ResourceViewProvider } from "react-resource-
 import { DocLayout } from "./DocLayout"
 import { overviewResource, resources } from "./pages"
 import { seedDemoData } from "./pages/demo"
+import "./fonts"
 import "./styles.css"
 
 /**
