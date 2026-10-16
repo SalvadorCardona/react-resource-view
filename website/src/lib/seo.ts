@@ -44,7 +44,7 @@ export function canonicalUrl(pathname: string): string {
 
 /** The image every page falls back to for Open Graph and Twitter Card. */
 export function defaultOgImageUrl(): string {
-  return `${SITE_ORIGIN}${import.meta.env.BASE_URL}og-image.jpg`
+  return `${SITE_ORIGIN}${import.meta.env.BASE_URL}og-react-resource-view.png`
 }
 
 /** Structured data for a documentation page — read by crawlers, not readers. */

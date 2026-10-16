@@ -62,14 +62,14 @@ export function Footer() {
         <p className="flex items-center gap-2">
           <Logo className="size-5" />
           <span>
-            MIT · built by{" "}
+            MIT ·{" "}
             <a
-              href="https://cardona.digital"
+              href="https://hermez.dev"
               target="_blank"
               rel="noreferrer"
               className="transition hover:text-foreground"
             >
-              Salvador Cardona
+              A Hermez product
             </a>
           </span>
         </p>

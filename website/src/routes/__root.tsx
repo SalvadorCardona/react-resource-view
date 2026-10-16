@@ -76,8 +76,17 @@ export const Route = createRootRoute({
         // GitHub Pages serves a project site under.
         {
           rel: "icon",
-          href: `${import.meta.env.BASE_URL}favicon.svg`,
+          href: `${import.meta.env.BASE_URL}favicon.ico`,
+          sizes: "32x32",
+        },
+        {
+          rel: "icon",
+          href: `${import.meta.env.BASE_URL}rrv-symbol.svg`,
           type: "image/svg+xml",
+        },
+        {
+          rel: "apple-touch-icon",
+          href: `${import.meta.env.BASE_URL}rrv-symbol-180.png`,
         },
       ],
       scripts: [

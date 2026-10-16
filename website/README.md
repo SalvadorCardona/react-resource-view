@@ -134,7 +134,7 @@ That one variable reaches the Vite asset base, the router's basepath and the
 links the view package builds. Building without it targets the domain root.
 
 Two details Pages needs are handled in `public/`: `.nojekyll`, so paths are
-served untouched, and the favicon.
+served untouched, and the icons (`favicon.ico`, `rrv-symbol*.svg|png`) and the share image.
 
 ### A Node host
 
