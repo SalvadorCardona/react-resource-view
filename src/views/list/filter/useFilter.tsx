@@ -8,8 +8,10 @@ import { cleanValuesInObject } from "@/internal/object/cleanValuesInObject"
 import { useMemo } from "react"
 import { deepMerge } from "@/internal/object/deepMerge"
 import { ViewResource } from "@/ViewResource"
+import type { SortState } from "@/ResourceDefinition"
 import FormGroupProviderFilter from "@/views/list/filter/FormGroupProviderFilter"
 import { toForm } from "@/definition/toForm"
+import { ReservedFilterKeys } from "@/api/apiDialectInterface"
 
 export type FilterInterface = Record<string, any>
 
@@ -23,6 +25,9 @@ export interface FilterOutputsInterface {
   filter: FilterInterface
   filterIsEmpty: boolean
   formContext: FormContextOutput
+  /** The sort the rows come in, as it goes to the API. */
+  sort?: SortState
+  setSort: (sort: SortState | undefined) => void
 }
 
 const defaultFormFilter: Partial<FormInterface> = {
@@ -44,6 +49,8 @@ export function getFormFilter(resource: ViewResource): FormInterface | undefined
 function getDefaultFilter(resource: ViewResource): FilterInterface {
   return resource?.views?.list?.filters?.initial ?? {}
 }
+
+const { order: ORDER_KEY, page: PAGE_KEY } = ReservedFilterKeys
 
 export default function useFilter({
   onChange,
@@ -103,24 +110,49 @@ export default function useFilter({
   }
 
   /**
-   * "Clear the search" only empties what the user typed. Two kinds of filter
+   * "Clear the search" only empties what the user typed. Three kinds of filter
    * survive:
    * - those injected by the context — generated inputs, such as the parent set
    *   by a tab's `filter` — which define the scope of the
    *   list: losing them would show the rows of every company;
-   * - the list's `initial` filters, which are its resting state.
+   * - the list's `initial` filters, which are its resting state;
+   * - the sort, which is not a search: the rows found again come in the order
+   *   the user chose.
    */
   const resetFilter = (filter: FilterInterface = {}) => {
     const injectedFilter: FilterInterface = {}
     Object.entries(formContext.form.inputs ?? {}).forEach(([key, input]) => {
       if (input?.generatedValue) injectedFilter[key] = input.value
     })
+    const order = formContext.form.data?.[ORDER_KEY]
 
     updateFilter(
-      { ...defaultFilter, ...cleanValuesInObject(injectedFilter), ...filter },
+      {
+        ...defaultFilter,
+        ...cleanValuesInObject(injectedFilter),
+        ...(order ? { [ORDER_KEY]: order } : {}),
+        ...filter,
+      },
       false
     )
   }
+
+  /**
+   * Sorts by one field — replacing the sort before it — or, given `undefined`,
+   * by none. Back to the first page: the page on screen means nothing in
+   * another order.
+   */
+  const setSort = (sort: SortState | undefined) => {
+    const {
+      [ORDER_KEY]: _order,
+      [PAGE_KEY]: _page,
+      ...rest
+    } = formContext.form.data ?? {}
+    updateFilter(sort ? { ...rest, [ORDER_KEY]: sort } : rest, false)
+  }
+
+  const sort = (formContext.form.data?.[ORDER_KEY] ?? undefined) as
+    SortState | undefined
 
   return {
     formContext,
@@ -128,5 +160,7 @@ export default function useFilter({
     filter,
     filterIsEmpty,
     resetFilter,
+    sort,
+    setSort,
   }
 }

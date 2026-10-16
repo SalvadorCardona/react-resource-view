@@ -14,7 +14,8 @@ export function NoResult() {
   const collection = listViewContext?.originalData
   const resource = currentResource.resource
 
-  if (!collection) {
+  // A list that could not be loaded is not empty: the error says so.
+  if (!collection || currentResource.error) {
     return null
   }
 

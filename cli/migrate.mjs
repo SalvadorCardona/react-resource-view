@@ -340,6 +340,44 @@ export function transformSource(
     }
   }
 
+  /**
+   * `const BOARD = { behavior: { openRecordIn: "drawer", bulkActions: […] } }`:
+   * once migrated, nothing of it is a layout's — the selection and its
+   * actions are the list's. Spread into a layout of a declaration of this
+   * file, the spread moves to that declaration's `views.list`.
+   */
+  const LIST_BEHAVIOR_KEYS = ["rowActions", "selectable", "bulkActions"]
+  const listFragments = new Set()
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue
+    for (const declaration of statement.declarationList.declarations) {
+      let initializer = declaration.initializer
+      if (initializer && ts.isAsExpression(initializer))
+        initializer = initializer.expression
+      if (!ts.isIdentifier(declaration.name) || !initializer) continue
+      if (!ts.isObjectLiteralExpression(initializer)) continue
+      const [behavior, ...others] = initializer.properties
+      if (
+        others.length ||
+        !behavior ||
+        !ts.isPropertyAssignment(behavior) ||
+        behavior.name.getText(file) !== "behavior" ||
+        !ts.isObjectLiteralExpression(behavior.initializer)
+      ) {
+        continue
+      }
+      const keys = behavior.initializer.properties.map((property) =>
+        ts.isPropertyAssignment(property) ? property.name.getText(file) : undefined
+      )
+      if (
+        keys.some((key) => LIST_BEHAVIOR_KEYS.includes(key)) &&
+        keys.every((key) => [...LIST_BEHAVIOR_KEYS, "openRecordIn"].includes(key))
+      ) {
+        listFragments.add(declaration.name.text)
+      }
+    }
+  }
+
   /** The shared board fragments spread somewhere in `node`. */
   const fragmentsSpreadIn = (node) => {
     const found = []
@@ -526,19 +564,23 @@ export function transformSource(
     }
 
     // A board of a 1.0 preview built away from its resource: where its cards
-    // open belongs to the resource's `read` view, which is not here.
+    // open belongs to the resource's `read` view, its selection to the
+    // resource's `views.list` — neither is here.
     if (ts.isCallExpression(node) && !isInsideDeclaration(node)) {
       const migrated = migrateBoardOpen(node)
       if (migrated) {
-        const values = migrated.read.map(
-          (entry) => `${entry.key}: ${entry.value.value}`
-        )
-        note(
-          node,
-          "RV1-LAYOUT-013",
-          `a card opens the record's \`read\` view where that view opens: declare \`views: { read: { ${values.join(", ")} } }\` on the resource.`
-        )
-        return print(migrated.call, indentOf(node))
+        if (migrated.read.length) {
+          const values = migrated.read.map(
+            (entry) => `${entry.key}: ${entry.value.value}`
+          )
+          note(
+            node,
+            "RV1-LAYOUT-013",
+            `a card opens the record's \`read\` view where that view opens: declare \`views: { read: { ${values.join(", ")} } }\` on the resource.`
+          )
+        }
+        keepListOptions(node, migrated.call, migrated.list, "RV1-LAYOUT-014")
+        return unlessSame(node, print(migrated.call, indentOf(node)))
       }
     }
 
@@ -566,7 +608,11 @@ export function transformSource(
       }
 
       if (isFactory(callee)) {
-        return print(migrateFactory(node), indentOf(node))
+        // Outside a declaration's layouts: the options of the list it holds
+        // stay, to be moved by hand.
+        const call = migrateFactory(node)
+        keepListOptions(node, call, call.list, "RV1-BEHAV-006")
+        return print(call, indentOf(node))
       }
 
       if (callee === "createView" && fromPackage("createView")) {
@@ -628,8 +674,8 @@ export function transformSource(
 
     // `const X: { behavior: object } = { behavior: … }` — the annotation
     // described the 0.x shape, often to get around its types. It gets the
-    // type of what the object now is, when that is one thing: the options of
-    // a board.
+    // type of what the object now is, when that is one thing: options of the
+    // list.
     if (
       ts.isVariableDeclaration(node) &&
       node.type &&
@@ -640,12 +686,17 @@ export function transformSource(
     ) {
       const migrated = migrateFragment(node.initializer, { annotated: true })
       const keys = migrated.entries.map((entry) => entry.key)
-      const isBoard =
-        keys.length > 0 &&
-        keys.every((key) => ["selectable", "bulkActions"].includes(key))
-      if (isBoard) {
-        used.types.add("BoardLayoutOptions")
-        return `${node.name.getText(file)}: Partial<BoardLayoutOptions> = ${print(migrated, indentOf(node))}`
+      const isList =
+        keys.length > 0 && keys.every((key) => LIST_BEHAVIOR_KEYS.includes(key))
+      if (isList) {
+        // Only the keys it holds: `Partial<ListViewDefinition>` would type
+        // `titleField` and the others for any item, and refuse to be spread
+        // into a list of tasks.
+        used.types.add("ListViewDefinition")
+        const picked = [...new Set(keys)]
+          .map((key) => JSON.stringify(key))
+          .join(" | ")
+        return `${node.name.getText(file)}: Pick<ListViewDefinition, ${picked}> = ${print(migrated, indentOf(node))}`
       }
       note(
         node,
@@ -699,9 +750,10 @@ export function transformSource(
   }
 
   /**
-   * `layout.board({ openRecord, expandable })`, as the 1.0 previews wrote it:
-   * a card now opens the record's `read` view where that view says. The call
-   * without them, and what goes to `views.read`.
+   * `layout.board({ openRecord, expandable, selectable, bulkActions })`, as
+   * the 1.0 previews wrote it: a card now opens the record's `read` view
+   * where that view says, and the selection is the list's. The call without
+   * them, what goes to `views.read` and what goes to `views.list`.
    */
   function migrateBoardOpen(call) {
     if (!ts.isCallExpression(call)) return undefined
@@ -709,11 +761,17 @@ export function transformSource(
     const [argument] = call.arguments
     if (!isObjectLiteral(argument)) return undefined
     const entries = entriesOf(argument)
-    const moved = entries.filter(
+    const opens = entries.filter(
       (entry) =>
         entry.kind === "prop" &&
         (entry.key === "openRecord" || entry.key === "expandable")
     )
+    const selection = entries.filter(
+      (entry) =>
+        entry.kind === "prop" &&
+        (entry.key === "selectable" || entry.key === "bulkActions")
+    )
+    const moved = [...opens, ...selection]
     if (!moved.length) return undefined
 
     return {
@@ -727,24 +785,62 @@ export function transformSource(
           object(entries.filter((entry) => !moved.includes(entry)).map(asEntry)),
         ],
       },
-      read: moved.map((entry) =>
+      read: opens.map((entry) =>
         prop(
           entry.key === "openRecord" ? "open" : "expandable",
           valueOf(entry.node),
           entry.comments
         )
       ),
+      list: selection.map((entry) =>
+        prop(entry.key, valueOf(entry.node), entry.comments)
+      ),
     }
+  }
+
+  /**
+   * Options of the list found on a layout away from any declaration: they
+   * stay on the layout — no code is lost — marked to be moved by hand to the
+   * resource's `views.list`.
+   */
+  function keepListOptions(node, call, list, id) {
+    if (!list.length) return
+    const marker = `TODO(${id})`
+    const options = call.args[0] ?? object([])
+    for (const entry of list) {
+      options.entries.push(
+        entry.comments.includes(marker)
+          ? entry
+          : {
+              ...entry,
+              comments: [
+                entry.comments,
+                todo(id, "move to the resource's views.list"),
+              ]
+                .filter(Boolean)
+                .join("\n"),
+            }
+      )
+    }
+    call.args = [options]
+    const names = list.map((entry) =>
+      entry.kind === "spread" ? `...${entry.value.value}` : entry.key
+    )
+    note(
+      node,
+      id,
+      `\`${names.join("`, `")}\` belong to the list, not to a layout: declare them in \`views: { list: { … } }\` on the resource.`
+    )
   }
 
   /* ------------------------------------------------------- behaviors */
 
   /**
    * The options of a `behavior` object, each told where it goes:
-   * `{ view: [...], list: [...], resource: [...], board: [...], read: [...] }`.
+   * `{ view: [...], list: [...], resource: [...], read: [...] }`.
    */
   function splitBehavior(literal) {
-    const out = { view: [], list: [], resource: [], board: [], read: [], todo: [] }
+    const out = { view: [], list: [], resource: [], read: [], todo: [] }
     const entries = entriesOf(literal)
     const byKey = Object.fromEntries(
       entries
@@ -836,7 +932,7 @@ export function transformSource(
         }
         case "selectable":
         case "bulkActions":
-          out.board.push(prop(entry.key, valueOf(entry.node), comments))
+          out.list.push(prop(entry.key, valueOf(entry.node), comments))
           break
         default:
           out.todo.push(entry)
@@ -903,7 +999,7 @@ export function transformSource(
         isObjectLiteral(entry.node)
       ) {
         const split = splitBehavior(entry.node)
-        const first = [...split.view, ...split.list, ...split.board].map(narrow)
+        const first = [...split.view, ...split.list].map(narrow)
         if (first[0]) first[0].comments = entry.comments + first[0].comments
         result.push(...first)
         const owner =
@@ -976,9 +1072,20 @@ export function transformSource(
 
     const entries = []
     const components = []
+    // The options of the list written on the layout: the caller takes them
+    // to `views.list`.
+    const list = []
     const defaultLabel = factory.type.charAt(0).toUpperCase() + factory.type.slice(1)
 
     for (const entry of entriesOf(argument)) {
+      if (
+        entry.kind === "spread" &&
+        ts.isIdentifier(entry.node) &&
+        listFragments.has(entry.node.text)
+      ) {
+        list.push(asEntry(entry))
+        continue
+      }
       if (entry.kind !== "prop" || entry.shorthand) {
         entries.push(asEntry(entry))
         continue
@@ -1001,7 +1108,9 @@ export function transformSource(
       }
       if (key === "behavior" && isObjectLiteral(node)) {
         const split = splitBehavior(node)
-        entries.push(...split.board)
+        const selection = split.list.filter((moved) => moved.key !== "rowActions")
+        if (selection[0]) selection[0].comments = comments + selection[0].comments
+        list.push(...selection)
         for (const moved of split.read) {
           note(
             node,
@@ -1011,7 +1120,7 @@ export function transformSource(
         }
         for (const left of [
           ...split.view,
-          ...split.list,
+          ...split.list.filter((moved) => !selection.includes(moved)),
           ...split.resource,
           ...split.todo,
         ]) {
@@ -1041,6 +1150,7 @@ export function transformSource(
       callee: `layout.${factory.type}`,
       typeArguments,
       args: entries.length ? [object(entries)] : [],
+      list,
     }
   }
 
@@ -1214,14 +1324,13 @@ export function transformSource(
   /**
    * What one 0.x view holds, sorted by where it goes in 1.0:
    * `own` stays on the view, `list` goes to `views.list`, `resource` to the
-   * root, `board` into the board layouts, `perAction` to other actions.
+   * root, `perAction` to other actions.
    */
   function migrateView(literal, action) {
     const out = {
       own: [],
       list: [],
       resource: [],
-      board: [],
       perAction: {},
       components: [],
       layoutComponents: [],
@@ -1299,7 +1408,7 @@ export function transformSource(
         case "behavior":
           if (isObjectLiteral(node)) {
             const split = splitBehavior(node)
-            const first = [...split.view, ...split.list, ...split.board][0]
+            const first = [...split.view, ...split.list][0]
             if (first) first.comments = comments + first.comments
             if (action === "root") {
               // A root behaviour reached every action.
@@ -1335,7 +1444,6 @@ export function transformSource(
               }
             }
             out.list.push(...split.list)
-            out.board.push(...split.board)
             for (const moved of split.read) addTo("read", moved, "openRecordIn")
             for (const moved of split.resource) {
               if (moved.export) out.exportPermission = moved.export
@@ -1418,7 +1526,8 @@ export function transformSource(
           out.layouts = { node, comments }
           break
         case "layouts": {
-          // A 1.0 preview's board saying where its cards open.
+          // A 1.0 preview's board saying where its cards open, or holding the
+          // list's selection.
           let changed = false
           const items =
             action === "list" && ts.isArrayLiteralExpression(node)
@@ -1426,6 +1535,7 @@ export function transformSource(
                   const migrated = migrateBoardOpen(element)
                   if (!migrated) return withComments(valueOf(element), element)
                   changed = true
+                  out.list.push(...migrated.list)
                   for (const moved of migrated.read) {
                     addTo(
                       "read",
@@ -1719,7 +1829,6 @@ export function transformSource(
     let viewsVariable
     let viewsPosition
     let permissionsPosition
-    const board = []
     let layoutsSource
     let listTitle
     let exportPermission
@@ -1791,7 +1900,7 @@ export function transformSource(
       }
       // The list also receives what the old `view` held: the comment written
       // above `views.list` is about the action's own options.
-      const contributed = [...part.own, ...part.list, ...part.board]
+      const contributed = [...part.own, ...part.list]
       if (action === "list" && rootView && contributed[0] && part.comments) {
         contributed[0].comments = part.comments + contributed[0].comments
         part.comments = ""
@@ -1816,7 +1925,6 @@ export function transformSource(
         listFilters.push(...part.filters)
       }
       if (part.layouts) layoutsSource = part.layouts
-      board.push(...part.board)
       resourceLevel.push(...part.resource)
       if (part.exportPermission) exportPermission = part.exportPermission
       for (const [target, moved] of Object.entries(part.perAction))
@@ -1986,7 +2094,6 @@ export function transformSource(
       views.list.push(...rootView.list)
       rootFilters = [...rootView.filters]
       if (rootView.layouts) layoutsSource = rootView.layouts
-      board.push(...rootView.board)
       resourceLevel.push(...rootView.resource)
       if (rootView.exportPermission) exportPermission = rootView.exportPermission
       listLayoutComponents.push(...rootView.layoutComponents)
@@ -1999,31 +2106,28 @@ export function transformSource(
       views.list.unshift(prop("title", listTitle.value, listTitle.comments))
     }
 
-    // The layouts, with the board options of the old behaviours.
+    // The layouts — the options of the list a layout held (its behaviour's
+    // selection, a shared fragment of them) go to the list.
     if (layoutsSource) {
       const node = layoutsSource.node
       let layouts
       if (ts.isArrayLiteralExpression(node)) {
+        const fromLayouts = []
         layouts = array(
           node.elements.map((element) => {
             if (
-              board.length &&
               ts.isCallExpression(element) &&
               ts.isIdentifier(element.expression) &&
-              FACTORIES[
-                imported.get(element.expression.text) ?? element.expression.text
-              ]?.type === "board"
+              isFactory(element.expression.text)
             ) {
               const call = migrateFactory(element)
-              const options = call.args[0] ?? object([])
-              options.entries.push(...board)
-              call.args = [options]
-              board.length = 0
+              fromLayouts.push(...call.list)
               return withComments(call, element)
             }
             return withComments(valueOf(element), element)
           })
         )
+        views.list.push(...fromLayouts)
       } else {
         layouts = valueOf(node)
       }
@@ -2050,14 +2154,6 @@ export function transformSource(
         )
       )
     }
-    if (board.length) {
-      note(
-        literal,
-        "RV1-BEHAV-006",
-        "board options (`selectable`, `bulkActions`) found no board in this declaration: pass them to `layout.board()`."
-      )
-    }
-
     // A shared board fragment spread in here says where the cards open.
     for (const name of fragmentsSpreadIn(literal)) {
       if (!views.read.some((entry) => entry.key === "open")) {

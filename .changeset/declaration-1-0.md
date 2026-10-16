@@ -32,10 +32,11 @@ update | delete`, each typed with only the options that have an effect there.
   `afterSave: "close" | "stay" | "reload" | { redirect: (item) => string }`;
   `rowActions` → `views.list.rowActions`; `eventSourced` → `realtime` at the
   root; `openRecordIn` → `views.read.open`; `selectable`, `bulkActions` →
-  options of `layout.board()`.
+  `views.list.selectable`, `views.list.bulkActions`, for every layout of the
+  list (`bulkActions` also takes `"delete"`).
 - **Layouts.** `viewVariants` becomes `views.list.layouts`, and the seven
   factories one `layout` namespace: `layout.table()`, `layout.cards({ columns })`,
-  `layout.board({ groupBy, columns, selectable })`, `layout.calendar({ dateField })`,
+  `layout.board({ groupBy, columns })`, `layout.calendar({ dateField })`,
   `layout.timeline({ startField, endField, groupBy })`, `layout.split({ readInList })`,
   `layout.items()` and `layout.custom()` for one's own (read its options with
   `useLayout()`). Field options are checked against the resource's item type —

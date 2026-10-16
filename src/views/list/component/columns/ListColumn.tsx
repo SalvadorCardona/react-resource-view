@@ -6,16 +6,18 @@ import { useLayout } from "@/layout/useLayout"
 import type { BoardLayoutOptions } from "@/layout/layout"
 import { BoardContext, useBoard } from "@/views/list/component/columns/useBoard"
 import { BoardSelectionBar } from "@/views/list/component/columns/BoardSelectionBar"
+import { useListViewContext } from "@/views/list/provider/useListViewContext"
 
 export default function ListColumn({ rows = [] }: ListComponentPropsInterface) {
-  const { groupBy, columns, selectable } = useLayout<BoardLayoutOptions>().options
+  const { groupBy, columns } = useLayout<BoardLayoutOptions>().options
+  const selection = useListViewContext().selection
   const [isDragging, setIsDragging] = useState(false)
 
   const board = useBoard({
     rows,
     identifierKey: groupBy ?? "",
     columns: columns ?? [],
-    selectable: selectable ?? true,
+    selectable: selection?.selectable ?? true,
   })
 
   if (!rows.length) return <Trans>No data yet</Trans>

@@ -12,7 +12,6 @@ import {
 } from "lucide-react"
 import type { FieldOf, FormDefinition } from "@/ResourceDefinition"
 import type {
-  BulkActionInterface,
   IconType,
   ItemComponentPropsInterface,
   ListComponentPropsInterface,
@@ -139,6 +138,8 @@ export interface CardsLayoutOptions {
 /**
  * A click on a card opens the record's `read` view where that view says —
  * `views.read.open` — and links to its page as `views.read.expandable` says.
+ * Its cards are selected and moved together as `views.list.selectable` says,
+ * and `views.list.bulkActions` come up beside "Move to…".
  */
 export interface BoardLayoutOptions<Item = any> {
   /**
@@ -148,13 +149,6 @@ export interface BoardLayoutOptions<Item = any> {
   groupBy: NoInfer<FieldOf<Item>>
   /** The columns, in order: one per value of `groupBy`. */
   columns: ValueOptionInterface[]
-  /**
-   * Whether cards can be selected — checkbox, Ctrl/Cmd+click, Shift+click, a
-   * long press on a phone — and moved together. Defaults to `true`.
-   */
-  selectable?: boolean
-  /** Actions run on the selected cards, beside "Move to…". */
-  bulkActions?: BulkActionInterface<Item & object>[]
   /** The field a card is titled with. */
   titleField?: NoInfer<FieldOf<Item>>
 }
@@ -328,8 +322,8 @@ function board<Item = any>(
       type: "board",
       icon: Columns3,
       components: { list: ListColumn, row: RowColumn, item: DumpItemComponent },
-      optionKeys: ["groupBy", "columns", "selectable", "bulkActions", "titleField"],
-      defaults: { selectable: true, bulkActions: [] },
+      optionKeys: ["groupBy", "columns", "titleField"],
+      defaults: {},
     },
     options
   )

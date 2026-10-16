@@ -1,5 +1,6 @@
 import { ActionList } from "react-data-form"
 import { findResource } from "@/utils/findResource"
+import { ReservedFilterKeys } from "@/api/apiDialectInterface"
 import {
   ViewResourceContext,
   ViewResourceContextParams,
@@ -27,7 +28,15 @@ export function resolveViewResourceContext(currentView: ViewResourceContextParam
   // The list's initial filters apply key by key, beneath those of the URL: a
   // value the user picked stays on top, and the other initial filters still
   // apply.
-  const initialFilter = view?.filters?.initial
+  // The initial sort, likewise, until a column header picks another.
+  const initialSort = view?.sort?.initial
+  const initialFilter =
+    view?.filters?.initial || initialSort
+      ? {
+          ...view?.filters?.initial,
+          ...(initialSort ? { [ReservedFilterKeys.order]: initialSort } : {}),
+        }
+      : undefined
   const filter = initialFilter
     ? { ...initialFilter, ...(currentView.filter ?? {}) }
     : currentView.filter

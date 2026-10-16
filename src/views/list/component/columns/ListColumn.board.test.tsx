@@ -14,7 +14,11 @@ import { configurePorts, getPorts } from "@/ports"
 import { ViewResourceContextParams } from "@/ViewResourceContext"
 import { RowComponentPropsInterface } from "@/ViewResource"
 import { layout, type BoardLayoutOptions } from "@/layout/layout"
-import type { ReadViewDefinition, UpdateViewDefinition } from "@/ResourceDefinition"
+import type {
+  ListViewDefinition,
+  ReadViewDefinition,
+  UpdateViewDefinition,
+} from "@/ResourceDefinition"
 
 const toast = vi.hoisted(() => vi.fn())
 vi.mock("sonner", () => ({ toast, Toaster: () => null }))
@@ -89,6 +93,7 @@ function renderBoard(
   name: string,
   {
     board,
+    list,
     read,
     update,
     updateItem,
@@ -97,6 +102,8 @@ function renderBoard(
     unreadable,
   }: {
     board?: Partial<BoardLayoutOptions>
+    /** `views.list`: `selectable`, `bulkActions`. */
+    list?: Pick<ListViewDefinition, "selectable" | "bulkActions">
     /** Where a card opens: the record's `read` view. */
     read?: ReadViewDefinition
     update?: UpdateViewDefinition
@@ -131,6 +138,7 @@ function renderBoard(
             ...board,
           }),
         ],
+        ...list,
       },
       read: { title: "Task", ...read },
       update: { ...update },
@@ -311,7 +319,7 @@ describe("selecting cards", () => {
   })
 
   it("can be turned off", async () => {
-    renderBoard("unselectable_board", { board: { selectable: false } })
+    renderBoard("unselectable_board", { list: { selectable: false } })
 
     const roast = await card("Roast")
     fireEvent.click(roast, { ctrlKey: true })
@@ -440,7 +448,7 @@ describe("moving several cards at once", () => {
   it("offers the view's bulk actions on the selection", async () => {
     const onAction = vi.fn()
     renderBoard("bulk_board", {
-      board: { bulkActions: [{ label: "Archive", onAction }] },
+      list: { bulkActions: [{ label: "Archive", onAction }] },
     })
 
     fireEvent.click(await card("Roast"), { ctrlKey: true })

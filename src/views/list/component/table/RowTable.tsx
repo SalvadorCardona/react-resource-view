@@ -17,6 +17,7 @@ import { FormInputViolation } from "react-data-form"
 
 import { DefaultItemComponent } from "@/views/list/component/DefaultItemComponent"
 import { cn } from "@/ui/cn"
+import { SelectRowCheckbox } from "@/views/list/selection/SelectRowCheckbox"
 
 function ListFormGroupProvider({
   formInput,
@@ -73,13 +74,24 @@ export function RowTable({ row }: RowComponentPropsInterface) {
       <TableRow
         aria-busy={row.pending ? true : undefined}
         className={cn(
-          currentResource.isSelected(row.data) && "bg-primary/10",
+          (currentResource.isSelected(row.data) ||
+            (listViewContext.selection?.selectable &&
+              row.pending !== "create" &&
+              listViewContext.selection.isSelected(
+                listViewContext.selection.idOf(row)
+              ))) &&
+            "bg-primary/10",
           // Shown before the API answered: a discreet "being saved", and
           // nothing to act on for a record that has no identifier yet.
           row.pending && "opacity-60 transition-opacity",
           row.pending === "create" && "pointer-events-none"
         )}
       >
+        {listViewContext.selection?.selectable && (
+          <TableCell className="w-10">
+            <SelectRowCheckbox row={row} />
+          </TableCell>
+        )}
         {getFormInputsFromForm(formContext.form)
           .filter((formInput) => !formInput.generatedValue)
           .map((formInput, e) => (

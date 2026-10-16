@@ -7,6 +7,7 @@ import { RowInterface } from "@/ViewResource"
 import getIdFromObject from "@/internal/id/getIdFromObject"
 import getIdentityFromObject from "@/internal/id/getIdentityFromObject"
 import useCurrentViewResourceContext from "@/provider/useCurrentViewResourceContext"
+import { useListViewContext } from "@/views/list/provider/useListViewContext"
 import { permissionResource } from "@/utils/permissionResource"
 import { updateRecord } from "@/hook/useResourceMutation"
 import {
@@ -68,7 +69,12 @@ export function useBoard({
   const currentResource = useCurrentViewResourceContext()
   const resource = currentResource.resource
 
-  const [rawSelected, setSelected] = useState<string[]>([])
+  // The list's selection — the one its bulk actions run on. A board drawn
+  // outside a list keeps one of its own.
+  const listSelection = useListViewContext().selection
+  const [localSelected, setLocalSelected] = useState<string[]>([])
+  const rawSelected = listSelection ? listSelection.selected : localSelected
+  const setSelected = listSelection ? listSelection.setSelected : setLocalSelected
   const [anchor, setAnchor] = useState<string | null>(null)
   const [dragging, setDragging] = useState<string[]>([])
   // Read by the drop, which may come before the render the drag start asked
@@ -91,9 +97,10 @@ export function useBoard({
   }
 
   // Escape empties the selection — unless it is closing something drawn over
-  // the board, a dialog or a menu, which has its own use for the key.
+  // the board, a dialog or a menu, which has its own use for the key. The
+  // list's selection already listens.
   useEffect(() => {
-    if (!selected.length) return
+    if (!selected.length || listSelection) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented) return
       const target = e.target instanceof Element ? e.target : null
@@ -104,7 +111,7 @@ export function useBoard({
     }
     document.addEventListener("keydown", onKeyDown)
     return () => document.removeEventListener("keydown", onKeyDown)
-  }, [selected.length])
+  }, [selected.length, listSelection])
 
   const moveTo = async (ids: string[], value: unknown) => {
     const candidates = ids
