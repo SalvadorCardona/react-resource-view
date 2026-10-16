@@ -62,6 +62,9 @@ export function DocLayout({ children }: { children: ReactNode }) {
       <main className="min-w-0 flex-1 py-8 lg:py-14">
         <MobileMenu />
         {children}
+        <footer className="mt-16 border-t border-border pt-6 text-sm text-muted-foreground">
+          A Hermez product
+        </footer>
       </main>
     </div>
   )
