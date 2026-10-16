@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { Compass, Github, Menu, X } from "lucide-react"
-import { Logo } from "@/components/Logo"
+import { FullLogo } from "@/components/Logo"
 import { Search } from "@/components/Search"
 import { Sidebar } from "@/components/Sidebar"
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -26,11 +26,8 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
             </button>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5" aria-label="react-resource-view — home">
-            <Logo />
-            <span className="hidden text-sm font-semibold tracking-tight sm:block" aria-hidden>
-              react-resource-view
-            </span>
+          <Link to="/" className="flex items-center" aria-label="React Resource View — home">
+            <FullLogo />
           </Link>
 
           <nav className="ml-4 hidden items-center gap-1 md:flex">
@@ -97,7 +94,7 @@ export function Header({ showMenu = false }: { showMenu?: boolean }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
-              <Logo />
+              <FullLogo />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

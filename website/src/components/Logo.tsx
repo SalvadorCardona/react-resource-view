@@ -1,48 +1,45 @@
 import { cn } from "@/lib/cn"
 
+// BASE_URL already ends in a slash, and carries the /<repository>/ prefix
+// GitHub Pages serves a project site under.
+const asset = (file: string) => `${import.meta.env.BASE_URL}${file}`
+
 /**
- * Two overlapping rounded squares: the form on the left, the view on the right,
- * in the same two hues the sidebar is split with.
+ * The react-resource-view mark, in the light or the dark version according to
+ * the theme: a checklist whose first box is ticked, in the outlined square of the
+ * Hermez family. Decorative — the name is always written next to it.
  */
 export function Logo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      className={cn("size-7", className)}
-      aria-hidden
-      fill="none"
-    >
-      <rect
-        x="2"
-        y="7"
-        width="17"
-        height="18"
-        rx="5"
-        className="fill-form"
-        opacity="0.9"
+    <>
+      <img
+        src={asset("rrv-symbol.svg")}
+        alt=""
+        className={cn("size-7 dark:hidden", className)}
       />
-      <rect
-        x="13"
-        y="7"
-        width="17"
-        height="18"
-        rx="5"
-        className="fill-view"
-        opacity="0.85"
+      <img
+        src={asset("rrv-symbol-dark.svg")}
+        alt=""
+        className={cn("hidden size-7 dark:block", className)}
       />
-      <path
-        d="M7 13h7M7 17h5"
-        className="stroke-background"
-        strokeWidth="2"
-        strokeLinecap="round"
+    </>
+  )
+}
+
+/** The symbol and the name, "A Hermez product" underneath: the site's masthead. */
+export function FullLogo({ className }: { className?: string }) {
+  return (
+    <>
+      <img
+        src={asset("rrv-logo.svg")}
+        alt="React Resource View"
+        className={cn("h-9 w-auto dark:hidden", className)}
       />
-      <path
-        d="M20 13h5M20 17h5M20 21h5"
-        className="stroke-background"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.85"
+      <img
+        src={asset("rrv-logo-dark.svg")}
+        alt="React Resource View"
+        className={cn("hidden h-9 w-auto dark:block", className)}
       />
-    </svg>
+    </>
   )
 }

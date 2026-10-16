@@ -1,4 +1,11 @@
 <p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo/rrv-logo-dark.svg">
+    <img src="assets/logo/rrv-logo.svg" alt="React Resource View — A Hermez product" height="64">
+  </picture>
+</p>
+
+<p align="center">
   <a href="https://cardona.digital/react-resource-view/playground/">
     <img src="diagrams/hero.png" alt="react-resource-view — declare a resource, get the whole CRUD: list, detail, create, edit and delete as a table, cards, a board, a split view, a calendar or a timeline, wired to API Platform, Spring Boot, Strapi, Supabase, FastAPI or Django and to the URL" width="100%">
   </a>
