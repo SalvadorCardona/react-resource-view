@@ -16,10 +16,10 @@ import type { Post } from "@/demo/playground/adminData"
  * editor is the builder now — same blocks, same palette, the record's own
  * repository underneath.
  *
- * `viewComponent` is the seam: a view may hand its rendering to a component of
+ * `components.view` is the seam: a view may hand its rendering to a component of
  * the application, and `useFormByResource` gives that component the very form
  * the declaration describes, saving where a form of this resource saves. The
- * sub-views — the comments of the post — go on being drawn underneath by the
+ * tabs — the comments of the post — go on being drawn underneath by the
  * package, which is why nothing about them is written here.
  */
 export function PostBuilder() {

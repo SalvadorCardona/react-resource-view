@@ -70,9 +70,7 @@ describe("the declaration button", () => {
     )
     expect(panel).toHaveTextContent("resources/products.ts")
     expect(panel).toHaveTextContent("Cards layout is highlighted")
-    expect(panel.querySelector(".line-marked")).toHaveTextContent(
-      "cardViewOptionFactory"
-    )
+    expect(panel.querySelector(".line-marked")).toHaveTextContent("layout.cards")
     expect(within(panel).getByRole("link", { name: /GitHub/ })).toHaveAttribute(
       "href",
       expect.stringMatching(/products\.ts#L\d+-L\d+$/)

@@ -28,12 +28,10 @@ const BASIC = `import { createViewResource } from "react-resource-view"
 export const articles = createViewResource("articles", {
   name: "Articles",
   path: "/api/articles",
-  view: {
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-      },
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
     },
   },
 })`
@@ -42,17 +40,14 @@ const PER_VIEW = `createViewResource("articles", {
   name: "Articles",
   path: "/api/articles",
   // Shared by every view…
-  view: {
-    form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
-  },
-  // …and overridden per action.
+  form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
+  // …and adjusted per action: only what differs, merged deeply.
   views: {
-    [ActionList.list]: { name: "All articles", itemsPerPage: 20 },
-    [ActionList.create]: {
-      name: "New article",
-      form: { inputs: { title: { label: "Title", required: true } } },
+    list: { title: "All articles", pageSize: 20 },
+    create: {
+      title: "New article",
+      form: { inputs: { title: { required: true } } },
     },
-    [ActionList.read]: { behavior: { canExport: true } },
   },
 })`
 
@@ -60,53 +55,57 @@ const OPEN_IN = `createViewResource("articles", {
   path: "/api/articles",
   views: {
     // A screen of its own, at /articles/read/42 — the default.
-    [ActionList.read]: { behavior: { openIn: "window" } },
+    read: { open: "page" },
     // A dialog over the list.
-    [ActionList.create]: { behavior: { openIn: "popup" } },
+    create: { open: "dialog" },
     // A panel sliding in from the right — up from the bottom on a phone.
-    [ActionList.update]: { behavior: { openIn: "drawer" } },
+    update: { open: "drawer" },
   },
 })`
 
-const FULL_WIDTH = `createViewResource("tasks", {
+const FULL_WIDTH = `createViewResource<Task>("tasks", {
   path: "/api/tasks",
-  view: {
-    // Every action of the resource takes the page's whole width…
-    fullWidth: true,
-    viewVariants: [
-      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
-      tableViewOptionFactory({ name: "Table" }),
-    ],
-  },
+  // Every action of the resource takes the page's whole width…
+  fullWidth: true,
   views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES }),
+        layout.table(),
+      ],
+    },
     // …but its forms, which read better narrow.
-    [ActionList.create]: { fullWidth: false },
-    [ActionList.update]: { fullWidth: false },
+    create: { fullWidth: false },
+    update: { fullWidth: false },
   },
 })
 
 // Or a single layout of a list, the others keeping the column:
-viewVariants: [
-  columnViewOptionFactory({ name: "Board", fullWidth: true }),
-  tableViewOptionFactory({ name: "Table" }),
+layouts: [
+  layout.board({ groupBy: "status", columns: STATUSES, fullWidth: true }),
+  layout.table(),
 ]`
 
 const HOOKS = `createViewResource("articles", {
   path: "/api/articles",
+  hooks: {
+    // Shape the query before a collection is fetched.
+    beforeList: (params, context) => ({
+      ...params,
+      "order[publishedAt]": "desc",
+    }),
 
-  // Shape the query before a collection is fetched.
-  preGetCollection: (params, context) => ({
-    ...params,
-    "order[publishedAt]": "desc",
-  }),
+    // Shape the payload before it is written.
+    beforeCreate: (data, { viewResourceContext }) => ({
+      ...data,
+      workspace: viewResourceContext?.filter?.workspace,
+    }),
 
-  // Shape the payload before it is written.
-  preCreate: (data, context) => ({
-    ...data,
-    workspace: context?.viewResourceContext?.filter?.workspace,
-  }),
+    beforeUpdate: (data) => ({ ...data, updatedAt: new Date().toISOString() }),
 
-  preUpdate: (data) => ({ ...data, updatedAt: new Date().toISOString() }),
+    // Told what the API answered.
+    afterSave: (article, { action }) => notify(\`Article \${action}d\`),
+  },
 })`
 
 const ON_CHANGE = `// Every write publishes, so a sibling view can refresh itself.
@@ -114,10 +113,11 @@ articles.onChange.subscribe(({ data, action }) => {
   if (action === ActionList.delete) analytics.track("article.deleted", data)
 })`
 
-const LOCAL = `// No \`path\` → localStorage. Every demo on this site is declared this way.
+const LOCAL = `// \`storage: "local"\` → localStorage. Every demo on this site is declared this way.
 const drafts = createViewResource("local_drafts", {
   name: "Drafts",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  storage: "local",
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 function Resources() {
@@ -155,10 +155,12 @@ function Resources() {
       <H2 id="five-views">Five views from one description</H2>
 
       <P>
-        <C>view</C> is the description every action starts from; <C>views</C>{" "}
-        overrides it per action. So the common case — one form for creating and
-        editing, one set of columns for the list — is written once, and only the
-        differences are stated.
+        The root of the declaration is what every action starts from;{" "}
+        <C>views.&lt;action&gt;</C> adjusts it for one action, and the two are
+        merged deeply. So the common case — one form for creating and editing, one
+        set of columns for the list — is written once, and only the differences are
+        stated: <C>inputs: {"{"} notes: false {"}"}</C> removes an inherited field,{" "}
+        <C>components: {"{"} top: null {"}"}</C> an inherited component.
       </P>
 
       <CodeBlock>{PER_VIEW}</CodeBlock>
@@ -178,43 +180,63 @@ function Resources() {
         rows={[
           {
             name: "views.list",
-            type: "ViewListInterface",
+            type: "ListViewDefinition",
             description: (
               <>
-                The collection. Owns <C>viewVariants</C>, <C>formFilter</C>,{" "}
-                <C>defaultFilter</C> and <C>itemsPerPage</C>.
+                The collection. Owns <C>layouts</C>, <C>filters</C>,{" "}
+                <C>pageSize</C>, <C>sort</C>, <C>rowActions</C>, <C>selectable</C>{" "}
+                and <C>bulkActions</C>.
               </>
             ),
           },
           {
             name: "views.read",
-            type: "ViewInterface",
-            description: "One item. Owns the sub-views and the export button.",
+            type: "ReadViewDefinition",
+            description: (
+              <>
+                One item. Owns <C>open</C>, <C>expandable</C> and the{" "}
+                <C>tabs</C> under the record.
+              </>
+            ),
           },
           {
             name: "views.create",
-            type: "ViewUpdateInterface",
-            description: "The creation form.",
+            type: "CreateViewDefinition",
+            description: (
+              <>
+                The creation form. Owns <C>open</C>, <C>afterSave</C> and{" "}
+                <C>optimistic</C>.
+              </>
+            ),
           },
           {
             name: "views.update",
-            type: "ViewUpdateInterface",
-            description: "The edit form.",
+            type: "UpdateViewDefinition",
+            description: (
+              <>
+                The edit form. What the creation form owns, and <C>tabs</C>.
+              </>
+            ),
           },
           {
             name: "views.delete",
-            type: "ViewUpdateInterface",
-            description: "The delete confirmation.",
+            type: "DeleteViewDefinition",
+            description: (
+              <>
+                The delete confirmation. Owns <C>open</C> and <C>optimistic</C>.
+              </>
+            ),
           },
         ]}
       />
 
       <Callout kind="tip" title="The list has no separate column definition">
         <P>
-          The table renders one column per field of <C>view.form</C>, in the order
-          the fields are declared, skipping those marked <C>generatedValue</C>.
-          Adding a column means adding a field — and that field is then editable
-          everywhere the form appears.
+          The table renders one column per field of the resource&apos;s{" "}
+          <C>form</C>, in the order the fields are declared, skipping those marked{" "}
+          <C>generatedValue</C>. Adding a column means adding a field — and that
+          field is then editable everywhere the form appears. A layout that shows
+          fewer picks them with <C>fields: ["title", "status"]</C>.
         </P>
       </Callout>
 
@@ -223,20 +245,20 @@ function Resources() {
       <P>
         An action is a screen, a dialog or a drawer — the same{" "}
         <Term id="view">view</Term> either way, drawn in a different frame.{" "}
-        <C>behavior.openIn</C> is the whole decision, and it is taken per action: a
-        list is read full page, and the form that edits one of its rows does not have
-        to be.
+        <C>views.&lt;action&gt;.open</C> is the whole decision, and it is taken per
+        action: a list is read full page, and the form that edits one of its rows
+        does not have to be.
       </P>
 
       <CodeBlock>{OPEN_IN}</CodeBlock>
 
       <Ul>
         <Li>
-          <C>window</C> — the view replaces the page, at its own URL. Shareable,
+          <C>page</C> — the view replaces the page, at its own URL. Shareable,
           bookmarkable, and where a list belongs.
         </Li>
         <Li>
-          <C>popup</C> — a dialog centred over the page. Short forms and delete
+          <C>dialog</C> — a dialog centred over the page. Short forms and delete
           confirmations, where what is behind is the context the reader is keeping.
         </Li>
         <Li>
@@ -249,14 +271,16 @@ function Resources() {
       <PropsTable
         rows={[
           {
-            name: "behavior.openIn",
-            type: '"window" | "popup" | "drawer"',
-            default: '"window"',
+            name: "open",
+            type: '"page" | "dialog" | "drawer" | OpenFrame',
+            default: '"page"',
             description: (
               <>
                 Set per action, on <C>views.&lt;action&gt;</C>, or once for the whole
-                application through <C>defaultResource</C>. The delete confirmation
-                is the one action that starts as a <C>popup</C>.
+                application through <C>configureResourceView({"{"} defaults {"}"})</C>
+                . The delete confirmation is the one action that starts as a{" "}
+                <C>dialog</C>. A frame of one&apos;s own is built with{" "}
+                <C>open.custom()</C>.
               </>
             ),
           },
@@ -285,10 +309,14 @@ function Resources() {
       </Callout>
 
       <P>
-        A view drawn over the page does not navigate after a write, whichever frame
-        carries it: it would take the list, its filters and its page away with it.
-        Pair it with <C>closeAfterUpdate</C> and <C>refreshDataAfterUpdate</C> to
-        decide what happens once the write lands.
+        A view drawn over the page is still written into the URL, under the list it
+        was opened from — <C>…/articles/list/articles/update/42</C>, filters and
+        page included — so a link, Back and a reload find it as it was. What
+        happens once the write lands is <C>afterSave</C>: <C>"close"</C> (the
+        default in a dialog or a drawer) goes back to the list,{" "}
+        <C>"stay"</C> (the default on a page) keeps the form, <C>"reload"</C> fills
+        it again with what the API answered, and{" "}
+        <C>{"{"} redirect: (item) =&gt; string {"}"}</C> goes elsewhere.
       </P>
 
       <H2 id="full-width">Full width</H2>
@@ -305,8 +333,8 @@ function Resources() {
 
       <P>
         It is read at three levels, and the most specific one wins: a list{" "}
-        <Term id="view-variant">variant</Term>, then the action&apos;s entry in{" "}
-        <C>views</C>, then the resource&apos;s <C>view</C>. So a resource declared
+        <Term id="view-variant">layout</Term>, then the action&apos;s entry in{" "}
+        <C>views</C>, then the root of the resource. So a resource declared
         full width keeps its forms narrow with a <C>fullWidth: false</C> on those
         actions, and a board can be the one wide layout of a list whose table stays
         in the column.
@@ -320,10 +348,10 @@ function Resources() {
             default: "false",
             description: (
               <>
-                On <C>view</C>, every action of the resource; on{" "}
-                <C>views.&lt;action&gt;</C>, that action; on a variant built by a{" "}
-                <C>*ViewOptionFactory</C>, that variant. The side margins stay, and a
-                narrow screen is laid out as before. Since 0.11.
+                At the root, every action of the resource; on{" "}
+                <C>views.&lt;action&gt;</C>, that action; on a layout built by{" "}
+                <C>layout.*()</C>, that layout. The side margins stay, and a narrow
+                screen is laid out as before.
               </>
             ),
           },
@@ -351,8 +379,8 @@ function Resources() {
             type: "string",
             description: (
               <>
-                Collection endpoint — <C>/api/articles</C>. Left out, the resource is
-                backed by localStorage.
+                Collection endpoint — <C>/api/articles</C>. Without it, declare{" "}
+                <C>storage: &quot;local&quot;</C> or a <C>repository</C>.
               </>
             ),
           },
@@ -362,65 +390,90 @@ function Resources() {
             description: "Shown in menus, in tabs and in the header of a list.",
           },
           {
-            name: "scope",
-            type: "string",
-            description: (
-              <>
-                Which area of the application it belongs to. See{" "}
-                <A href="/docs/resource-view/scopes">Scopes</A>.
-              </>
-            ),
-          },
-          {
             name: "alias",
             type: "string",
             description: "A second identifier the router also accepts.",
           },
           {
-            name: "view",
-            type: "ViewListInterface",
+            name: "storage",
+            type: '"local"',
             description: (
               <>
-                The description every action starts from — <C>fullWidth</C> included,
-                see <A href="#full-width">Full width</A>.
+                Keeps the records in localStorage instead of an API — declared, so a
+                forgotten <C>path</C> does not look like a working API.
+              </>
+            ),
+          },
+          {
+            name: "dialect",
+            type: "ApiDialectInterface",
+            description: (
+              <>
+                How this resource&apos;s API spells its requests, when it is not the
+                one given to <C>configureApi</C>. See{" "}
+                <A href="/docs/resource-view/backends">Backends</A>.
+              </>
+            ),
+          },
+          {
+            name: "form, fullWidth, titleField, components, description",
+            type: "CommonViewOptions",
+            description: (
+              <>
+                What every action starts from, adjusted per action in{" "}
+                <C>views</C> — <C>fullWidth</C> included, see{" "}
+                <A href="#full-width">Full width</A>.
               </>
             ),
           },
           {
             name: "views",
             type: "{ list, read, create, update, delete }",
-            description: "Per-action overrides.",
+            description: "What is particular to one action, merged over the root.",
           },
           {
-            name: "canList / canRead / canCreate / canUpdate / canDelete",
-            type: "boolean | (() => boolean)",
+            name: "permissions",
+            type: '"all" | "readonly" | Action[] | { [action]: boolean | fn }',
+            default: '"all"',
             description: (
               <>
-                Permissions, evaluated on render. See{" "}
+                What the users may do — everything unless restricted here. See{" "}
                 <A href="/docs/resource-view/permissions">Permissions</A>.
               </>
             ),
           },
           {
-            name: "limit",
-            type: "LimitInterface",
+            name: "hooks",
+            type: "ResourceHooks",
+            description: (
+              <>
+                Code run around the calls to the data. See{" "}
+                <A href="#hooks">Shaping requests</A>.
+              </>
+            ),
+          },
+          {
+            name: "realtime",
+            type: "boolean",
+            description: "Reloads the views when the API pushes a change (Mercure).",
+          },
+          {
+            name: "optimistic",
+            type: "boolean",
+            default: "true",
+            description:
+              "Draws every write before the API answers, and puts it back if the API refuses.",
+          },
+          {
+            name: "quota",
+            type: "{ get, fallback }",
             description: "A creation quota, with a fallback rendered once reached.",
           },
           {
-            name: "decoratorComponent",
-            type: "FC<{ children }>",
-            description: "Wraps every view of this resource.",
-          },
-          {
-            name: "onChange",
-            type: "PubSub<{ data, action }>",
-            description: "Publishes after every successful write.",
-          },
-          {
-            name: "getCollection / getItem / createItem / updateItem / removeItem",
-            type: "functions",
+            name: "repository",
+            type: "{ getCollection, getItem, createItem, updateItem, removeItem }",
             description:
-              "The repository. Supplied for you, and replaceable one method at a time.",
+              "Replaces some or all of the calls to the data, one method at a time.",
           },
         ]}
       />
@@ -429,7 +482,7 @@ function Resources() {
 
       <P>
         <C>createViewResource</C> picks a <Term id="repository">repository</Term>{" "}
-        from one thing: whether the resource has a <C>path</C>.
+        from what it declares: a <C>path</C>, or <C>storage: &quot;local&quot;</C>.
       </P>
 
       <Ul>
@@ -442,8 +495,12 @@ function Resources() {
           <C>dialect</C> of its own, for an application reading two backends at once.
         </Li>
         <Li>
-          <strong>Without one</strong> — a localStorage repository keyed on the
-          resource id, with the same interface.
+          <strong>
+            With <C>storage: &quot;local&quot;</C>
+          </strong>{" "}
+          — a localStorage repository keyed on the resource id, with the same
+          interface. Neither declared, development throws an error naming the
+          resource.
         </Li>
       </Ul>
 
@@ -456,7 +513,7 @@ function Resources() {
 
       <Callout kind="note" title="Or bring your own">
         <P>
-          Any of the five methods can be given directly on the declaration and takes
+          Any of the five methods can be given in <C>repository</C> and takes
           precedence — a resource reading from IndexedDB, from a GraphQL endpoint, or
           from an in-memory fixture is the same declaration with five functions on
           it.
@@ -466,8 +523,8 @@ function Resources() {
       <H2 id="hooks">Shaping requests</H2>
 
       <P>
-        Three hooks sit between the views and the repository. Each receives the
-        current context, so a value can be derived from the surrounding view — the
+        <C>hooks</C> sit between the views and the repository. Each receives{" "}
+        <C>{"{"} viewResourceContext {"}"}</C>, and may answer asynchronously, so a value can be derived from the surrounding view — the
         parent item of a <Term id="sub-view">sub-view</Term>, the active filter, the
         current <Term id="scope">scope</Term>.
       </P>
@@ -477,32 +534,48 @@ function Resources() {
       <PropsTable
         rows={[
           {
-            name: "preGetCollection",
+            name: "beforeList",
             type: "(params, context) => params",
             description:
               "Before a collection is fetched. Sorting, extra query parameters, a forced filter.",
           },
           {
-            name: "preGetItem",
+            name: "beforeRead",
             type: "(params, context) => params",
             description: "Before a single item is fetched.",
           },
           {
-            name: "preCreate",
+            name: "beforeCreate",
             type: "(data, context) => data",
             description: "Before a create. Injecting an owner or a tenant.",
           },
           {
-            name: "preUpdate",
+            name: "beforeUpdate",
             type: "(data, context) => data",
             description: "Before an update.",
+          },
+          {
+            name: "beforeDelete",
+            type: "(item, context) => item",
+            description: "Before a delete.",
+          },
+          {
+            name: "afterSave",
+            type: "(item, context & { action }) => void",
+            description:
+              "After a create or an update, with the record the API answered.",
+          },
+          {
+            name: "afterDelete",
+            type: "(item, context) => void",
+            description: "After a delete.",
           },
         ]}
       />
 
       <P>
         The filter currently applied is merged into the collection request after{" "}
-        <C>preGetCollection</C> runs, so a hook cannot accidentally erase what the
+        <C>beforeList</C> runs, so a hook cannot accidentally erase what the
         reader typed.
       </P>
 

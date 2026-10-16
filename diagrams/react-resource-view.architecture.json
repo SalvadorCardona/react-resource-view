@@ -139,7 +139,7 @@
       "id": "forms",
       "type": "external",
       "label": "react-data-form",
-      "sublabel": "form and formFilter",
+      "sublabel": "form and filters",
       "row": 3,
       "col": 3,
       "size": [160, 66]
@@ -147,7 +147,7 @@
     {
       "id": "variants",
       "type": "frontend",
-      "label": "List variants",
+      "label": "List layouts",
       "sublabel": "table, card, split, calendar, timeline",
       "row": 3,
       "col": 2,
@@ -286,7 +286,7 @@
       "items": [
         "One request per context change; a response arriving late is dropped",
         "Only the rows are written back, so a filter chosen meanwhile survives",
-        "behavior.eventSourced subscribes to the Mercure topic and refetches"
+        "realtime: true subscribes to the Mercure topic and refetches"
       ]
     }
   ]

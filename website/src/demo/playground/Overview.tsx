@@ -6,7 +6,7 @@ import {
   generateLinkByResource,
   Link,
   type FilterInterface,
-  type ViewResourceInterface,
+  type ViewResource,
 } from "react-resource-view"
 import { formatPrice } from "@/demo/playground/adminRows"
 import {
@@ -97,7 +97,7 @@ function readFigures(): Figure[] {
       value: String(pendingComments.length),
       label: plural(pendingComments.length, "comment", "comments") + " to moderate",
       hint: `${comments.length} left under the posts in all`,
-      href: listLink(commentsResource, { status: "pending" }, "list"),
+      href: listLink(commentsResource, { status: "pending" }, "items"),
       attention: pendingComments.length > 0,
     },
     {
@@ -138,7 +138,7 @@ function plural(count: number, one: string, many: string): string {
  * the views make for themselves.
  */
 function listLink(
-  resource: ViewResourceInterface,
+  resource: ViewResource,
   filter?: FilterInterface,
   viewVariantId?: string
 ): string {
@@ -312,7 +312,7 @@ function CompanyTabs() {
 
 /* -------------------------------------------------------------------------- */
 
-const RESOURCES: ViewResourceInterface[] = [
+const RESOURCES: ViewResource[] = [
   usersResource,
   companiesResource,
   postsResource,
@@ -343,11 +343,10 @@ function Resources() {
         {RESOURCES.map((resource) => {
           const Icon = resource.icon
           const declaration = DECLARATIONS[resource["@id"]]
-          // Each variant is named in the declaration, and that name is what the
-          // layout switcher shows — so it is what is listed here too.
-          const layouts = (resource.view?.viewVariants ?? [])
-            .map((variant) => variant.name)
-            .filter((name): name is string => Boolean(name))
+          // What the layout switcher shows for each layout of the list — its
+          // label, or its type when the declaration gives none.
+          const list = resource.views.list
+          const layouts = list.layouts.map((layout) => layout.label)
 
           return (
             <Link
@@ -362,12 +361,12 @@ function Resources() {
                   </span>
                 )}
                 <span className="min-w-0">
-                  <span className="block font-medium">{resource.view?.name}</span>
+                  <span className="block font-medium">{list.title}</span>
                 </span>
               </span>
 
               <span className="text-sm text-muted-foreground">
-                {resource.view?.description}
+                {list.description}
               </span>
 
               <span className="mt-auto flex flex-wrap items-center gap-1.5">

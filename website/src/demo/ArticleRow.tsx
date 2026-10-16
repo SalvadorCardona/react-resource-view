@@ -15,12 +15,12 @@ const STATUS_LABELS: Record<Article["status"], string> = {
 }
 
 /**
- * How one article is drawn in the card, list, column and split layouts.
+ * How one article is drawn in the cards, items, board and split layouts.
  *
  * Those four fall back to `DumpRowComponent`, which prints every key of the raw
  * JSON-LD item — `@id` and `@type` included. That is a sensible default for
  * getting something on screen, and the wrong thing to show a reader, so the
- * demos on this site supply a `rowComponent` of their own. It is also the
+ * demos on this site supply a `components.row` of their own. It is also the
  * extension point the layouts page describes, exercised rather than asserted.
  */
 export function ArticleRow({ row }: RowComponentPropsInterface) {

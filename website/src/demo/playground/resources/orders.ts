@@ -1,11 +1,10 @@
 import { Receipt } from "lucide-react"
 import {
-  ActionList,
   DatePickerInputController,
   PriceInputController,
   SelectInputController,
 } from "react-data-form"
-import { createViewResource, tableViewOptionFactory } from "react-resource-view"
+import { createViewResource, layout } from "react-resource-view"
 import { ORDER_STATUSES, ORDERS_ID, type Order } from "@/demo/playground/adminData"
 import { POPUP } from "@/demo/playground/shared"
 
@@ -16,38 +15,36 @@ import { POPUP } from "@/demo/playground/shared"
  */
 export const ordersResource = createViewResource<Order>(ORDERS_ID, {
   name: "Orders",
-  scope: "admin",
   icon: Receipt,
-  canRead: true,
-  canUpdate: true,
-  view: {
-    name: "Orders",
-    description: "What the shop has sold, and where each parcel stands.",
-    form: {
-      inputs: {
-        reference: { label: "Reference", required: true },
-        customer: { label: "Customer" },
-        total: { label: "Total", controller: PriceInputController },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: ORDER_STATUSES,
-        },
-        placedAt: { label: "Placed on", controller: DatePickerInputController },
+  storage: "local",
+  permissions: { create: false, delete: false },
+  description: "What the shop has sold, and where each parcel stands.",
+  form: {
+    inputs: {
+      reference: { label: "Reference", required: true },
+      customer: { label: "Customer" },
+      total: { label: "Total", controller: PriceInputController },
+      status: {
+        label: "Status",
+        controller: SelectInputController,
+        valueOptions: ORDER_STATUSES,
       },
+      placedAt: { label: "Placed on", controller: DatePickerInputController },
     },
-    formFilter: {
-      inputs: {
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: ORDER_STATUSES,
-        },
-      },
-    },
-    viewVariants: [tableViewOptionFactory({ name: "Table" })],
   },
   views: {
-    [ActionList.update]: { name: "Edit an order", ...POPUP },
+    list: {
+      filters: {
+        inputs: {
+          status: {
+            label: "Status",
+            controller: SelectInputController,
+            valueOptions: ORDER_STATUSES,
+          },
+        },
+      },
+      layouts: [layout.table()],
+    },
+    update: { title: "Edit an order", ...POPUP },
   },
 })

@@ -12,8 +12,9 @@ import {
  * The column beside a company's tabs: what the account amounts to at a glance,
  * kept in view whichever tab is open.
  *
- * It is `subViewResource.viewComponent`, so it is rendered inside the record's
- * own view, and `useCurrentViewResourceContext` hands back the company.
+ * It is the `aside` of the update view's `tabs`, so it is rendered inside the
+ * record's own view, and `useCurrentViewResourceContext` hands back the
+ * company.
  */
 export function CompanySummary() {
   const company = useCurrentViewResourceContext()?.data as Company | undefined

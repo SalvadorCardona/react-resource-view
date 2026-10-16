@@ -159,10 +159,8 @@ export const tasks = createViewResource<Task>("tasks", {
   validation en dev reconnaît) et `MIGRATION-1.0.md` disent la même chose ;
   des tests vérifient qu'ils restent alignés. Les fixtures `after/` du codemod
   se régénèrent avec `UPDATE_FIXTURES=1 pnpm vitest run cli/migrate.test.ts`.
-- `website/` est encore écrit en 0.x tant que la 1.0 n'est pas publiée sur
-  npm : après publication, `npx react-resource-view migrate website/src` (les
-  ressources du playground migrées sont déjà dans
-  `cli/__fixtures__/playground/after/`).
+- `website/` est écrit en 1.0 et installe la 1.0 depuis npm (`^1.0.0`,
+  remonté par `release.yml` à chaque publication).
 - Un changeset créé avec `pnpm changeset` n'est pas commité automatiquement
   (`commit: false` dans `.changeset/config.json`) : il faut l'ajouter au
   commit soi-même. Le bump de version et la publication npm sont ensuite

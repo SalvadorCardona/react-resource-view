@@ -1,16 +1,10 @@
 import { Mail } from "lucide-react"
 import {
-  ActionList,
   DatePickerInputController,
   SelectButtonInputController,
   SelectInputController,
 } from "react-data-form"
-import {
-  cardViewOptionFactory,
-  columnViewOptionFactory,
-  createViewResource,
-  tableViewOptionFactory,
-} from "react-resource-view"
+import { createViewResource, layout } from "react-resource-view"
 import { createBlockBuilderInput } from "@/demo/builder/BlockBuilderInput"
 import { BUILDER_FORM_COMPONENTS } from "@/demo/builder/BuilderForm"
 import { BRAND_COLORS, EMAIL_BLOCK } from "@/demo/builder/emailBlocks"
@@ -48,7 +42,7 @@ const FIELDS = {
  * A newsletter is an envelope and a stack of blocks, exactly as a post is a few
  * fields and a stack of blocks; only the palette differs (`email-block`), and
  * what the blocks compile to: the HTML of an email rather than a page. The
- * editor is the email builder, through `viewComponent`, and the kit "Email" of
+ * editor is the email builder, through `components.view`, and the kit "Email" of
  * `/playground/builder` saves here.
  *
  * Nothing is sent from here — the site is static, and a public form that sent
@@ -56,67 +50,50 @@ const FIELDS = {
  */
 export const newslettersResource = createViewResource<Newsletter>(NEWSLETTERS_ID, {
   name: "Newsletters",
-  scope: "admin",
   icon: Mail,
-  canRead: true,
-  canCreate: true,
-  canUpdate: true,
-  canDelete: true,
-  view: {
-    name: "Newsletters",
-    description:
-      "The emails the roastery sends, from the draft to the day they go out. Open one: it is assembled block by block, and the preview is the HTML a mailbox receives.",
-    form: {
-      components: BUILDER_FORM_COMPONENTS,
-      inputs: {
-        ...FIELDS,
-        blocks: createBlockBuilderInput({
-          label: "Content",
-          forms: [EMAIL_BLOCK],
-          addLabel: "Add a first block",
-        }),
-      },
-    },
-    formFilter: {
-      inputs: {
-        subject: { label: "Search a subject" },
-        status: {
-          label: "Status",
-          controller: SelectInputController,
-          valueOptions: NEWSLETTER_STATUSES,
-        },
-      },
-    },
-    viewVariants: [
-      tableViewOptionFactory({
-        name: "Table",
-        form: {
-          inputs: {
-            subject: FIELDS.subject,
-            fromName: FIELDS.fromName,
-            status: FIELDS.status,
-            sendAt: FIELDS.sendAt,
-          },
-        },
+  storage: "local",
+  description:
+    "The emails the roastery sends, from the draft to the day they go out. Open one: it is assembled block by block, and the preview is the HTML a mailbox receives.",
+  form: {
+    components: BUILDER_FORM_COMPONENTS,
+    inputs: {
+      ...FIELDS,
+      blocks: createBlockBuilderInput({
+        label: "Content",
+        forms: [EMAIL_BLOCK],
+        addLabel: "Add a first block",
       }),
-      columnViewOptionFactory({
-        name: "Board",
-        rowComponent: NewsletterRow,
-        identifierKey: "status",
-        identifierKeyList: NEWSLETTER_STATUSES,
-      }),
-      cardViewOptionFactory({ name: "Cards", grid: 3, rowComponent: NewsletterRow }),
-    ],
+    },
   },
   views: {
-    // On the list alone: a `components` on `view` would reach every action.
-    [ActionList.list]: { components: { top: NewsletterBuilderLink } },
-    [ActionList.create]: { name: "New newsletter", ...DRAWER },
-    // Editing a newsletter is the email builder, on this record.
-    [ActionList.update]: {
-      name: "Edit a newsletter",
-      viewComponent: NewsletterBuilder,
+    list: {
+      components: { top: NewsletterBuilderLink },
+      filters: {
+        inputs: {
+          subject: { label: "Search a subject" },
+          status: {
+            label: "Status",
+            controller: SelectInputController,
+            valueOptions: NEWSLETTER_STATUSES,
+          },
+        },
+      },
+      layouts: [
+        layout.table({ fields: ["subject", "fromName", "status", "sendAt"] }),
+        layout.board({
+          groupBy: "status",
+          columns: NEWSLETTER_STATUSES,
+          components: { row: NewsletterRow },
+        }),
+        layout.cards({ columns: 3, components: { row: NewsletterRow } }),
+      ],
     },
-    [ActionList.delete]: { name: "Delete a newsletter", ...POPUP },
+    create: { title: "New newsletter", ...DRAWER },
+    // Editing a newsletter is the email builder, on this record.
+    update: {
+      title: "Edit a newsletter",
+      components: { view: NewsletterBuilder },
+    },
+    delete: { title: "Delete a newsletter", ...POPUP },
   },
 })

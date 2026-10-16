@@ -31,27 +31,23 @@ export const adminScope: ScopeInterface = {
   // The first link of the breadcrumb, in the top bar.
   label: "Back office",
   decoratorComponent: AdminLayout,
+  // The one place a resource's scope is written: their links lead here.
   resources: [articles, authors],
-  menu: [
-    createItemMenuWithResource({ resource: articles }),
-    createItemMenuWithResource({ resource: authors }),
-  ],
+  // One entry per resource, in order.
+  menu: "auto",
   defaultViewResourceContextParams: { resourceId: articles["@id"] },
 }`
 
 const MENU = `menu: [
-  // An entry built from a resource: its name, its icon and its link.
-  createItemMenuWithResource({ resource: overview }),
-  createItemMenuWithResource({ resource: tasks }),
+  // A resource is an entry: its name, its icon and its link.
+  overview,
+  tasks,
 
   // A section: a collapsible group in the sidebar, a drawer on a phone.
   {
     name: "Catalogue",
     icon: ShoppingBag,
-    items: [
-      createItemMenuWithResource({ resource: products }),
-      createItemMenuWithResource({ resource: orders }),
-    ],
+    items: [products, orders],
   },
 
   // A group whose pages are tabs under the page header rather than
@@ -60,10 +56,7 @@ const MENU = `menu: [
     name: "Settings",
     icon: Settings,
     subNavigation: true,
-    items: [
-      createItemMenuWithResource({ resource: profile }),
-      createItemMenuWithResource({ resource: billing }),
-    ],
+    items: [profile, billing],
   },
 ]`
 
@@ -76,7 +69,8 @@ export const adminScope: ScopeInterface = {
     // A search field, a ⌘K palette, a user menu — anything.
     topBarEnd: <UserMenu />,
   }),
-  menu: [/* … */],
+  resources: [/* … */],
+  menu: "auto",
 }`
 
 const FOOTER = `import { BookOpen, Github, Mail } from "lucide-react"
@@ -90,8 +84,9 @@ decoratorComponent: createAdminLayout({
     { name: "GitHub", icon: Github, href: "https://github.com/acme/app" },
     // …a mailto: hands over to the mail client…
     { name: "Contact", icon: Mail, href: "mailto:support@example.com" },
-    // …and a page of the application stays in it.
-    createItemMenuWithResource({ resource: faq }),
+    // …and a page of the application stays in it. Built outside a scope's
+    // menu, an entry names the scope its link leads into.
+    createItemMenuWithResource({ resource: faq, scope: "admin" }),
   ],
 })`
 
@@ -101,9 +96,9 @@ const FOOTER_NODE = `decoratorComponent: createAdminLayout({
 })`
 
 const HEADER = `views: {
-  [ActionList.update]: {
+  update: {
     // The field that names an account, instead of \`title\` or \`name\`.
-    titleKey: "email",
+    titleField: "email",
     components: {
       // Either of them, or both — the rest of the header stays.
       title: () => <h2>…</h2>,
@@ -114,26 +109,27 @@ const HEADER = `views: {
   },
 }`
 
-const FULL_WIDTH = `createViewResource("tasks", {
-  view: {
-    // Every action of the resource, across the whole page…
-    fullWidth: true,
-    viewVariants: [
-      columnViewOptionFactory({ name: "Board", identifierKey: "status" }),
-      calendarViewOptionFactory({ name: "Calendar", dateKey: "dueDate" }),
-    ],
-  },
+const FULL_WIDTH = `createViewResource<Task>("tasks", {
+  path: "/api/tasks",
+  // Every action of the resource, across the whole page…
+  fullWidth: true,
   views: {
+    list: {
+      layouts: [
+        layout.board({ groupBy: "status", columns: STATUSES }),
+        layout.calendar({ dateField: "dueDate" }),
+      ],
+    },
     // …but its forms, which keep the column.
-    [ActionList.create]: { fullWidth: false },
-    [ActionList.update]: { fullWidth: false },
+    create: { fullWidth: false },
+    update: { fullWidth: false },
   },
 })`
 
-const VARIANT = `viewVariants: [
+const VARIANT = `layouts: [
   // Only the board is wide; the table stays in the column.
-  columnViewOptionFactory({ name: "Board", fullWidth: true }),
-  tableViewOptionFactory({ name: "Table" }),
+  layout.board({ groupBy: "status", columns: STATUSES, fullWidth: true }),
+  layout.table(),
 ]`
 
 const OWN_DECORATOR = `import { isFullWidthView, useCurrentViewResourceContext } from "react-resource-view"
@@ -196,7 +192,8 @@ function AdminLayoutPage() {
 
       <P>
         Nothing beyond a menu is required — the sidebar, the top bar and the mobile
-        navigation all read it. The scope&apos;s <C>label</C>, when it has one, opens
+        navigation all read it — and <C>menu: &quot;auto&quot;</C> builds it from the
+        scope&apos;s <C>resources</C>, one entry each. The scope&apos;s <C>label</C>, when it has one, opens
         the breadcrumb in the top bar: it is the name of the application.
       </P>
 
@@ -207,9 +204,8 @@ function AdminLayoutPage() {
       <P>
         The menu is data, and the template draws it three ways: the sidebar on a
         desktop, the bottom bar on a phone, and the tabs under the page header. A
-        resource is put in it with <C>createItemMenuWithResource</C>, which reads the
-        name, the icon and the link off the resource — declared once, on the
-        resource.
+        resource is put in it as it is: the entry reads the name, the icon and the
+        link off the resource — declared once, on the resource.
       </P>
 
       <CodeBlock filename="scopes/admin.ts">{MENU}</CodeBlock>
@@ -278,13 +274,6 @@ function AdminLayoutPage() {
         block of this kind.
       </P>
 
-      <Callout kind="note" title="Since 0.12">
-        <P>
-          <C>sidebarFooter</C>, <C>footerMenu</C> and <C>footerMenuTitle</C> arrived
-          in react-resource-view 0.12.
-        </P>
-      </Callout>
-
       <H2 id="header">The page header</H2>
 
       <P>
@@ -295,8 +284,8 @@ function AdminLayoutPage() {
       </P>
 
       <P>
-        The name is read from <C>title</C>, <C>name</C> or <C>label</C>; a view names
-        another field with <C>titleKey</C>. Each part of the header is a slot a view
+        The name is read from <C>title</C>, <C>name</C> or <C>label</C>; a resource —
+        or one of its views — names another field with <C>titleField</C>. Each part of the header is a slot a view
         can fill:
       </P>
 
@@ -315,8 +304,8 @@ function AdminLayoutPage() {
 
       <P>
         The option is read at three levels, and the most specific one wins: the list{" "}
-        <Term id="view-variant">variant</Term> on screen, then the action&apos;s
-        entry in <C>views</C>, then the resource&apos;s <C>view</C>. Nothing declared
+        <Term id="view-variant">layout</Term> on screen, then the action&apos;s
+        entry in <C>views</C>, then the root of the resource. Nothing declared
         means the column, so a resource that never mentions it is drawn exactly as
         before. For a single layout of a list:
       </P>
@@ -330,11 +319,10 @@ function AdminLayoutPage() {
 
       <CodeBlock>{OWN_DECORATOR}</CodeBlock>
 
-      <Callout kind="note" title="Since 0.11">
+      <Callout kind="note" title="With the rest of the declaration">
         <P>
-          <C>fullWidth</C> and <C>isFullWidthView</C> arrived in react-resource-view
-          0.11. The option is also listed with the rest of a resource&apos;s
-          declaration, under{" "}
+          The option is also listed with the rest of a resource&apos;s declaration,
+          under{" "}
           <A href="/docs/resource-view/resources#full-width">declaring a resource</A>.
         </P>
       </Callout>
@@ -430,7 +418,7 @@ function AdminLayoutPage() {
         rows={[
           {
             name: "scope.menu",
-            type: "MenuItemInterface[]",
+            type: '"auto" | (ViewResource | MenuItemInterface)[]',
             description: "The sidebar, the bottom bar and the header's tabs.",
           },
           {
@@ -439,23 +427,23 @@ function AdminLayoutPage() {
             description: "The first link of the breadcrumb: the application's name.",
           },
           {
-            name: "view.titleKey",
+            name: "titleField",
             type: "string",
             description: "The field naming a record in the header and the breadcrumb.",
           },
           {
-            name: "view.components",
+            name: "components",
             type: "{ title?, actions?, navigation? }",
             description: "Replace a part of the page header, or all of it.",
           },
           {
-            name: "view.fullWidth",
+            name: "fullWidth",
             type: "boolean",
             default: "false",
             description: (
               <>
-                The whole width of the page for this view — on <C>view</C>, on{" "}
-                <C>views.&lt;action&gt;</C> or on a list variant.
+                The whole width of the page — at the root of the resource, on{" "}
+                <C>views.&lt;action&gt;</C> or on a layout of the list.
               </>
             ),
           },

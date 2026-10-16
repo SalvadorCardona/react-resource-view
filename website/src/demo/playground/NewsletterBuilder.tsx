@@ -14,7 +14,7 @@ import type { Newsletter } from "@/demo/playground/adminData"
 /**
  * Editing a newsletter, on the newsletter itself — `PostBuilder`, for email.
  *
- * Same seam: `viewComponent` hands the edit view to this component, and
+ * Same seam: `components.view` hands the edit view to this component, and
  * `useFormByResource` gives it the form the declaration describes, saving
  * through the resource's own repository. The envelope fields fold into the
  * "Settings" panel above the blocks; the canvas shows the HTML `renderEmail`

@@ -58,7 +58,7 @@ import { createViewResource, ViewResourceContextProvider } from "react-resource-
 const articles = createViewResource("articles", {
   name: "Articles",
   path: "/api/articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })
 
 export function ArticlesPage() {
@@ -96,6 +96,18 @@ function Installation() {
           The core never references it. Installing it is only needed if you import{" "}
           <C>react-resource-view/tanstack</C>, and an application on another router
           installs nothing extra.
+        </P>
+      </Callout>
+
+      <Callout kind="tip" title="Upgrading from 0.x?">
+        <P>
+          1.0 rewrote how a resource is declared, and this documentation is written
+          for it. <C>npx react-resource-view migrate src</C> rewrites your
+          declarations, and{" "}
+          <A href="https://github.com/SalvadorCardona/react-resource-view/blob/main/MIGRATION-1.0.md">
+            the migration guide
+          </A>{" "}
+          lists every change, before and after.
         </P>
       </Callout>
 
@@ -256,7 +268,7 @@ function Installation() {
             type: "string",
             description: (
               <>
-                Path of the Mercure hub. A view with <C>behavior.eventSourced</C>{" "}
+                Path of the Mercure hub. A resource declaring <C>realtime: true</C>{" "}
                 refetches when the hub says the collection changed.
               </>
             ),
@@ -296,7 +308,7 @@ function Installation() {
       <Ul>
         <Li>
           <strong>“Form is needed for build a table”</strong> — the table's columns
-          come from <C>view.form</C>. Give the view a form.
+          come from the resource&apos;s <C>form</C>. Give the resource a form.
         </Li>
         <Li>
           <strong>“Resource not found”</strong> — the provider was given a{" "}

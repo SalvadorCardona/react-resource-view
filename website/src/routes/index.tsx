@@ -249,24 +249,23 @@ const BEFORE = [
   "Routes, permissions, loading and empty states — for every resource",
 ]
 
-const DECLARATION = `import { createViewResource } from "react-resource-view"
+const DECLARATION = `import { createViewResource, layout } from "react-resource-view"
 
-export const articles = createViewResource<Article>("/api/articles", {
+export const articles = createViewResource<Article>("articles", {
   name: "Articles",
-  canRead: true,
-  canCreate: true,
-  canUpdate: true,
-  canDelete: true,
-  view: {
-    form: {
-      inputs: {
-        title: { label: "Title", required: true },
-        author: { label: "Author" },
-        status: { label: "Status", controller: SelectInputController },
-      },
+  path: "/api/articles",
+  form: {
+    inputs: {
+      title: { label: "Title", required: true },
+      author: { label: "Author" },
+      status: { label: "Status", controller: SelectInputController },
     },
-    formFilter: { inputs: { title: { label: "Search a title" } } },
-    viewVariants: [tableViewOptionFactory(), cardViewOptionFactory()],
+  },
+  views: {
+    list: {
+      filters: { inputs: { title: { label: "Search a title" } } },
+      layouts: [layout.table(), layout.cards()],
+    },
   },
 })`
 
@@ -532,8 +531,9 @@ function Layouts() {
           Seven layouts, one resource
         </h2>
         <p className="mt-3 text-muted-foreground">
-          A layout is a line in <code className="font-mono text-sm">viewVariants</code>
-          , not a screen you build. Declare several and the reader picks — the
+          A layout is a line in{" "}
+          <code className="font-mono text-sm">views.list.layouts</code>, not a
+          screen you build. Declare several and the reader picks — the
           filters, the permissions and the forms carry over untouched.
         </p>
       </header>
@@ -557,8 +557,9 @@ function Layouts() {
                 The eighth layout is yours
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Create your own view variant: one file — three components and a
-                factory. One command writes it where you want it.
+                Create your own layout: one file — three components and a{" "}
+                <code className="font-mono text-xs">layout.custom()</code> call. One
+                command writes it where you want it.
               </p>
             </div>
           </div>

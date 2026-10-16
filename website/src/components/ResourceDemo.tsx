@@ -1,14 +1,11 @@
 import { useState } from "react"
 import { ActionList } from "react-data-form"
-import {
-  ViewResourceContextProvider,
-  type ViewResourceInterface,
-} from "react-resource-view"
+import { ViewResourceContextProvider, type ViewResource } from "react-resource-view"
 import { seedDemoData } from "@/demo/data"
 import { cn } from "@/lib/cn"
 
 export interface ResourceDemoProps {
-  resource: ViewResourceInterface
+  resource: ViewResource
   /** Defaults to the list view, which is what most examples show. */
   action?: ActionList
   /**

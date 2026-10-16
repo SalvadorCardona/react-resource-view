@@ -83,7 +83,8 @@ type Article = components["schemas"]["Article"] & { "@id": string }
 export const articles = createViewResource<Article>("articles", {
   name: "Articles",
   path: "/api/articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  // inputs, titleField, layout.board({ groupBy })… are checked against Article.
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 const SIDE_BY_SIDE = `// Before — an interface copied from the API, by hand.

@@ -27,7 +27,7 @@ const RESUME_SECTIONS = [
  * The column beside an account's tabs: what the account adds up to, at a
  * glance, whichever tab is open.
  *
- * It is `subViewResource.viewComponent`, rendered inside the record's view
+ * It is the `aside` of the view's `tabs`, rendered inside the record's view
  * like the tabs are — so `useCurrentViewResourceContext` hands back the account
  * on screen, and the figures are read from the same storage the posts list and
  * the CV tab write to. A save in either redraws them.

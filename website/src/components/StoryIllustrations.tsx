@@ -334,11 +334,12 @@ export function OneDescriptionIllustration() {
   const code = [
     { text: "createViewResource({" },
     { text: "  form," },
-    { text: "  viewVariants: [" },
-    { text: "    table()," },
-    { text: "    cards()," },
-    { text: "    calendar(),", active: true },
-    { text: "  ]," },
+    { text: "  views: { list: {" },
+    { text: "    layouts: [" },
+    { text: "      table()," },
+    { text: "      cards()," },
+    { text: "      calendar(),", active: true },
+    { text: "    ] } }," },
     { text: "})" },
   ]
 
@@ -354,7 +355,7 @@ export function OneDescriptionIllustration() {
       />
       <circle cx="19" cy="18" r="3" className="stroke-muted-foreground" />
       <text x="27" y="21" fontSize="8" className="fill-muted-foreground">
-        /articles?view=<tspan className="fill-primary">calendar</tspan>
+        /articles?variant=<tspan className="fill-primary">calendar</tspan>
       </text>
 
       {/* The description */}
@@ -370,7 +371,7 @@ export function OneDescriptionIllustration() {
         <text
           key={index}
           x="14"
-          y={54 + index * 14}
+          y={54 + index * 12}
           fontSize="7.5"
           xmlSpace="preserve"
           className={active ? "fill-primary" : "fill-muted-foreground"}
@@ -379,13 +380,13 @@ export function OneDescriptionIllustration() {
         </text>
       ))}
 
-      {/* Each variant, wired to the view it draws */}
-      <path d="M70 93C112 93 116 56 140 56" className="stroke-muted-foreground/50" />
+      {/* Each layout, wired to the view it draws */}
+      <path d="M78 99C112 99 116 56 140 56" className="stroke-muted-foreground/50" />
       <path
-        d="M70 107C112 107 116 100 140 100"
+        d="M78 111C112 111 116 100 140 100"
         className="stroke-muted-foreground/50"
       />
-      <path d="M84 121C112 121 116 144 140 144" className="stroke-primary" />
+      <path d="M92 123C112 123 116 144 140 144" className="stroke-primary" />
 
       {/* table() */}
       <rect

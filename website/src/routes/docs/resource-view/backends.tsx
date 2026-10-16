@@ -38,10 +38,8 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "articles", // → /api/articles
   name: "Articles",
-  view: {
-    itemsPerPage: 25,
-    form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
-  },
+  form: { inputs: { title: { label: "Title" }, body: { label: "Body" } } },
+  views: { list: { pageSize: 25 } },
 })`
 
 const SUPABASE = `import { configureApi, createViewResource, supabaseDialect } from "react-resource-view"
@@ -55,7 +53,7 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "articles", // → /rest/v1/articles
   name: "Articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 const FASTAPI = `import { configureApi, createViewResource, fastapiDialect } from "react-resource-view"
@@ -69,7 +67,7 @@ configureApi({
 const items = createViewResource("items", {
   path: "items", // → /items, /items/{id}
   name: "Items",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 const SPRING = `import { configureApi, createViewResource, springDialect } from "react-resource-view"
@@ -83,7 +81,7 @@ configureApi({
 const books = createViewResource("books", {
   path: "/api/books", // → /api/books?page=0&size=20, /api/books/{id}
   name: "Books",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 const DJANGO = `import { configureApi, createViewResource, djangoDialect } from "react-resource-view"
@@ -97,7 +95,7 @@ configureApi({
 const articles = createViewResource("articles", {
   path: "/api/articles", // → /api/articles/?page=1&page_size=30, /api/articles/{id}/
   name: "Articles",
-  view: { form: { inputs: { title: { label: "Title" } } } },
+  form: { inputs: { title: { label: "Title" } } },
 })`
 
 const DJANGO_VIEWSET = `class ArticleViewSet(viewsets.ModelViewSet):
@@ -173,17 +171,25 @@ const invoices = createViewResource("invoices", {
   dialect: supabaseDialect({ apiKey }),
 })`
 
-const FILTERS = `view: {
-  itemsPerPage: 25,
-  defaultFilter: { status: "published", order: { createdAt: "desc" } },
-  formFilter: { inputs: { title: { label: "Title" } } },
+const FILTERS = `views: {
+  list: {
+    // → itemsPerPage
+    pageSize: 25,
+    // → order
+    sort: { fields: ["createdAt", "title"], initial: { createdAt: "desc" } },
+    // → a field of the resource
+    filters: {
+      inputs: { title: { label: "Title" } },
+      initial: { status: "published" },
+    },
+  },
 }`
 
 const OPERATORS = `// Strapi — any operator the REST API accepts
-defaultFilter: { title: { $containsi: "hello" } }
+filters: { initial: { title: { $containsi: "hello" } } }
 
 // Supabase — any PostgREST operator
-defaultFilter: { createdAt: { gte: "2024-01-01" } }`
+filters: { initial: { createdAt: { gte: "2024-01-01" } } }`
 
 const CUSTOM = `import type { ApiDialectInterface } from "react-resource-view"
 
@@ -749,11 +755,11 @@ function Backends() {
           {
             name: "itemsPerPage",
             type: "number",
-            default: "view.itemsPerPage",
+            default: "views.list.pageSize",
             description: (
               <>
                 Rows per page. <C>pagination[pageSize]</C> on Strapi, <C>limit</C> on
-                Supabase, <C>limit</C> (or <C>size</C>) on FastAPI, <C>page_size</C> on Django. The page size a view declares travels with the request, so
+                Supabase, <C>limit</C> (or <C>size</C>) on FastAPI, <C>page_size</C> on Django. The page size a list declares travels with the request, so
                 the pagination counts the rows the API actually returned.
               </>
             ),
@@ -831,8 +837,8 @@ function Backends() {
       </P>
 
       <P>
-        A resource that brings its own <C>getCollection</C>, <C>getItem</C> and the
-        rest still bypasses all of this, as it always could — see{" "}
+        A resource that brings its own <C>repository: {"{"} getCollection, getItem,
+        … {"}"}</C> still bypasses all of this, as it always could — see{" "}
         <A href="/docs/resource-view/resources">declaring a resource</A>.
       </P>
     </DocArticle>

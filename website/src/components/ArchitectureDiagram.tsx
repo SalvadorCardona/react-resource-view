@@ -30,16 +30,16 @@ export function ArchitectureDiagram() {
               </a>{" "}
               per field.
             </Box>
-            <Box concept="view-variant" title="viewVariants">
-              Table, cards, columns, split, calendar, timeline — the reader picks.
+            <Box concept="view-variant" title="layouts">
+              Table, cards, board, split, calendar, timeline — the reader picks.
             </Box>
           </div>
 
           <Arrow label="reads and writes through" />
 
           <Box concept="repository" title="Repository">
-            HTTP when the resource has a <code>path</code>, localStorage when it has
-            none.
+            HTTP when the resource has a <code>path</code>, localStorage with{" "}
+            <code>storage: "local"</code>.
           </Box>
 
           <Arrow label="spelled by" />

@@ -1,39 +1,38 @@
 /**
- * Spotlight — a view variant for react-resource-view.
+ * Spotlight — a layout for react-resource-view.
  *
- * A variant is a view with three rendering slots, and nothing else:
+ * A layout draws a list with three components, and nothing else:
  *
- *   listComponent  draws the whole collection
- *   rowComponent   draws one record
- *   itemComponent  draws one field of a record
+ *   list  draws the whole collection
+ *   row   draws one record
+ *   item  draws one field of a record
  *
  * Declare it beside the built-in ones and the reader gets a switcher; the
  * choice travels in the URL as "spotlight".
  *
- *   viewVariants: [tableViewOptionFactory(), spotlightViewFactory()]
+ *   views: { list: { layouts: [layout.table(), spotlightLayout()] } }
  */
 // Any component taking a `className` does for an icon; lucide-react is what
 // the package's own layouts use — `npm i lucide-react` if you have not got it.
 import { Sparkles } from "lucide-react"
 import {
-  createView,
   ItemRender,
+  layout,
   ListPagination,
   ListResourceViewButton,
-  useCurrentViewResourceContext,
+  useLayout,
   type ItemComponentPropsInterface,
+  type LayoutOptions,
   type ListComponentPropsInterface,
   type RowComponentPropsInterface,
-  type ViewInterface,
 } from "react-resource-view"
 
 /**
- * The options this variant takes, on top of everything a view accepts.
- *
- * Anything declared here can be passed to the factory and read back from the
- * view. `dense` is an example: replace it with your own.
+ * The options of this layout, on top of those every layout takes (`id`,
+ * `label`, `fields`…). They are read back with `useLayout().options`.
+ * `dense` is an example: replace it with your own.
  */
-export interface SpotlightViewInterface extends ViewInterface {
+export interface SpotlightOptions {
   dense?: boolean
 }
 
@@ -81,13 +80,11 @@ export function SpotlightRow({ row }: RowComponentPropsInterface) {
  * The whole collection.
  *
  * `rows` is what the current page holds, already filtered and paginated.
- * `useCurrentViewResourceContext` gives the rest: the resource, the loading
- * state, the filters, and the view this variant was declared with — your own
- * options included.
+ * `useLayout` gives this layout's own options; `useCurrentViewResourceContext`
+ * the rest — the resource, the loading state, the filters.
  */
 export function SpotlightList({ rows = [] }: ListComponentPropsInterface) {
-  const view = useCurrentViewResourceContext().view as SpotlightViewInterface
-  const dense = view?.dense ?? false
+  const { dense = false } = useLayout<SpotlightOptions>().options
 
   if (!rows.length) {
     return (
@@ -125,28 +122,27 @@ export function SpotlightList({ rows = [] }: ListComponentPropsInterface) {
 }
 
 /**
- * The factory.
+ * The layout.
  *
- * `createView` fills in the id — the slug of the name — and whatever the
- * application configured as its default components. What is passed after it
- * wins, so a resource can still override any of it on the spot:
+ * Whatever is passed wins over what is written here, so a resource can still
+ * adjust it on the spot:
  *
- *   spotlightViewFactory({ name: "Compact", dense: true, itemsPerPage: 50 })
+ *   spotlightLayout({ label: "Compact", dense: true })
  */
-export default function spotlightViewFactory(
-  args?: Partial<SpotlightViewInterface>
-): SpotlightViewInterface {
-  const defaultArgs: Partial<SpotlightViewInterface> = {
-    dense: false,
-    ...args,
-  }
-
-  return createView({
-    name: "Spotlight",
+export default function spotlightLayout(
+  { dense = false, components, ...options }: LayoutOptions & SpotlightOptions = {}
+) {
+  return layout.custom({
+    type: "spotlight",
+    label: "Spotlight",
     icon: Sparkles,
-    listComponent: SpotlightList,
-    rowComponent: SpotlightRow,
-    itemComponent: SpotlightItem,
-    ...defaultArgs,
+    ...options,
+    components: {
+      list: SpotlightList,
+      row: SpotlightRow,
+      item: SpotlightItem,
+      ...components,
+    },
+    options: { dense },
   })
 }
